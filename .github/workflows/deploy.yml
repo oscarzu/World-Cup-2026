@@ -27,6 +27,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+        with:
+          # Enable Pages (build type "GitHub Actions") automatically if it
+          # isn't configured yet, so the deploy doesn't depend on the manual
+          # Settings -> Pages toggle.
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: "."
