@@ -50,6 +50,27 @@ export function kickoffDate(match) {
   return new Date(Date.UTC(Y, Mo - 1, D, utcHour, parseInt(mm, 10)));
 }
 
+// Human kickoff label in the configured timezone (CST), e.g. "13:00 CST".
+// Falls back to the raw string if the time can't be parsed.
+export function kickoffLabel(match) {
+  const ko = kickoffDate(match);
+  if (!ko) return match.time || "";
+  const t = ko.toLocaleTimeString("es-MX", {
+    timeZone: CONFIG.TIMEZONE, hour: "2-digit", minute: "2-digit", hour12: false,
+  });
+  return `${t} ${CONFIG.TIMEZONE_LABEL}`;
+}
+
+// Kickoff date + time in the configured timezone, e.g. "jue 11 jun · 13:00 CST".
+export function kickoffDateTime(match) {
+  const ko = kickoffDate(match);
+  if (!ko) return "";
+  const d = ko.toLocaleDateString("es-MX", {
+    timeZone: CONFIG.TIMEZONE, weekday: "short", day: "numeric", month: "short",
+  });
+  return `${d} · ${kickoffLabel(match)}`;
+}
+
 function deriveStatus(match, score) {
   if (score && score.home != null && score.away != null) return "finished";
   const ko = kickoffDate(match);

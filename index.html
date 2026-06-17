@@ -47,6 +47,12 @@
         <h2 class="hero-title">La 23.ª Copa Mundial de la FIFA</h2>
         <p class="hero-text">Primera edición con <strong>48 selecciones</strong>, repartida en
           tres países anfitriones y <strong>16 sedes</strong>.</p>
+        <div class="host-row">
+          <span class="host-pill">🇨🇦 Canadá</span>
+          <span class="host-pill">🇲🇽 México</span>
+          <span class="host-pill">🇺🇸 USA</span>
+          <span class="host-pill ghost">Horarios en CST</span>
+        </div>
       </div>
       <div class="stat-grid" id="overview-stats"></div>
       <div class="overview-split">
@@ -56,7 +62,7 @@
         </div>
         <div class="card">
           <h3>Goleo por jornada</h3>
-          <canvas id="chart-overview" height="200"></canvas>
+          <div class="chart-box"><canvas id="chart-overview"></canvas></div>
         </div>
       </div>
     </section>
@@ -96,9 +102,20 @@
     <!-- Stats -->
     <section id="stats" class="panel">
       <div class="stat-grid" id="stats-kpis"></div>
+
+      <h3 class="section-title">Datos curiosos del torneo</h3>
+      <p class="section-sub">Hallazgos extraídos de los 104 partidos.</p>
+      <div class="facts-grid" id="facts-grid"></div>
+
+      <h3 class="section-title">Agregados del torneo</h3>
+      <p class="section-sub">Fueras de lugar, goles anulados, VAR, tarjetas y más.</p>
+      <div class="stat-grid agg-grid" id="agg-grid"></div>
+
+      <h3 class="section-title">Gráficas</h3>
       <div class="charts-grid">
-        <div class="card"><h3>Goles por grupo</h3><canvas id="chart-groups" height="220"></canvas></div>
-        <div class="card"><h3>Goles por jornada</h3><canvas id="chart-matchdays" height="220"></canvas></div>
+        <div class="card"><h3>Goles por grupo</h3><div class="chart-box"><canvas id="chart-groups"></canvas></div></div>
+        <div class="card"><h3>Selecciones más goleadoras</h3><div class="chart-box"><canvas id="chart-teams"></canvas></div></div>
+        <div class="card"><h3>Momentos del torneo</h3><div class="chart-box"><canvas id="chart-moments"></canvas></div></div>
       </div>
     </section>
   </main>

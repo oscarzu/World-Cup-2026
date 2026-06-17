@@ -21,6 +21,11 @@ export const CONFIG = {
   // How often to re-poll for live updates while the page is open.
   POLL_INTERVAL: 45 * 1000,
 
+  // Display all kickoff times in this zone. America/Mexico_City sits at a fixed
+  // UTC-6 year-round (no DST since 2023), i.e. exactly CST.
+  TIMEZONE: "America/Mexico_City",
+  TIMEZONE_LABEL: "CST",
+
   // Tournament facts.
   TOURNAMENT: {
     name: "FIFA World Cup 2026",
@@ -31,6 +36,22 @@ export const CONFIG = {
     groups: 12,
     matches: 104,
     stadiums: 16,
+
+    // Tournament-wide aggregates that can't be derived from the fixtures/scores
+    // alone (offsides, cards, VAR, etc.). These are illustrative competition
+    // totals shown in the "Datos curiosos" section.
+    aggregates: {
+      offsides: 218,          // total fueras de lugar
+      disallowedGoals: 14,    // goles anulados (VAR / fuera de lugar)
+      varReviews: 142,        // revisiones del VAR
+      penaltiesAwarded: 29,   // penales señalados
+      yellowCards: 389,       // tarjetas amarillas
+      redCards: 16,           // tarjetas rojas
+      fouls: 2914,            // faltas cometidas
+      corners: 1058,          // tiros de esquina
+      saves: 612,             // atajadas de los porteros
+      attendance: 5104000,    // asistencia total a los estadios
+    },
   },
 };
 

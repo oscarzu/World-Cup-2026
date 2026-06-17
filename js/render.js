@@ -1,7 +1,7 @@
 // render.js — pure DOM rendering helpers. No data fetching here.
 
 import { VENUES } from "./config.js";
-import { flagUrl } from "./api.js";
+import { flagUrl, kickoffLabel } from "./api.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
@@ -32,7 +32,7 @@ export function matchCard(m, { showGoals = true } = {}) {
   const hasScore = m.score && m.score.home != null;
   const center = hasScore
     ? `<div class="score">${m.score.home} – ${m.score.away}</div>`
-    : `<div class="meta">${esc(m.time || "Por definir")}</div>`;
+    : `<div class="meta">${esc(kickoffLabel(m) || "Por definir")}</div>`;
   const pen = m.score?.penHome != null
     ? `<div class="meta">pen. ${m.score.penHome}–${m.score.penAway}</div>` : "";
 
@@ -188,6 +188,80 @@ export function renderStatsKpis(stats, matches) {
   ];
   $("#stats-kpis").innerHTML = kpis.map(([l, n]) =>
     `<div class="stat"><div class="num">${n}</div><div class="label">${l}</div></div>`).join("");
+}
+
+// ---- curated tournament aggregates (offsides, cards, VAR, …) ----
+export function renderAggregates(facts) {
+  const a = facts.aggregates || {};
+  const items = [
+    ["🚩", "Fueras de lugar", a.offsides],
+    ["🚫", "Goles anulados", a.disallowedGoals],
+    ["📺", "Revisiones VAR", a.varReviews],
+    ["🎯", "Penales señalados", a.penaltiesAwarded],
+    ["🟨", "Tarjetas amarillas", a.yellowCards],
+    ["🟥", "Tarjetas rojas", a.redCards],
+    ["⚠️", "Faltas cometidas", a.fouls],
+    ["📐", "Tiros de esquina", a.corners],
+    ["🧤", "Atajadas", a.saves],
+    ["👥", "Asistencia total", a.attendance ? a.attendance.toLocaleString("es-MX") : "—"],
+  ];
+  const grid = document.getElementById("agg-grid");
+  if (!grid) return;
+  grid.innerHTML = items.map(([icon, label, val]) => `
+    <div class="stat agg">
+      <div class="agg-icon" aria-hidden="true">${icon}</div>
+      <div class="num">${val ?? "—"}</div>
+      <div class="label">${label}</div>
+    </div>`).join("");
+}
+
+// ---- derived "bizarre" facts cards ----
+export function renderFacts(facts) {
+  const wrap = document.getElementById("facts-grid");
+  if (!wrap) return;
+
+  const pair = (m) => m ? `${esc(m.home.name)} vs ${esc(m.away.name)}` : "—";
+  const cards = [];
+
+  if (facts.highest)
+    cards.push(fact("🔥", "Partido más goleador",
+      `${facts.highest.total} goles`, `${pair(facts.highest.m)} (${facts.highest.score})`));
+  if (facts.biggest)
+    cards.push(fact("💥", "Mayor goleada",
+      `${facts.biggest.margin} de diferencia`, `${pair(facts.biggest.m)} (${facts.biggest.score})`));
+  if (facts.fastest)
+    cards.push(fact("⚡", "Gol más madrugador",
+      `Min. ${facts.fastest.min}'`, esc(facts.fastest.name || "—")));
+  if (facts.latest)
+    cards.push(fact("⏱️", "Gol más tardío",
+      `Min. ${facts.latest.min}'`, esc(facts.latest.name || "—")));
+
+  cards.push(fact("🎩", "Hat-tricks",
+    String(facts.hatTricks.length),
+    facts.hatTricks.length ? esc(facts.hatTricks[0].name) + (facts.hatTricks.length > 1 ? " y más" : "") : "Aún ninguno"));
+  cards.push(fact("🔄", "Remontadas", String(facts.comebacks), "Perdían al descanso y ganaron"));
+  cards.push(fact("🥅", "Tandas de penales", String(facts.shootouts), "Definidos desde los once pasos"));
+  cards.push(fact("🧱", "Porterías en cero", String(facts.cleanSheets), "Partidos con valla invicta"));
+  cards.push(fact("🥱", "Empates 0–0", String(facts.zeroZero), "Duelos sin goles"));
+  cards.push(fact("🏟️", "Goleadas (3+)", String(facts.blowouts), "Partidos con diferencia de 3 o más"));
+  cards.push(fact("🎯", "Goles de penal", String(facts.penaltyGoals), "Anotados desde el manchón"));
+  if (facts.topTeams[0])
+    cards.push(fact("👑", "Ataque más letal",
+      `${facts.topTeams[0].goals} goles`, esc(facts.topTeams[0].name)));
+
+  wrap.innerHTML = cards.join("");
+}
+
+function fact(icon, label, value, detail) {
+  return `
+  <div class="fact">
+    <div class="fact-icon" aria-hidden="true">${icon}</div>
+    <div class="fact-body">
+      <div class="fact-value">${value}</div>
+      <div class="fact-label">${label}</div>
+      <div class="fact-detail">${detail}</div>
+    </div>
+  </div>`;
 }
 
 // Small count-up animation for overview numbers.
