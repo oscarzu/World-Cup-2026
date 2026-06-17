@@ -175,6 +175,15 @@ export async function loadBase() {
   return { matches, source, online, fetchedAt: new Date() };
 }
 
+// Curated team/player stats layer (fouls, shots, cards). Never throws.
+export async function loadTeamStats() {
+  try {
+    return await cachedFetch(CONFIG.TEAM_STATS_URL, CONFIG.BASE_TTL);
+  } catch (_) {
+    return { teams: {}, yellowCards: [] };
+  }
+}
+
 // Try the live API and overlay it; never throws.
 export async function applyLive(matches) {
   try {

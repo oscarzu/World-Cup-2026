@@ -61,11 +61,12 @@ function upsert(id, type, labels, data, label, opts = {}) {
   });
 }
 
-let lastStats = null, lastFacts = null;
+let lastStats = null, lastFacts = null, lastDisc = null;
 
-export function renderCharts(stats, facts) {
+export function renderCharts(stats, facts, disc) {
   if (stats) lastStats = stats;
   if (facts) lastFacts = facts;
+  if (disc) lastDisc = disc;
   const t = theme();
 
   if (lastStats) {
@@ -91,6 +92,20 @@ export function renderCharts(stats, facts) {
         lastFacts.zeroZero, lastFacts.hatTricks.length],
       "Partidos",
       { colors: [t.accent, t.live, t.gold, t.text, t.accent2] });
+  }
+
+  if (lastDisc) {
+    // Most-fouling nations (top 10) — horizontal bar.
+    const fr = (lastDisc.foulsRanking || []).slice(0, 10);
+    upsert("chart-fouls", "bar",
+      fr.map((x) => x.name), fr.map((x) => x.fouls), "Faltas",
+      { horizontal: true, color: t.live });
+
+    // Players with most yellow cards (top 10) — horizontal bar.
+    const yc = lastDisc.yellow || [];
+    upsert("chart-cards", "bar",
+      yc.map((x) => x.name), yc.map((x) => x.cards), "Amarillas",
+      { horizontal: true, color: t.gold });
   }
 }
 
