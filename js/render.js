@@ -1,11 +1,21 @@
 // render.js — pure DOM rendering helpers. No data fetching here.
 
 import { VENUES } from "./config.js";
-import { flagUrl, kickoffLabel } from "./api.js";
+import { flagUrl, kickoffLabel, kickoffDateTime } from "./api.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Integer with thousands separators (e.g. 2914 -> "2,914"). Non-numerics pass through.
+export const fmtInt = (n) => {
+  const v = Number(n);
+  return Number.isFinite(v) ? v.toLocaleString("en-US") : String(n ?? "—");
+};
+
+// Wikimedia Commons hi-res image via the stable Special:FilePath redirect.
+const venuePhoto = (file) =>
+  `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1200`;
 
 function flagImg(team, cls = "flag") {
   const url = flagUrl(team);
@@ -71,7 +81,7 @@ export function renderOverview(matches, stats, tournament) {
     ["Goles/partido", stats.avg ? stats.avg.toFixed(2) : "0.00"],
   ];
   $("#overview-stats").innerHTML = kpis.map(([l, n]) =>
-    `<div class="stat"><div class="num" data-count="${n}">${n}</div><div class="label">${l}</div></div>`
+    `<div class="stat"><div class="num" data-count="${n}">${fmtInt(n)}</div><div class="label">${l}</div></div>`
   ).join("");
 
   // Live + next 5 upcoming.
@@ -167,11 +177,99 @@ export function renderScorers(list) {
 // ---- venues ----
 export function renderVenues() {
   const grid = $("#venues-grid");
-  grid.innerHTML = Object.entries(VENUES).map(([, v]) => `
-    <div class="venue">
-      <div class="vn">${flagImg(v.country)}${esc(v.stadium)}</div>
-      <div class="vc">${esc(v.city)}, ${esc(v.country)}</div>
-    </div>`).join("");
+  grid.innerHTML = Object.entries(VENUES).map(([, v]) => {
+    // If the photo fails to load, swap in a branded gradient banner.
+    const onerr = "this.style.display='none';this.parentElement.classList.add('noimg')";
+    return `
+    <article class="venue">
+      <div class="venue-media" data-name="${esc(v.stadium)}">
+        <img class="venue-img" src="${venuePhoto(v.img)}" alt="${esc(v.stadium)}"
+             loading="lazy" referrerpolicy="no-referrer" onerror="${onerr}" />
+        <span class="venue-flag">${flagImg(v.country, "flag")}</span>
+        <span class="venue-glyph" aria-hidden="true">🏟️</span>
+      </div>
+      <div class="venue-body">
+        <div class="venue-fifa">${esc(v.fifa)}</div>
+        <div class="vn">${esc(v.stadium)}</div>
+        <div class="vc">${esc(v.city)}, ${esc(v.country)}</div>
+        <div class="venue-stats">
+          <div><span class="vk">Inaugurado</span><span class="vv">${v.built}</span></div>
+          <div><span class="vk">Capacidad</span><span class="vv">${fmtInt(v.capacity)}</span></div>
+          <div><span class="vk">Costo aprox.</span><span class="vv">${esc(v.cost)}</span></div>
+        </div>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+// ---- live match centre ----
+export function renderLive(matches) {
+  const wrap = $("#live-feed");
+  if (!wrap) return;
+  const live = matches.filter((m) => m.status === "live");
+
+  if (live.length) {
+    wrap.innerHTML = live.map(liveCard).join("");
+    return;
+  }
+  // Nothing live → show the next kickoffs with a countdown.
+  const upcoming = matches.filter((m) => m.status === "scheduled").slice(0, 4);
+  wrap.innerHTML = `
+    <div class="live-empty card">
+      <div class="live-empty-dot"></div>
+      <div>
+        <h3>No hay partidos en vivo ahora</h3>
+        <p class="section-sub" style="margin:.2rem 0 0">En cuanto ruede el balón, el marcador y los goles aparecerán aquí en tiempo real.</p>
+      </div>
+    </div>
+    ${upcoming.length ? `<h3 class="section-title">Próximos partidos</h3>
+    <div class="match-list">${upcoming.map(upcomingCard).join("")}</div>` : ""}`;
+}
+
+function venueFifa(ground) {
+  const v = VENUES[ground];
+  return v ? `${v.fifa} · ${v.city}` : esc(ground || "");
+}
+
+function goalTimeline(m, side) {
+  const gs = (m.goals || []).filter((g) => g.team === side);
+  if (!gs.length) return `<li class="empty-goal">—</li>`;
+  return gs.map((g) =>
+    `<li>${esc(g.name)} <span class="gm">${g.minute}'${g.penalty ? " (p)" : ""}</span></li>`).join("");
+}
+
+function liveCard(m) {
+  const h = m.score?.home ?? 0, a = m.score?.away ?? 0;
+  return `
+  <article class="live-card">
+    <div class="live-top">
+      <span class="badge live">● En vivo</span>
+      <span class="live-round">${esc(m.round)}</span>
+    </div>
+    <div class="live-score">
+      <div class="lt home">${flagImg(m.home.name)}<span class="nm">${esc(m.home.name)}</span></div>
+      <div class="lsc">${h} <span>–</span> ${a}</div>
+      <div class="lt away"><span class="nm">${esc(m.away.name)}</span>${flagImg(m.away.name)}</div>
+    </div>
+    <div class="live-goals">
+      <ul class="gl home">${goalTimeline(m, "home")}</ul>
+      <span class="gl-ball" aria-hidden="true">⚽</span>
+      <ul class="gl away">${goalTimeline(m, "away")}</ul>
+    </div>
+    <div class="live-venue">📍 ${venueFifa(m.ground)}</div>
+  </article>`;
+}
+
+function upcomingCard(m) {
+  return `
+  <div class="match">
+    <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(m.home.name)}</span></div>
+    <div class="center">
+      <span class="badge up">Próximo</span>
+      <div class="meta">${esc(kickoffDateTime(m) || kickoffLabel(m) || "Por definir")}</div>
+    </div>
+    <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(m.away.name)}</span></div>
+  </div>`;
 }
 
 // ---- stats KPIs ----
@@ -187,7 +285,7 @@ export function renderStatsKpis(stats, matches) {
     ["Restantes", matches.length - finished],
   ];
   $("#stats-kpis").innerHTML = kpis.map(([l, n]) =>
-    `<div class="stat"><div class="num">${n}</div><div class="label">${l}</div></div>`).join("");
+    `<div class="stat"><div class="num">${fmtInt(n)}</div><div class="label">${l}</div></div>`).join("");
 }
 
 // ---- curated tournament aggregates (offsides, cards, VAR, …) ----
@@ -203,14 +301,14 @@ export function renderAggregates(facts) {
     ["⚠️", "Faltas cometidas", a.fouls],
     ["📐", "Tiros de esquina", a.corners],
     ["🧤", "Atajadas", a.saves],
-    ["👥", "Asistencia total", a.attendance ? a.attendance.toLocaleString("es-MX") : "—"],
+    ["👥", "Asistencia total", a.attendance],
   ];
   const grid = document.getElementById("agg-grid");
   if (!grid) return;
   grid.innerHTML = items.map(([icon, label, val]) => `
     <div class="stat agg">
       <div class="agg-icon" aria-hidden="true">${icon}</div>
-      <div class="num">${val ?? "—"}</div>
+      <div class="num">${val == null ? "—" : fmtInt(val)}</div>
       <div class="label">${label}</div>
     </div>`).join("");
 }
@@ -269,11 +367,12 @@ export function animateCounts(root = document) {
   for (const el of root.querySelectorAll("[data-count]")) {
     const target = parseFloat(el.dataset.count);
     if (Number.isNaN(target) || target > 1000) continue;
+    const isInt = Number.isInteger(target);
     let cur = 0;
     const step = Math.max(1, Math.ceil(target / 28));
     const tick = () => {
       cur = Math.min(target, cur + step);
-      el.textContent = cur;
+      el.textContent = isInt ? fmtInt(cur) : cur;
       if (cur < target) requestAnimationFrame(tick);
     };
     tick();

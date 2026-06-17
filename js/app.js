@@ -64,6 +64,7 @@ function renderAll() {
   UI.renderStandings(computeStandings(state.matches));
   UI.renderBracket(state.matches);
   UI.renderScorers(computeScorers(state.matches));
+  UI.renderLive(state.matches);
   UI.renderVenues();
   UI.renderStatsKpis(stats, state.matches);
   UI.renderAggregates(facts);

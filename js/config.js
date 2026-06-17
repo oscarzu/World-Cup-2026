@@ -71,21 +71,89 @@ export const FLAGS = {
 };
 
 // Venue metadata keyed by the "ground" string used in the base data.
+//   fifa    – official tournament name FIFA uses (sponsor-free)
+//   stadium – the venue's real/original name
+//   built   – year opened · capacity – seats for 2026 · cost – approx. build cost
+//   img     – Wikimedia Commons file name (served via Special:FilePath, hi-res)
 export const VENUES = {
-  Atlanta: { stadium: "Mercedes-Benz Stadium", city: "Atlanta", country: "USA" },
-  "Boston (Foxborough)": { stadium: "Gillette Stadium", city: "Foxborough", country: "USA" },
-  "Dallas (Arlington)": { stadium: "AT&T Stadium", city: "Arlington", country: "USA" },
-  "Guadalajara (Zapopan)": { stadium: "Estadio Akron", city: "Guadalajara", country: "Mexico" },
-  Houston: { stadium: "NRG Stadium", city: "Houston", country: "USA" },
-  "Kansas City": { stadium: "Arrowhead Stadium", city: "Kansas City", country: "USA" },
-  "Los Angeles (Inglewood)": { stadium: "SoFi Stadium", city: "Inglewood", country: "USA" },
-  "Mexico City": { stadium: "Estadio Azteca", city: "Mexico City", country: "Mexico" },
-  "Miami (Miami Gardens)": { stadium: "Hard Rock Stadium", city: "Miami Gardens", country: "USA" },
-  "Monterrey (Guadalupe)": { stadium: "Estadio BBVA", city: "Monterrey", country: "Mexico" },
-  "New York/New Jersey (East Rutherford)": { stadium: "MetLife Stadium", city: "East Rutherford", country: "USA" },
-  Philadelphia: { stadium: "Lincoln Financial Field", city: "Philadelphia", country: "USA" },
-  "San Francisco Bay Area (Santa Clara)": { stadium: "Levi's Stadium", city: "Santa Clara", country: "USA" },
-  Seattle: { stadium: "Lumen Field", city: "Seattle", country: "USA" },
-  Toronto: { stadium: "BMO Field", city: "Toronto", country: "Canada" },
-  Vancouver: { stadium: "BC Place", city: "Vancouver", country: "Canada" },
+  Atlanta: {
+    fifa: "Atlanta Stadium", stadium: "Mercedes-Benz Stadium",
+    city: "Atlanta", country: "USA",
+    built: 2017, capacity: 71000, cost: "US$1,600 M", img: "Mercedes-Benz Stadium.jpg",
+  },
+  "Boston (Foxborough)": {
+    fifa: "Boston Stadium", stadium: "Gillette Stadium",
+    city: "Foxborough", country: "USA",
+    built: 2002, capacity: 65878, cost: "US$325 M", img: "Gillette Stadium.jpg",
+  },
+  "Dallas (Arlington)": {
+    fifa: "Dallas Stadium", stadium: "AT&T Stadium",
+    city: "Arlington", country: "USA",
+    built: 2009, capacity: 80000, cost: "US$1,300 M", img: "Cowboys Stadium full.jpg",
+  },
+  "Guadalajara (Zapopan)": {
+    fifa: "Estadio Guadalajara", stadium: "Estadio Akron",
+    city: "Guadalajara", country: "Mexico",
+    built: 2010, capacity: 49850, cost: "US$197 M", img: "Estadio Akron.jpg",
+  },
+  Houston: {
+    fifa: "Houston Stadium", stadium: "NRG Stadium",
+    city: "Houston", country: "USA",
+    built: 2002, capacity: 72220, cost: "US$352 M", img: "NRG Stadium.jpg",
+  },
+  "Kansas City": {
+    fifa: "Kansas City Stadium", stadium: "Arrowhead Stadium",
+    city: "Kansas City", country: "USA",
+    built: 1972, capacity: 76416, cost: "US$43 M (1972)", img: "Arrowhead Stadium.jpg",
+  },
+  "Los Angeles (Inglewood)": {
+    fifa: "Los Angeles Stadium", stadium: "SoFi Stadium",
+    city: "Inglewood", country: "USA",
+    built: 2020, capacity: 70240, cost: "US$5,500 M", img: "SoFi Stadium.jpg",
+  },
+  "Mexico City": {
+    fifa: "Estadio Ciudad de México", stadium: "Estadio Azteca",
+    city: "Ciudad de México", country: "Mexico",
+    built: 1966, capacity: 83264, cost: "US$26 M (1966)", img: "Estadio Azteca.jpg",
+  },
+  "Miami (Miami Gardens)": {
+    fifa: "Miami Stadium", stadium: "Hard Rock Stadium",
+    city: "Miami Gardens", country: "USA",
+    built: 1987, capacity: 65326, cost: "US$115 M (1987)", img: "Hard Rock Stadium.jpg",
+  },
+  "Monterrey (Guadalupe)": {
+    fifa: "Estadio Monterrey", stadium: "Estadio BBVA",
+    city: "Monterrey", country: "Mexico",
+    built: 2015, capacity: 53500, cost: "US$200 M", img: "Estadio BBVA Bancomer.jpg",
+  },
+  "New York/New Jersey (East Rutherford)": {
+    fifa: "New York New Jersey Stadium", stadium: "MetLife Stadium",
+    city: "East Rutherford", country: "USA",
+    built: 2010, capacity: 82500, cost: "US$1,600 M", img: "MetLife Stadium (May 2014).jpg",
+  },
+  Philadelphia: {
+    fifa: "Philadelphia Stadium", stadium: "Lincoln Financial Field",
+    city: "Philadelphia", country: "USA",
+    built: 2003, capacity: 69176, cost: "US$512 M", img: "Lincoln Financial Field.jpg",
+  },
+  "San Francisco Bay Area (Santa Clara)": {
+    fifa: "San Francisco Bay Area Stadium", stadium: "Levi's Stadium",
+    city: "Santa Clara", country: "USA",
+    built: 2014, capacity: 68500, cost: "US$1,300 M", img: "Levi's Stadium.jpg",
+  },
+  Seattle: {
+    fifa: "Seattle Stadium", stadium: "Lumen Field",
+    city: "Seattle", country: "USA",
+    built: 2002, capacity: 68740, cost: "US$430 M", img: "Lumen Field.jpg",
+  },
+  Toronto: {
+    fifa: "Toronto Stadium", stadium: "BMO Field",
+    city: "Toronto", country: "Canada",
+    built: 2007, capacity: 45500, cost: "CA$62.9 M", img: "BMO Field.jpg",
+  },
+  Vancouver: {
+    fifa: "Vancouver Stadium", stadium: "BC Place",
+    city: "Vancouver", country: "Canada",
+    built: 1983, capacity: 54500, cost: "CA$126 M (1983)", img: "BC Place.jpg",
+  },
 };
