@@ -13,7 +13,7 @@ crons = ["*/5 * * * *"]
 #   npx wrangler kv namespace create WC26
 [[kv_namespaces]]
 binding = "WC26"
-id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+id = "8fb63d9aa3634b199b3d5f5872997fe3"
 
 [vars]
 LIVE_LEAGUE = "1"
