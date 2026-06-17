@@ -3,10 +3,24 @@ main = "worker.js"
 compatibility_date = "2024-11-01"
 workers_dev = true
 
-# Optional: lock CORS to your site's origin instead of allowing any (*).
-# Uncomment and set to your GitHub Pages origin:
-# [vars]
-# ALLOW_ORIGIN = "https://oscarzu.github.io"
+# Cron: collect from API-Football every 5 minutes (the ONLY API consumer).
+# A daily budget counter in the Worker caps usage so you never exceed 100/day.
+[triggers]
+crons = ["*/5 * * * *"]
+
+# KV store that holds the shared snapshot + accumulated dataset.
+# Create it once and paste the returned id below:
+#   npx wrangler kv namespace create WC26
+[[kv_namespaces]]
+binding = "WC26"
+id = "PASTE_YOUR_KV_NAMESPACE_ID_HERE"
+
+[vars]
+LIVE_LEAGUE = "1"
+LIVE_SEASON = "2026"
+MAX_DAILY = "95"     # hard cap on upstream API calls per day (free tier = 100)
+ENRICH_LIMIT = "4"   # how many live fixtures to enrich with fouls/shots per run
+# ALLOW_ORIGIN = "https://oscarzu.github.io"   # optional: lock CORS to your site
 
 # The API-Football key is a SECRET, not a var. Set it with:
 #   npx wrangler secret put API_FOOTBALL_KEY
