@@ -7,10 +7,15 @@ import { computeScorers, goalStats } from "./scorers.js";
 import { computeFacts } from "./facts.js";
 import { computeDiscipline } from "./discipline.js";
 import { renderCharts, rethemeCharts } from "./charts.js";
+import * as AF from "./apifootball.js";
 import * as UI from "./render.js";
 
 const $ = (s) => document.querySelector(s);
-const state = { matches: [], source: "", online: true, teamStats: { teams: {}, yellowCards: [] } };
+const state = {
+  matches: [], source: "", online: true,
+  teamStats: { teams: {}, yellowCards: [] },
+  liveMatches: [], liveProvider: false,
+};
 
 // ---- theme ----
 function initTheme() {
@@ -66,7 +71,8 @@ function renderAll() {
   UI.renderStandings(computeStandings(state.matches));
   UI.renderBracket(state.matches);
   UI.renderScorers(computeScorers(state.matches));
-  UI.renderLive(state.matches);
+  const liveList = state.liveMatches.length ? state.liveMatches : state.matches;
+  UI.renderLive(liveList, state.matches);
   UI.renderVenues();
   UI.renderStatsKpis(stats, state.matches);
   UI.renderAggregates(facts);
@@ -77,12 +83,14 @@ function renderAll() {
   renderCharts(stats, facts, disc);
 
   // Live indicator + freshness.
-  const liveCount = state.matches.filter((m) => m.status === "live").length;
+  const liveCount = (state.liveMatches.length ? state.liveMatches : state.matches)
+    .filter((m) => m.status === "live").length;
   $("#live-indicator").hidden = liveCount === 0;
   $("#updated").textContent = "Act. " + new Date().toLocaleTimeString("es-MX",
     { timeZone: CONFIG.TIMEZONE, hour: "2-digit", minute: "2-digit" }) + " " + CONFIG.TIMEZONE_LABEL;
+  const provider = state.liveProvider ? "API-Football (en vivo)" : state.source;
   $("#data-source").textContent =
-    `Fuente: ${state.source}${state.online ? "" : " (sin conexión)"} · ` +
+    `Fuente: ${provider}${state.online ? "" : " (sin conexión)"} · ` +
     `${state.matches.filter((m) => m.score?.home != null).length} partidos con marcador.`;
 }
 
@@ -90,6 +98,19 @@ function renderAll() {
 async function poll() {
   const res = await applyLive(state.matches);
   if (res.applied > 0) renderAll();
+}
+
+// Real-time layer via the API-Football proxy (only when configured).
+async function refreshLive() {
+  const [live, cards] = await Promise.allSettled([
+    AF.fetchLiveMatches(), AF.fetchTopYellowCards(),
+  ]);
+  let changed = false;
+  if (live.status === "fulfilled") { state.liveMatches = live.value; state.liveProvider = true; changed = true; }
+  if (cards.status === "fulfilled" && cards.value.length) {
+    state.teamStats = { ...state.teamStats, yellowCards: cards.value }; changed = true;
+  }
+  if (changed) renderAll();
 }
 
 // ---- boot ----
@@ -113,9 +134,15 @@ async function boot() {
     return;
   }
 
-  // Best-effort live overlay now + on an interval.
-  poll();
-  setInterval(poll, CONFIG.POLL_INTERVAL);
+  // Real-time provider (API-Football via proxy) if configured; else the
+  // best-effort community overlay. Both poll on an interval.
+  if (AF.liveEnabled()) {
+    refreshLive();
+    setInterval(refreshLive, CONFIG.LIVE_POLL);
+  } else {
+    poll();
+    setInterval(poll, CONFIG.POLL_INTERVAL);
+  }
 }
 
 // Chart.js loads with `defer`; wait for window load so it's defined.

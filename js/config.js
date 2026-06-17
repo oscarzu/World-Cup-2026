@@ -18,6 +18,16 @@ export const CONFIG = {
   LIVE_API_BASE: "https://worldcup26.ir",
   LIVE_GAMES_PATH: "/get/games",
 
+  // ---- Real-time provider via Cloudflare Worker proxy (API-Football) ----
+  // Leave empty to use the bundled curated stats. Once you deploy the worker
+  // (see worker/README.md) paste its URL here, e.g.
+  //   "https://wc26-football-proxy.<your-subdomain>.workers.dev"
+  // The proxy holds your API key server-side, so it is never exposed here.
+  LIVE_PROXY_URL: "",
+  LIVE_LEAGUE: 1,     // API-Football league id for the FIFA World Cup
+  LIVE_SEASON: 2026,
+  LIVE_POLL: 30 * 1000, // refresh live data every 30s when a proxy is set
+
   // Cache TTLs (ms).
   BASE_TTL: 60 * 60 * 1000, // base fixtures: 1h
   LIVE_TTL: 45 * 1000,      // live overlay: 45s
