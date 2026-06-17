@@ -1,0 +1,217 @@
+{
+ "note": "Illustrative team & player stats (fouls, shots on target, cards) layered on top of openfootball fixtures.",
+ "teams": {
+  "Germany": {
+   "fouls": 85,
+   "shotsOnTarget": 49,
+   "goals": 15
+  },
+  "Sweden": {
+   "fouls": 114,
+   "shotsOnTarget": 52,
+   "goals": 15
+  },
+  "USA": {
+   "fouls": 114,
+   "shotsOnTarget": 33,
+   "goals": 12
+  },
+  "Mexico": {
+   "fouls": 121,
+   "shotsOnTarget": 29,
+   "goals": 6
+  },
+  "South Korea": {
+   "fouls": 115,
+   "shotsOnTarget": 59,
+   "goals": 3
+  },
+  "Australia": {
+   "fouls": 99,
+   "shotsOnTarget": 30,
+   "goals": 3
+  },
+  "Netherlands": {
+   "fouls": 78,
+   "shotsOnTarget": 38,
+   "goals": 15
+  },
+  "Japan": {
+   "fouls": 88,
+   "shotsOnTarget": 47,
+   "goals": 13
+  },
+  "Iran": {
+   "fouls": 107,
+   "shotsOnTarget": 57,
+   "goals": 12
+  },
+  "New Zealand": {
+   "fouls": 73,
+   "shotsOnTarget": 53,
+   "goals": 7
+  },
+  "Czech Republic": {
+   "fouls": 97,
+   "shotsOnTarget": 30,
+   "goals": 2
+  },
+  "Canada": {
+   "fouls": 107,
+   "shotsOnTarget": 61,
+   "goals": 3
+  },
+  "Bosnia & Herzegovina": {
+   "fouls": 117,
+   "shotsOnTarget": 41,
+   "goals": 4
+  },
+  "Qatar": {
+   "fouls": 92,
+   "shotsOnTarget": 72,
+   "goals": 15
+  },
+  "Switzerland": {
+   "fouls": 109,
+   "shotsOnTarget": 31,
+   "goals": 14
+  },
+  "Brazil": {
+   "fouls": 90,
+   "shotsOnTarget": 47,
+   "goals": 2
+  },
+  "Morocco": {
+   "fouls": 118,
+   "shotsOnTarget": 39,
+   "goals": 10
+  },
+  "Scotland": {
+   "fouls": 73,
+   "shotsOnTarget": 37,
+   "goals": 8
+  },
+  "Paraguay": {
+   "fouls": 77,
+   "shotsOnTarget": 44,
+   "goals": 14
+  },
+  "Curaçao": {
+   "fouls": 76,
+   "shotsOnTarget": 63,
+   "goals": 8
+  },
+  "Ivory Coast": {
+   "fouls": 112,
+   "shotsOnTarget": 71,
+   "goals": 2
+  },
+  "Tunisia": {
+   "fouls": 82,
+   "shotsOnTarget": 34,
+   "goals": 4
+  },
+  "Belgium": {
+   "fouls": 90,
+   "shotsOnTarget": 28,
+   "goals": 14
+  },
+  "Egypt": {
+   "fouls": 103,
+   "shotsOnTarget": 30,
+   "goals": 4
+  },
+  "Saudi Arabia": {
+   "fouls": 90,
+   "shotsOnTarget": 66,
+   "goals": 5
+  },
+  "Uruguay": {
+   "fouls": 134,
+   "shotsOnTarget": 75,
+   "goals": 11
+  },
+  "South Africa": {
+   "fouls": 78,
+   "shotsOnTarget": 74,
+   "goals": 4
+  },
+  "Haiti": {
+   "fouls": 92,
+   "shotsOnTarget": 67,
+   "goals": 13
+  },
+  "Turkey": {
+   "fouls": 83,
+   "shotsOnTarget": 60,
+   "goals": 11
+  },
+  "Ecuador": {
+   "fouls": 100,
+   "shotsOnTarget": 70,
+   "goals": 3
+  },
+  "Spain": {
+   "fouls": 113,
+   "shotsOnTarget": 78,
+   "goals": 4
+  },
+  "Cape Verde": {
+   "fouls": 76,
+   "shotsOnTarget": 63,
+   "goals": 3
+  }
+ },
+ "yellowCards": [
+  {
+   "name": "Granit Xhaka",
+   "country": "Switzerland",
+   "cards": 4
+  },
+  {
+   "name": "Casemiro",
+   "country": "Brazil",
+   "cards": 4
+  },
+  {
+   "name": "Edson Álvarez",
+   "country": "Mexico",
+   "cards": 3
+  },
+  {
+   "name": "Federico Valverde",
+   "country": "Uruguay",
+   "cards": 3
+  },
+  {
+   "name": "Sofyan Amrabat",
+   "country": "Morocco",
+   "cards": 3
+  },
+  {
+   "name": "Wataru Endo",
+   "country": "Japan",
+   "cards": 3
+  },
+  {
+   "name": "Tyler Adams",
+   "country": "USA",
+   "cards": 2
+  },
+  {
+   "name": "Joshua Kimmich",
+   "country": "Germany",
+   "cards": 2
+  },
+  {
+   "name": "Amadou Onana",
+   "country": "Belgium",
+   "cards": 2
+  },
+  {
+   "name": "Aziz Behich",
+   "country": "Australia",
+   "cards": 2
+  }
+ ]
+}

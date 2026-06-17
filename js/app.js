@@ -1,15 +1,16 @@
 // app.js — orchestration: load, render, tabs, theme, search/filter, live polling.
 
 import { CONFIG } from "./config.js";
-import { loadBase, applyLive } from "./api.js";
+import { loadBase, applyLive, loadTeamStats } from "./api.js";
 import { computeStandings } from "./standings.js";
 import { computeScorers, goalStats } from "./scorers.js";
 import { computeFacts } from "./facts.js";
+import { computeDiscipline } from "./discipline.js";
 import { renderCharts, rethemeCharts } from "./charts.js";
 import * as UI from "./render.js";
 
 const $ = (s) => document.querySelector(s);
-const state = { matches: [], source: "", online: true };
+const state = { matches: [], source: "", online: true, teamStats: { teams: {}, yellowCards: [] } };
 
 // ---- theme ----
 function initTheme() {
@@ -37,6 +38,7 @@ function initTabs() {
     const id = btn.dataset.tab;
     document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("is-active", p.id === id));
     if (id === "stats" || id === "overview") renderCharts();
+    if (id === "live") UI.renderSocial();
   });
 }
 
@@ -70,7 +72,9 @@ function renderAll() {
   UI.renderAggregates(facts);
   UI.renderFacts(facts);
   UI.animateCounts($("#agg-grid"));
-  renderCharts(stats, facts);
+  const disc = computeDiscipline(state.teamStats);
+  UI.renderDiscipline(disc);
+  renderCharts(stats, facts, disc);
 
   // Live indicator + freshness.
   const liveCount = state.matches.filter((m) => m.status === "live").length;
@@ -95,10 +99,11 @@ async function boot() {
   initMatchControls();
 
   try {
-    const data = await loadBase();
+    const [data, teamStats] = await Promise.all([loadBase(), loadTeamStats()]);
     state.matches = data.matches;
     state.source = data.source;
     state.online = data.online;
+    state.teamStats = teamStats;
     UI.fillMatchFilter(state.matches);
     renderAll();
   } catch (err) {

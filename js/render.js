@@ -362,6 +362,92 @@ function fact(icon, label, value, detail) {
   </div>`;
 }
 
+// ---- discipline & shooting efficacy ----
+export function renderDiscipline(disc) {
+  // KPI cards: most fouls + least efficacy (shots per goal).
+  const kpiWrap = document.getElementById("disc-kpis");
+  if (kpiWrap) {
+    const mf = disc.mostFouls, le = disc.leastEfficacy;
+    const cards = [];
+    if (mf) cards.push(`
+      <div class="fact">
+        <div class="fact-icon">⚠️</div>
+        <div class="fact-body">
+          <div class="fact-value">${fmtInt(mf.fouls)} faltas</div>
+          <div class="fact-label">Selección más infractora</div>
+          <div class="fact-detail">${flagImg(mf.name)} ${esc(mf.name)}</div>
+        </div>
+      </div>`);
+    if (le) cards.push(`
+      <div class="fact">
+        <div class="fact-icon">🎯</div>
+        <div class="fact-body">
+          <div class="fact-value">${le.ratio.toFixed(1)} tiros/gol</div>
+          <div class="fact-label">Menor eficacia (tiros a arco ÷ goles)</div>
+          <div class="fact-detail">${flagImg(le.name)} ${esc(le.name)} · ${le.shots} tiros · ${le.goals} goles</div>
+        </div>
+      </div>`);
+    kpiWrap.innerHTML = cards.join("");
+  }
+
+  // Top-10 fouls table.
+  const tbl = document.getElementById("fouls-table");
+  if (tbl) {
+    const rows = disc.foulsRanking.slice(0, 10);
+    tbl.innerHTML = `
+      <table class="rank-table">
+        <thead><tr><th>#</th><th style="text-align:left">Selección</th><th>Faltas</th></tr></thead>
+        <tbody>${rows.map((r, i) => `
+          <tr>
+            <td class="rk">${i + 1}</td>
+            <td class="team">${flagImg(r.name)}<span>${esc(r.name)}</span></td>
+            <td class="val">${fmtInt(r.fouls)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`;
+  }
+}
+
+// ---- social feeds (X + Instagram) for the live tab ----
+export function renderSocial() {
+  const wrap = document.getElementById("social-wrap");
+  if (!wrap || wrap.dataset.ready) return;
+  wrap.dataset.ready = "1";
+  wrap.innerHTML = `
+    <div class="social-grid">
+      <div class="card social-card">
+        <h3>𝕏 · @FIFAWorldCup</h3>
+        <div class="social-embed">
+          <a class="twitter-timeline" data-theme="dark" data-height="520" data-chrome="noheader nofooter transparent"
+             href="https://twitter.com/FIFAWorldCup?ref_src=twsrc%5Etfw">Publicaciones de @FIFAWorldCup</a>
+        </div>
+        <a class="social-link" href="https://x.com/FIFAWorldCup" target="_blank" rel="noopener">Abrir en X ↗</a>
+      </div>
+      <div class="card social-card">
+        <h3>📸 · @fifaworldcup</h3>
+        <div class="social-embed ig">
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/fifaworldcup/"
+            data-instgrm-version="14"></blockquote>
+          <div class="ig-fallback">
+            <p>Sigue la cobertura oficial en Instagram para fotos y reels del torneo.</p>
+          </div>
+        </div>
+        <a class="social-link" href="https://www.instagram.com/fifaworldcup/" target="_blank" rel="noopener">Abrir en Instagram ↗</a>
+      </div>
+    </div>`;
+
+  // Load widget scripts once (best-effort; links remain if they don't load).
+  loadScript("https://platform.twitter.com/widgets.js", () => window.twttr?.widgets?.load(wrap));
+  loadScript("https://www.instagram.com/embed.js", () => window.instgrm?.Embeds?.process());
+}
+
+function loadScript(src, onload) {
+  if (document.querySelector(`script[src="${src}"]`)) { onload?.(); return; }
+  const s = document.createElement("script");
+  s.src = src; s.async = true; s.onload = onload;
+  document.body.appendChild(s);
+}
+
 // Small count-up animation for overview numbers.
 export function animateCounts(root = document) {
   for (const el of root.querySelectorAll("[data-count]")) {

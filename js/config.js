@@ -9,6 +9,10 @@ export const CONFIG = {
   // Committed offline fallback (served from this site) so we never hard-fail.
   FALLBACK_DATA_URL: "./data/worldcup.json",
 
+  // Curated stats layer (fouls, shots on target, yellow cards) that openfootball
+  // doesn't provide. Swap this URL for a live provider to get instant data.
+  TEAM_STATS_URL: "./data/teamstats.json",
+
   // Optional real-time community API (CORS enabled). Best-effort enhancement only:
   // if it is unreachable / requires auth, the dashboard keeps working on base data.
   LIVE_API_BASE: "https://worldcup26.ir",

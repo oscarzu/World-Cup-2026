@@ -31,13 +31,13 @@
 
   <nav class="tabs" id="tabs" aria-label="Secciones">
     <button class="tab is-active" data-tab="overview">Resumen</button>
+    <button class="tab" data-tab="stats">Estadísticas</button>
     <button class="tab" data-tab="live">En vivo</button>
     <button class="tab" data-tab="matches">Partidos</button>
     <button class="tab" data-tab="standings">Grupos</button>
     <button class="tab" data-tab="bracket">Eliminatorias</button>
     <button class="tab" data-tab="scorers">Goleadores</button>
     <button class="tab" data-tab="venues">Sedes</button>
-    <button class="tab" data-tab="stats">Estadísticas</button>
   </nav>
 
   <main id="app">
@@ -66,11 +66,27 @@
           <div class="chart-box"><canvas id="chart-overview"></canvas></div>
         </div>
       </div>
+
+      <h3 class="section-title">Reglas esenciales de esta Copa</h3>
+      <p class="section-sub">Lo nuevo que debes saber para el Mundial 2026.</p>
+      <div class="rules-grid">
+        <div class="rule"><span class="rule-ic">🌎</span><div><b>48 selecciones</b><p>Formato ampliado: 12 grupos de 4 equipos, 104 partidos en total.</p></div></div>
+        <div class="rule"><span class="rule-ic">🪜</span><div><b>Nueva ronda de 32</b><p>Avanzan los 2 primeros de cada grupo + los 8 mejores terceros (32 a eliminatorias).</p></div></div>
+        <div class="rule"><span class="rule-ic">👕</span><div><b>Plantillas de 26</b><p>Cada selección puede registrar hasta 26 jugadores (y 26 en convocatoria por partido).</p></div></div>
+        <div class="rule"><span class="rule-ic">🔁</span><div><b>5 cambios</b><p>Hasta 5 sustituciones en 3 ventanas, más un cambio extra por conmoción cerebral.</p></div></div>
+        <div class="rule"><span class="rule-ic">🤖</span><div><b>VAR y fuera de lugar semiautomático</b><p>Tecnología de offside semiautomática; el árbitro anuncia por altavoz las decisiones del VAR.</p></div></div>
+        <div class="rule"><span class="rule-ic">⏱️</span><div><b>Tiempo añadido estricto</b><p>Se compensa con precisión el tiempo perdido; 8 s máximo para que el portero suelte el balón (saque de banda en contra si se excede).</p></div></div>
+        <div class="rule"><span class="rule-ic">🏟️</span><div><b>16 sedes, 3 países</b><p>Canadá, México y EE. UU.; la final será en el MetLife Stadium (Nueva York/Nueva Jersey).</p></div></div>
+        <div class="rule"><span class="rule-ic">🗓️</span><div><b>39 días de torneo</b><p>Del 11 de junio al 19 de julio de 2026, la Copa del Mundo más larga de la historia.</p></div></div>
+      </div>
     </section>
 
     <!-- Live -->
     <section id="live" class="panel">
       <div id="live-feed" class="live-feed"></div>
+      <h3 class="section-title">Redes en vivo</h3>
+      <p class="section-sub">Cobertura oficial del torneo en X e Instagram.</p>
+      <div id="social-wrap"></div>
     </section>
 
     <!-- Matches -->
@@ -122,6 +138,18 @@
         <div class="card"><h3>Goles por grupo</h3><div class="chart-box"><canvas id="chart-groups"></canvas></div></div>
         <div class="card"><h3>Selecciones más goleadoras</h3><div class="chart-box"><canvas id="chart-teams"></canvas></div></div>
         <div class="card"><h3>Momentos del torneo</h3><div class="chart-box"><canvas id="chart-moments"></canvas></div></div>
+      </div>
+
+      <h3 class="section-title">Disciplina y eficacia</h3>
+      <p class="section-sub">Faltas, tarjetas y puntería por selección (datos ilustrativos).</p>
+      <div class="facts-grid" id="disc-kpis"></div>
+      <div class="charts-grid">
+        <div class="card"><h3>Selecciones con más faltas</h3><div class="chart-box"><canvas id="chart-fouls"></canvas></div></div>
+        <div class="card"><h3>Jugadores con más amarillas</h3><div class="chart-box"><canvas id="chart-cards"></canvas></div></div>
+      </div>
+      <div class="card" style="margin-top:1.2rem">
+        <h3>Top 10 selecciones con más faltas</h3>
+        <div id="fouls-table"></div>
       </div>
     </section>
   </main>
