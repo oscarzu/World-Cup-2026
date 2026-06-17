@@ -108,18 +108,25 @@ function liveStatusArgs() {
 }
 
 async function refreshLive() {
-  const [live, cards] = await Promise.allSettled([
-    AF.fetchLiveMatches(), AF.fetchTopYellowCards(),
-  ]);
-  let changed = false;
-  if (live.status === "fulfilled") {
-    state.liveMatches = live.value; state.liveProvider = true;
-    state.liveUpdatedAt = Date.now(); changed = true;
+  try {
+    const snap = await AF.fetchSnapshot();
+    state.liveMatches = snap.live;
+    state.liveProvider = true;
+    state.liveUpdatedAt = snap.updatedAt || Date.now(); // server time → same for everyone
+    if (snap.yellowCards.length) {
+      state.teamStats = { ...state.teamStats, yellowCards: snap.yellowCards };
+    }
+    // Our own accumulated team dataset (fouls/shots/goals) overrides curated when present.
+    try {
+      const teams = await AF.fetchLiveTeamStats();
+      if (teams && Object.keys(teams).length) {
+        state.teamStats = { ...state.teamStats, teams };
+      }
+    } catch (_) { /* keep curated teams */ }
+    renderAll();
+  } catch (_) {
+    /* proxy unreachable / no data → keep curated, do not flip provider */
   }
-  if (cards.status === "fulfilled" && cards.value.length) {
-    state.teamStats = { ...state.teamStats, yellowCards: cards.value }; changed = true;
-  }
-  if (changed) renderAll();
   UI.renderLiveStatus(liveStatusArgs());
 }
 

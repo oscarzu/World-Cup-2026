@@ -1,74 +1,74 @@
-# Real-time data proxy (API-Football → dashboard)
+# Shared real-time collector (API-Football → KV → dashboard)
 
-This Cloudflare Worker lets the static dashboard show **real, near-live** data
-(live scores, live fouls/shots, top yellow-card players) from
-[API-Football](https://www.api-football.com/) **without exposing your API key**
-in the browser, and without CORS errors.
+This Cloudflare Worker turns API-Football into a **single shared source of
+truth** for the dashboard:
 
 ```
-browser ──▶ Cloudflare Worker (holds key, adds CORS, caches) ──▶ API-Football
+            (every 5 min, ONE consumer)              (unlimited reads, 0 API cost)
+Cron Trigger ─────────────────────────▶ Worker ──▶ KV store ──▶ every visitor's browser
+                                          │
+                                          └─ accumulates our own dataset (agg)
 ```
+
+- A **Cron Trigger** runs the Worker on a schedule and calls API-Football
+  **once**, then stores the normalized result in **KV**.
+- Browsers only **read** the stored snapshot, so everyone sees the **same data**
+  (even after a refresh) and API usage does **not** grow with traffic.
+- A **daily budget counter** caps upstream calls (`MAX_DAILY`, default 95) so you
+  never blow the free 100/day quota — once spent, the last snapshot keeps serving.
+- Each run also merges live fouls/shots/goals into `agg`, building **your own
+  dataset** over the tournament (served at `/teamstats`).
 
 ## 1. Get an API-Football key
+Create a free account at https://dashboard.api-football.com/ (the direct
+`api-sports.io` plan, not RapidAPI) and copy your key.
 
-1. Create a free account at https://dashboard.api-football.com/ (direct
-   `api-sports.io` plan — **not** the RapidAPI variant, which uses a different
-   header).
-2. Copy your API key. The free plan allows **100 requests/day** — the Worker
-   caches responses (20s for live, 30min otherwise) to stay within it.
-
-## 2. Deploy the Worker
-
-You need Node.js installed. From this `worker/` folder:
-
+## 2. Create the KV store (once)
+From this `worker/` folder:
 ```bash
-npm install -g wrangler        # or: npm i -D wrangler
-wrangler login                 # opens the browser to authorize Cloudflare
-wrangler secret put API_FOOTBALL_KEY   # paste your key when prompted (stays server-side)
-wrangler deploy
+npx wrangler kv namespace create WC26
+```
+It prints something like:
+```
+[[kv_namespaces]]
+binding = "WC26"
+id = "abcd1234..."
+```
+Copy that `id` into **`wrangler.toml`** (replace `PASTE_YOUR_KV_NAMESPACE_ID_HERE`).
+
+## 3. Set the secret + deploy
+```bash
+npx wrangler login                       # if not already
+npx wrangler secret put API_FOOTBALL_KEY # paste your key (stays server-side)
+npx wrangler deploy                      # registers the worker, KV binding and 5-min cron
 ```
 
-`wrangler deploy` prints your Worker URL, e.g.:
-
+## 4. First fill (optional)
+The cron fires every 5 min; to populate immediately, open once:
 ```
-https://wc26-football-proxy.<your-subdomain>.workers.dev
+https://wc26-football-proxy.<your-subdomain>.workers.dev/refresh
 ```
-
-(Optional, recommended) Lock CORS to your site: edit `wrangler.toml`, uncomment
-the `[vars]` block, set `ALLOW_ORIGIN = "https://oscarzu.github.io"`, then
-`wrangler deploy` again.
-
-## 3. Point the dashboard at the Worker
-
-Edit **`js/config.js`** and set:
-
-```js
-LIVE_PROXY_URL: "https://wc26-football-proxy.<your-subdomain>.workers.dev",
+Then check it stored data:
 ```
+https://wc26-football-proxy.<your-subdomain>.workers.dev/health
+```
+You should see `apiCallsUsedToday` and a `snapshotUpdatedAt` timestamp.
 
-Commit & push. That's it — when a proxy URL is present the dashboard switches to
-the live provider automatically:
+## 5. Point the dashboard at it
+In **`js/config.js`** set `LIVE_PROXY_URL` to your Worker URL, commit & push.
+(That's already done if you've configured it before — no change needed.)
 
-- **En vivo**: live fixtures with elapsed minute, goal timeline, and live
-  **fouls / shots on goal** per team.
-- **Estadísticas → Jugadores con más amarillas**: real top yellow-card list.
-- The footer shows `Fuente: API-Football (en vivo)`.
+## Routes (read-only, browser-facing)
+- `GET /snapshot`   → `{ updatedAt, live:[…], yellowCards:[…] }` (what the UI reads)
+- `GET /teamstats`  → `{ teams: { name: { fouls, shotsOnTarget, goals } } }` (our own accumulated data)
+- `GET /health`     → status + API calls used today
+- `GET /refresh`    → force a collection now (still respects the daily budget)
 
-If the proxy is empty, unreachable, or rate-limited, the dashboard silently
-falls back to the bundled curated data — it never hard-fails.
+## Tuning (in `wrangler.toml` → `[vars]`)
+- `MAX_DAILY` — hard cap on API-Football calls/day (default 95).
+- `ENRICH_LIMIT` — how many live fixtures get fouls/shots each run (default 4).
+- Cron cadence — edit `crons = ["*/5 * * * *"]` (e.g. `*/10` to stretch the quota).
+- `ALLOW_ORIGIN` — lock CORS to your site instead of `*`.
 
-## Endpoints the Worker allows (read-only)
-
-`/fixtures`, `/fixtures/statistics`, `/fixtures/events`, `/players/topscorers`,
-`/players/topyellowcards`, `/players/topredcards`, `/standings`,
-`/teams/statistics` — all under league `1` (FIFA World Cup), season `2026`.
-
-## Quota note
-
-Per-team, full-tournament aggregates (e.g. total fouls per nation across all
-104 matches) would require one `/fixtures/statistics` call per fixture, which
-can exceed the free 100/day quota. The dashboard therefore keeps the curated
-`data/teamstats.json` for the tournament-wide fouls table/efficacy, and uses
-the live provider for the cheap, high-value calls (live matches + the
-`topyellowcards` leaderboard). Upgrade your API-Football plan if you want to
-aggregate everything live.
+For sustained 24/7 live coverage, raise the cadence or upgrade the API-Football
+plan; the budget counter guarantees you never exceed the free tier regardless.
