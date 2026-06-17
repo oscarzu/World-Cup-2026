@@ -18,8 +18,15 @@ async function api(path, params = {}) {
   const res = await fetch(`${base}${path}${qs ? "?" + qs : ""}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`proxy HTTP ${res.status}`);
   const json = await res.json();
+  // API-Football reports problems (rate limit, bad key, …) in `errors`.
+  const errs = json.errors;
+  const hasErr = Array.isArray(errs) ? errs.length : errs && Object.keys(errs).length;
+  if (hasErr) throw new Error("api-football: " + JSON.stringify(errs));
   return json.response || [];
 }
+
+// Max live fixtures to enrich with events+statistics per refresh (quota guard).
+const MAX_ENRICH = 6;
 
 const LIVE_SHORT = new Set(["1H", "2H", "HT", "ET", "BT", "P", "LIVE"]);
 function mapStatus(short) {
@@ -66,10 +73,13 @@ function mapFixture(fx, events = [], stats = []) {
 export async function fetchLiveMatches() {
   const fixtures = await api("/fixtures", { league: LEAGUE, season: SEASON, live: "all" });
   const out = [];
-  for (const fx of fixtures) {
+  for (let i = 0; i < fixtures.length; i++) {
+    const fx = fixtures[i];
     let events = [], stats = [];
-    try { events = await api("/fixtures/events", { fixture: fx.fixture.id }); } catch (_) { /* optional */ }
-    try { stats = await api("/fixtures/statistics", { fixture: fx.fixture.id }); } catch (_) { /* optional */ }
+    if (i < MAX_ENRICH) { // only enrich the first few to respect the per-minute quota
+      try { events = await api("/fixtures/events", { fixture: fx.fixture.id }); } catch (_) { /* optional */ }
+      try { stats = await api("/fixtures/statistics", { fixture: fx.fixture.id }); } catch (_) { /* optional */ }
+    }
     out.push(mapFixture(fx, events, stats));
   }
   return out;
