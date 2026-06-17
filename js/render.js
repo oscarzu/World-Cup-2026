@@ -202,6 +202,26 @@ export function renderVenues() {
   }).join("");
 }
 
+// ---- live status legend (cadence + last-updated) ----
+function relTime(ts) {
+  if (!ts) return "—";
+  const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (s < 60) return `hace ${s}s`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `hace ${m} min`;
+  return `hace ${Math.round(m / 60)} h`;
+}
+
+export function renderLiveStatus({ provider, updatedAt, intervalMin }) {
+  const el = document.getElementById("live-status");
+  if (!el) return;
+  const src = provider ? "API-Football" : "datos del torneo (sin proveedor en vivo)";
+  el.innerHTML = `
+    <span class="live-status-dot ${provider ? "on" : ""}"></span>
+    <span class="live-status-txt">Fuente: <b>${src}</b> · se actualiza cada ${intervalMin} min</span>
+    <span class="live-status-ago">Actualizado ${relTime(updatedAt)}</span>`;
+}
+
 // ---- live match centre ----
 export function renderLive(matches, upcomingSource = matches) {
   const wrap = $("#live-feed");
