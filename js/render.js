@@ -203,7 +203,7 @@ export function renderVenues() {
 }
 
 // ---- live match centre ----
-export function renderLive(matches) {
+export function renderLive(matches, upcomingSource = matches) {
   const wrap = $("#live-feed");
   if (!wrap) return;
   const live = matches.filter((m) => m.status === "live");
@@ -213,7 +213,7 @@ export function renderLive(matches) {
     return;
   }
   // Nothing live → show the next kickoffs with a countdown.
-  const upcoming = matches.filter((m) => m.status === "scheduled").slice(0, 4);
+  const upcoming = upcomingSource.filter((m) => m.status === "scheduled").slice(0, 4);
   wrap.innerHTML = `
     <div class="live-empty card">
       <div class="live-empty-dot"></div>
@@ -240,10 +240,24 @@ function goalTimeline(m, side) {
 
 function liveCard(m) {
   const h = m.score?.home ?? 0, a = m.score?.away ?? 0;
+  const clock = m.elapsed != null ? `${m.elapsed}'` : "En vivo";
+
+  // Optional live statistics row (only when the provider supplies them).
+  let statsRow = "";
+  const sh = m.stats?.home, sa = m.stats?.away;
+  if (sh && sa && (sh.fouls != null || sh.shots != null)) {
+    const stat = (label, hv, av) => `
+      <div class="ls-row"><span class="ls-h">${hv ?? "–"}</span><span class="ls-k">${label}</span><span class="ls-a">${av ?? "–"}</span></div>`;
+    statsRow = `<div class="live-stats">
+      ${stat("Tiros a arco", sh.shots, sa.shots)}
+      ${stat("Faltas", sh.fouls, sa.fouls)}
+    </div>`;
+  }
+
   return `
   <article class="live-card">
     <div class="live-top">
-      <span class="badge live">● En vivo</span>
+      <span class="badge live">● ${esc(clock)}</span>
       <span class="live-round">${esc(m.round)}</span>
     </div>
     <div class="live-score">
@@ -256,6 +270,7 @@ function liveCard(m) {
       <span class="gl-ball" aria-hidden="true">⚽</span>
       <ul class="gl away">${goalTimeline(m, "away")}</ul>
     </div>
+    ${statsRow}
     <div class="live-venue">📍 ${venueFifa(m.ground)}</div>
   </article>`;
 }
