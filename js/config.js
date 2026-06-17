@@ -79,32 +79,32 @@ export const VENUES = {
   Atlanta: {
     fifa: "Atlanta Stadium", stadium: "Mercedes-Benz Stadium",
     city: "Atlanta", country: "USA",
-    built: 2017, capacity: 71000, cost: "US$1,600 M", img: "Mercedes-Benz Stadium.jpg",
+    built: 2017, capacity: 71000, cost: "US$1,600 M", img: "Falcons Opening Day - MB Stadium.jpg",
   },
   "Boston (Foxborough)": {
     fifa: "Boston Stadium", stadium: "Gillette Stadium",
     city: "Foxborough", country: "USA",
-    built: 2002, capacity: 65878, cost: "US$325 M", img: "Gillette Stadium.jpg",
+    built: 2002, capacity: 65878, cost: "US$325 M", img: "Gillette Stadium.JPG",
   },
   "Dallas (Arlington)": {
     fifa: "Dallas Stadium", stadium: "AT&T Stadium",
     city: "Arlington", country: "USA",
-    built: 2009, capacity: 80000, cost: "US$1,300 M", img: "Cowboys Stadium full.jpg",
+    built: 2009, capacity: 80000, cost: "US$1,300 M", img: "AT&T Stadium 2022-08-24.jpg",
   },
   "Guadalajara (Zapopan)": {
     fifa: "Estadio Guadalajara", stadium: "Estadio Akron",
     city: "Guadalajara", country: "Mexico",
-    built: 2010, capacity: 49850, cost: "US$197 M", img: "Estadio Akron.jpg",
+    built: 2010, capacity: 49850, cost: "US$197 M", img: "Estadio Omnilife Chivas.jpg",
   },
   Houston: {
     fifa: "Houston Stadium", stadium: "NRG Stadium",
     city: "Houston", country: "USA",
-    built: 2002, capacity: 72220, cost: "US$352 M", img: "NRG Stadium.jpg",
+    built: 2002, capacity: 72220, cost: "US$352 M", img: "Reliant stadium.jpg",
   },
   "Kansas City": {
     fifa: "Kansas City Stadium", stadium: "Arrowhead Stadium",
     city: "Kansas City", country: "USA",
-    built: 1972, capacity: 76416, cost: "US$43 M (1972)", img: "Arrowhead Stadium.jpg",
+    built: 1972, capacity: 76416, cost: "US$43 M (1972)", img: "Arrowhead Stadium 2010.JPG",
   },
   "Los Angeles (Inglewood)": {
     fifa: "Los Angeles Stadium", stadium: "SoFi Stadium",
@@ -114,7 +114,7 @@ export const VENUES = {
   "Mexico City": {
     fifa: "Estadio Ciudad de México", stadium: "Estadio Azteca",
     city: "Ciudad de México", country: "Mexico",
-    built: 1966, capacity: 83264, cost: "US$26 M (1966)", img: "Estadio Azteca.jpg",
+    built: 1966, capacity: 83264, cost: "US$26 M (1966)", img: "Estadio Azteca 1.JPG",
   },
   "Miami (Miami Gardens)": {
     fifa: "Miami Stadium", stadium: "Hard Rock Stadium",
@@ -124,36 +124,36 @@ export const VENUES = {
   "Monterrey (Guadalupe)": {
     fifa: "Estadio Monterrey", stadium: "Estadio BBVA",
     city: "Monterrey", country: "Mexico",
-    built: 2015, capacity: 53500, cost: "US$200 M", img: "Estadio BBVA Bancomer.jpg",
+    built: 2015, capacity: 53500, cost: "US$200 M", img: "Estadio BBVA Bancomer (1).jpg",
   },
   "New York/New Jersey (East Rutherford)": {
     fifa: "New York New Jersey Stadium", stadium: "MetLife Stadium",
     city: "East Rutherford", country: "USA",
-    built: 2010, capacity: 82500, cost: "US$1,600 M", img: "MetLife Stadium (May 2014).jpg",
+    built: 2010, capacity: 82500, cost: "US$1,600 M", img: "MetLife Stadium exterior Super Bowl XLVIII.jpg",
   },
   Philadelphia: {
     fifa: "Philadelphia Stadium", stadium: "Lincoln Financial Field",
     city: "Philadelphia", country: "USA",
-    built: 2003, capacity: 69176, cost: "US$512 M", img: "Lincoln Financial Field.jpg",
+    built: 2003, capacity: 69176, cost: "US$512 M", img: "Lincoln Financial Field, Philadelphia, 2024.jpg",
   },
   "San Francisco Bay Area (Santa Clara)": {
     fifa: "San Francisco Bay Area Stadium", stadium: "Levi's Stadium",
     city: "Santa Clara", country: "USA",
-    built: 2014, capacity: 68500, cost: "US$1,300 M", img: "Levi's Stadium.jpg",
+    built: 2014, capacity: 68500, cost: "US$1,300 M", img: "Levi's Stadium from air.jpg",
   },
   Seattle: {
     fifa: "Seattle Stadium", stadium: "Lumen Field",
     city: "Seattle", country: "USA",
-    built: 2002, capacity: 68740, cost: "US$430 M", img: "Lumen Field.jpg",
+    built: 2002, capacity: 68740, cost: "US$430 M", img: "Artistic Design on Exterior of Lumen Field Stadium.jpg",
   },
   Toronto: {
     fifa: "Toronto Stadium", stadium: "BMO Field",
     city: "Toronto", country: "Canada",
-    built: 2007, capacity: 45500, cost: "CA$62.9 M", img: "BMO Field.jpg",
+    built: 2007, capacity: 45500, cost: "CA$62.9 M", img: "BMO Field, Toronto, Ontario (29969149766).jpg",
   },
   Vancouver: {
     fifa: "Vancouver Stadium", stadium: "BC Place",
     city: "Vancouver", country: "Canada",
-    built: 1983, capacity: 54500, cost: "CA$126 M (1983)", img: "BC Place.jpg",
+    built: 1983, capacity: 54500, cost: "CA$126 M (1983)", img: "BC Place (Vancouver).jpg",
   },
 };
