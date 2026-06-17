@@ -4,6 +4,7 @@ import { CONFIG } from "./config.js";
 import { loadBase, applyLive } from "./api.js";
 import { computeStandings } from "./standings.js";
 import { computeScorers, goalStats } from "./scorers.js";
+import { computeFacts } from "./facts.js";
 import { renderCharts, rethemeCharts } from "./charts.js";
 import * as UI from "./render.js";
 
@@ -56,6 +57,7 @@ function initMatchControls() {
 // ---- rendering pass ----
 function renderAll() {
   const stats = goalStats(state.matches);
+  const facts = computeFacts(state.matches);
   UI.renderOverview(state.matches, stats, CONFIG.TOURNAMENT);
   UI.animateCounts($("#overview-stats"));
   UI.renderMatches(state.matches);
@@ -64,13 +66,16 @@ function renderAll() {
   UI.renderScorers(computeScorers(state.matches));
   UI.renderVenues();
   UI.renderStatsKpis(stats, state.matches);
-  renderCharts(stats);
+  UI.renderAggregates(facts);
+  UI.renderFacts(facts);
+  UI.animateCounts($("#agg-grid"));
+  renderCharts(stats, facts);
 
   // Live indicator + freshness.
   const liveCount = state.matches.filter((m) => m.status === "live").length;
   $("#live-indicator").hidden = liveCount === 0;
   $("#updated").textContent = "Act. " + new Date().toLocaleTimeString("es-MX",
-    { hour: "2-digit", minute: "2-digit" });
+    { timeZone: CONFIG.TIMEZONE, hour: "2-digit", minute: "2-digit" }) + " " + CONFIG.TIMEZONE_LABEL;
   $("#data-source").textContent =
     `Fuente: ${state.source}${state.online ? "" : " (sin conexión)"} · ` +
     `${state.matches.filter((m) => m.score?.home != null).length} partidos con marcador.`;
