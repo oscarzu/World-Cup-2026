@@ -354,6 +354,14 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 .venue-stats .vv { font-size: 0.92rem; font-weight: 700; margin-top: 0.15rem; }
 
 /* ---- live centre ---- */
+.live-status { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.8rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+  padding: 0.5rem 0.9rem; margin-bottom: 1.1rem; font-size: 0.8rem; color: var(--muted);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
+.live-status b { color: var(--text); }
+.live-status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: 0 0 auto; }
+.live-status-dot.on { background: var(--accent); box-shadow: 0 0 0 0 var(--accent); animation: pulse 1.6s infinite; }
+.live-status-ago { margin-left: auto; color: var(--text); font-weight: 600; }
 .live-feed { display: grid; gap: 1.1rem; }
 .live-empty { display: flex; align-items: center; gap: 0.9rem; }
 .live-empty-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--muted); flex: 0 0 auto; }

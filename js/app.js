@@ -14,7 +14,7 @@ const $ = (s) => document.querySelector(s);
 const state = {
   matches: [], source: "", online: true,
   teamStats: { teams: {}, yellowCards: [] },
-  liveMatches: [], liveProvider: false,
+  liveMatches: [], liveProvider: false, liveUpdatedAt: null,
 };
 
 // ---- theme ----
@@ -101,16 +101,50 @@ async function poll() {
 }
 
 // Real-time layer via the API-Football proxy (only when configured).
+function liveStatusArgs() {
+  const hasLive = state.liveMatches.some((m) => m.status === "live");
+  const intervalMin = Math.round((hasLive ? CONFIG.LIVE_POLL : CONFIG.LIVE_POLL_IDLE) / 60000);
+  return { provider: state.liveProvider, updatedAt: state.liveUpdatedAt, intervalMin };
+}
+
 async function refreshLive() {
   const [live, cards] = await Promise.allSettled([
     AF.fetchLiveMatches(), AF.fetchTopYellowCards(),
   ]);
   let changed = false;
-  if (live.status === "fulfilled") { state.liveMatches = live.value; state.liveProvider = true; changed = true; }
+  if (live.status === "fulfilled") {
+    state.liveMatches = live.value; state.liveProvider = true;
+    state.liveUpdatedAt = Date.now(); changed = true;
+  }
   if (cards.status === "fulfilled" && cards.value.length) {
     state.teamStats = { ...state.teamStats, yellowCards: cards.value }; changed = true;
   }
   if (changed) renderAll();
+  UI.renderLiveStatus(liveStatusArgs());
+}
+
+// Adaptive, visibility-aware loop: poll every 5 min while a match is live,
+// back off to 15 min otherwise, and never poll while the tab is hidden.
+let liveTimer = null;
+async function liveTick() {
+  if (document.visibilityState === "visible") {
+    try { await refreshLive(); } catch (_) { /* keep curated */ }
+  }
+  const hasLive = state.liveMatches.some((m) => m.status === "live");
+  clearTimeout(liveTimer);
+  liveTimer = setTimeout(liveTick, hasLive ? CONFIG.LIVE_POLL : CONFIG.LIVE_POLL_IDLE);
+}
+
+function startLiveLoop() {
+  liveTick();
+  // Refresh immediately when the user returns to the tab if data is stale.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    const stale = !state.liveUpdatedAt || (Date.now() - state.liveUpdatedAt) > CONFIG.LIVE_POLL;
+    if (stale) refreshLive();
+  });
+  // Tick the "Actualizado hace…" label without hitting the API.
+  setInterval(() => UI.renderLiveStatus(liveStatusArgs()), 30 * 1000);
 }
 
 // ---- boot ----
@@ -137,8 +171,8 @@ async function boot() {
   // Real-time provider (API-Football via proxy) if configured; else the
   // best-effort community overlay. Both poll on an interval.
   if (AF.liveEnabled()) {
-    refreshLive();
-    setInterval(refreshLive, CONFIG.LIVE_POLL);
+    UI.renderLiveStatus(liveStatusArgs()); // show legend immediately
+    startLiveLoop();
   } else {
     poll();
     setInterval(poll, CONFIG.POLL_INTERVAL);

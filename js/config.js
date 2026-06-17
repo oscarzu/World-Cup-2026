@@ -26,7 +26,8 @@ export const CONFIG = {
   LIVE_PROXY_URL: "https://wc26-football-proxy.oscarzu.workers.dev",
   LIVE_LEAGUE: 1,     // API-Football league id for the FIFA World Cup
   LIVE_SEASON: 2026,
-  LIVE_POLL: 90 * 1000, // refresh live data every 90s (free-tier quota guard)
+  LIVE_POLL: 5 * 60 * 1000,       // refresh live data every 5 min (only while the tab is visible)
+  LIVE_POLL_IDLE: 15 * 60 * 1000, // back off to 15 min when no match is live
 
   // Cache TTLs (ms).
   BASE_TTL: 60 * 60 * 1000, // base fixtures: 1h

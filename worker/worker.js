@@ -49,8 +49,8 @@ export default {
     const target = API_BASE + path + (url.search || "");
     // Cache aggressively to respect the free tier (10 req/min · 100 req/day).
     let ttl = 1800; // static data (standings, top scorers): 30 min
-    if (url.searchParams.get("live") === "all") ttl = 60;            // live list: 1 min
-    else if (path === "/fixtures/statistics" || path === "/fixtures/events") ttl = 120; // live detail: 2 min
+    if (url.searchParams.get("live") === "all") ttl = 300;          // live list: 5 min
+    else if (path === "/fixtures/statistics" || path === "/fixtures/events") ttl = 300; // live detail: 5 min
 
     // Edge cache keyed by the upstream URL.
     const cache = caches.default;
