@@ -40,10 +40,12 @@ export default {
       const today = new Date().toISOString().slice(0, 10);
       const used = Number((await env.WC26.get(`budget:${today}`)) || 0);
       const snap = JSON.parse((await env.WC26.get("snapshot")) || "{}");
-      return json({ ok: true, date: today, apiCallsUsedToday: used, snapshotUpdatedAt: snap.updatedAt || null }, 200, cors);
+      const lastResult = JSON.parse((await env.WC26.get("lastResult")) || "null");
+      return json({ ok: true, date: today, apiCallsUsedToday: used,
+        snapshotUpdatedAt: snap.updatedAt || null, lastResult }, 200, cors);
     }
-    // On-demand refresh (also respects the daily budget). Handy for first run.
-    if (path === "/refresh") { await collect(env); return json({ ok: true }, 200, cors); }
+    // On-demand refresh (also respects the daily budget). Returns diagnostics.
+    if (path === "/refresh") { const r = await collect(env); return json(r, 200, cors); }
 
     return json({ error: "not found", routes: ["/snapshot", "/teamstats", "/health", "/refresh"] }, 404, cors);
   },
@@ -55,8 +57,12 @@ export default {
 };
 
 // Pull from API-Football (budget-guarded) and persist snapshot + aggregates.
+// Returns a diagnostics object so /refresh can surface what happened.
 async function collect(env) {
-  if (!env.API_FOOTBALL_KEY || !env.WC26) return;
+  const result = { ok: false, fixtures: 0, live: 0, yellowCards: 0, apiCalls: 0, error: null };
+  if (!env.API_FOOTBALL_KEY) { result.error = "API_FOOTBALL_KEY secret not set"; return result; }
+  if (!env.WC26) { result.error = "KV namespace 'WC26' not bound"; return result; }
+
   const LEAGUE = Number(env.LIVE_LEAGUE || 1);
   const SEASON = Number(env.LIVE_SEASON || 2026);
   const MAX = Number(env.MAX_DAILY || 95);
@@ -65,7 +71,8 @@ async function collect(env) {
   const today = new Date().toISOString().slice(0, 10);
   const bKey = `budget:${today}`;
   let used = Number((await env.WC26.get(bKey)) || 0);
-  if (used >= MAX) return; // preserve quota; serve last stored snapshot
+  const startUsed = used;
+  if (used >= MAX) { result.error = `daily budget reached (${used}/${MAX})`; return result; }
 
   const af = async (path, params) => {
     const u = new URL(API_BASE + path);
@@ -73,14 +80,16 @@ async function collect(env) {
     used++;
     const r = await fetch(u, { headers: { "x-apisports-key": env.API_FOOTBALL_KEY } });
     const j = await r.json();
-    if (j.errors && (Array.isArray(j.errors) ? j.errors.length : Object.keys(j.errors).length)) {
-      throw new Error("api-football: " + JSON.stringify(j.errors));
+    const e = j.errors;
+    if (e && (Array.isArray(e) ? e.length : Object.keys(e).length)) {
+      throw new Error(typeof e === "object" ? JSON.stringify(e) : String(e));
     }
     return j.response || [];
   };
 
   try {
     const fixtures = await af("/fixtures", { league: LEAGUE, season: SEASON, live: "all" });
+    result.fixtures = fixtures.length;
     const agg = JSON.parse((await env.WC26.get("agg")) || '{"fixtures":{}}');
     const live = [];
 
@@ -92,29 +101,33 @@ async function collect(env) {
         try { stats = await af("/fixtures/statistics", { fixture: fx.fixture.id }); } catch (_) {}
       }
       live.push(mapFixture(fx, events, stats));
-      if (stats.length) agg.fixtures[fx.fixture.id] = extractAgg(fx, stats); // build our own data
+      if (stats.length) agg.fixtures[fx.fixture.id] = extractAgg(fx, stats);
     }
+    result.live = live.length;
 
     let yellowCards = [];
     if (used < MAX) {
-      try {
-        const rows = await af("/players/topyellowcards", { league: LEAGUE, season: SEASON });
-        yellowCards = rows.map((r) => ({
-          name: r.player?.name,
-          country: r.statistics?.[0]?.team?.name,
-          cards: (r.statistics || []).reduce((n, s) => n + (s.cards?.yellow || 0), 0),
-        })).filter((x) => x.name && x.cards).slice(0, 10);
-      } catch (_) {}
+      const rows = await af("/players/topyellowcards", { league: LEAGUE, season: SEASON });
+      yellowCards = rows.map((r) => ({
+        name: r.player?.name,
+        country: r.statistics?.[0]?.team?.name,
+        cards: (r.statistics || []).reduce((n, s) => n + (s.cards?.yellow || 0), 0),
+      })).filter((x) => x.name && x.cards).slice(0, 10);
     }
+    result.yellowCards = yellowCards.length;
 
     agg.updatedAt = Date.now();
     await env.WC26.put("snapshot", JSON.stringify({ updatedAt: Date.now(), live, yellowCards }));
     await env.WC26.put("agg", JSON.stringify(agg));
-  } catch (_) {
-    // leave the previous snapshot in place
+    result.ok = true;
+  } catch (e) {
+    result.error = String(e && e.message ? e.message : e);
   } finally {
+    result.apiCalls = used - startUsed;
     await env.WC26.put(bKey, String(used), { expirationTtl: 172800 });
+    await env.WC26.put("lastResult", JSON.stringify({ ...result, at: Date.now() }));
   }
+  return result;
 }
 
 // ---- mapping helpers (server-side, so the client just consumes JSON) ----
