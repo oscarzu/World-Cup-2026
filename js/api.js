@@ -184,6 +184,16 @@ export async function loadTeamStats() {
   }
 }
 
+// Per-matchday efficacy history (illustrative). Never throws.
+export async function loadEfficacyHistory() {
+  try {
+    const d = await cachedFetch(CONFIG.EFFICACY_HISTORY_URL, CONFIG.BASE_TTL);
+    return Array.isArray(d?.history) ? d.history : [];
+  } catch (_) {
+    return [];
+  }
+}
+
 // Try the live API and overlay it; never throws.
 export async function applyLive(matches) {
   try {

@@ -13,6 +13,9 @@ export const CONFIG = {
   // doesn't provide. Swap this URL for a live provider to get instant data.
   TEAM_STATS_URL: "./data/teamstats.json",
 
+  // Per-matchday shooting-efficacy history (illustrative; powers the historical chart).
+  EFFICACY_HISTORY_URL: "./data/efficacy-history.json",
+
   // Optional real-time community API (CORS enabled). Best-effort enhancement only:
   // if it is unreachable / requires auth, the dashboard keeps working on base data.
   LIVE_API_BASE: "https://worldcup26.ir",
@@ -89,6 +92,37 @@ export const FLAGS = {
   "Cabo Verde": "cv", "Türkiye": "tr", Turkiye: "tr",
   "Bosnia and Herzegovina": "ba", "Czech Republic ": "cz",
 };
+
+// Spanish (Mexico) names for selecciones. Display only — flag lookups keep the
+// original key. Falls back to translating knockout placeholders word-by-word.
+export const TEAM_ES = {
+  Germany: "Alemania", Sweden: "Suecia", USA: "Estados Unidos", "United States": "Estados Unidos",
+  Mexico: "México", "South Korea": "Corea del Sur", "Korea Republic": "Corea del Sur",
+  Australia: "Australia", Netherlands: "Países Bajos", Japan: "Japón", Iran: "Irán", "IR Iran": "Irán",
+  "New Zealand": "Nueva Zelanda", "Czech Republic": "República Checa", Czechia: "República Checa",
+  Canada: "Canadá", "Bosnia & Herzegovina": "Bosnia y Herzegovina", "Bosnia and Herzegovina": "Bosnia y Herzegovina",
+  Qatar: "Catar", Switzerland: "Suiza", Brazil: "Brasil", Morocco: "Marruecos", Scotland: "Escocia",
+  Paraguay: "Paraguay", "Curaçao": "Curazao", "Ivory Coast": "Costa de Marfil",
+  "Côte d'Ivoire": "Costa de Marfil", "Cote d'Ivoire": "Costa de Marfil",
+  Tunisia: "Túnez", Belgium: "Bélgica", Egypt: "Egipto", "Saudi Arabia": "Arabia Saudita", Uruguay: "Uruguay",
+  "South Africa": "Sudáfrica", Haiti: "Haití", Turkey: "Turquía", "Türkiye": "Turquía", Turkiye: "Turquía",
+  Ecuador: "Ecuador", Spain: "España", "Cape Verde": "Cabo Verde", "Cabo Verde": "Cabo Verde",
+  Algeria: "Argelia", Argentina: "Argentina", Austria: "Austria", Colombia: "Colombia", Croatia: "Croacia",
+  "DR Congo": "RD Congo", England: "Inglaterra", France: "Francia", Ghana: "Ghana", Iraq: "Irak",
+  Jordan: "Jordania", Norway: "Noruega", Panama: "Panamá", Portugal: "Portugal", Senegal: "Senegal",
+  Uzbekistan: "Uzbekistán", Italy: "Italia", Denmark: "Dinamarca", Poland: "Polonia", Wales: "Gales",
+  Serbia: "Serbia", Nigeria: "Nigeria", Cameroon: "Camerún",
+};
+
+export function teamES(name) {
+  if (!name) return "";
+  if (TEAM_ES[name]) return TEAM_ES[name];
+  return String(name)
+    .replace(/\bWinners?\b/gi, "Ganador")
+    .replace(/\bRunners?-?up\b/gi, "2.º de")
+    .replace(/\bGroup\b/gi, "Grupo")
+    .replace(/\bThird place\b/gi, "Tercer lugar");
+}
 
 // Venue metadata keyed by the "ground" string used in the base data.
 //   fifa    – official tournament name FIFA uses (sponsor-free)

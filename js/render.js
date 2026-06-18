@@ -1,9 +1,10 @@
 // render.js — pure DOM rendering helpers. No data fetching here.
 
-import { VENUES } from "./config.js";
-import { flagUrl, kickoffLabel, kickoffDateTime } from "./api.js";
+import { VENUES, teamES } from "./config.js";
+import { flagUrl, kickoffLabel, kickoffDateTime, kickoffDate } from "./api.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
+const tn = teamES; // selección name → Spanish (es-MX) for display
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -57,12 +58,12 @@ export function matchCard(m, { showGoals = true } = {}) {
 
   return `
   <div class="match ${m.status === "live" ? "is-live" : ""}">
-    <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(m.home.name)}</span></div>
+    <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(tn(m.home.name))}</span></div>
     <div class="center">
       <span class="badge ${st.cls}">${st.label}</span>
       ${center}${pen}
     </div>
-    <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(m.away.name)}</span></div>
+    <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(tn(m.away.name))}</span></div>
     ${goals}
   </div>`;
 }
@@ -84,12 +85,13 @@ export function renderOverview(matches, stats, tournament) {
     `<div class="stat"><div class="num" data-count="${n}">${fmtInt(n)}</div><div class="label">${l}</div></div>`
   ).join("");
 
-  // Live + next 5 upcoming.
+  // Live now + the next kickoffs, ordered chronologically and dated.
   const live = matches.filter((m) => m.status === "live");
-  const upcoming = matches.filter((m) => m.status === "scheduled").slice(0, 6 - live.length);
-  const list = [...live, ...upcoming];
-  $("#overview-live").innerHTML = list.length
-    ? list.map((m) => matchCard(m, { showGoals: false })).join("")
+  const upcoming = matches.filter((m) => m.status === "scheduled")
+    .sort((a, b) => (kickoffDate(a)?.getTime() ?? Infinity) - (kickoffDate(b)?.getTime() ?? Infinity))
+    .slice(0, 6 - live.length);
+  $("#overview-live").innerHTML = (live.length || upcoming.length)
+    ? [...live.map((m) => matchCard(m, { showGoals: false })), ...upcoming.map(upcomingCard)].join("")
     : `<p class="empty">No hay partidos próximos en la programación.</p>`;
 }
 
@@ -125,7 +127,7 @@ export function renderStandings(groupsMap) {
         <tbody>
           ${rows.map((r, i) => `
             <tr class="${i < 2 ? "qual" : ""}">
-              <td class="team">${flagImg(r.name)}<span>${esc(r.name)}</span></td>
+              <td class="team">${flagImg(r.name)}<span>${esc(tn(r.name))}</span></td>
               <td>${r.P}</td><td>${r.W}</td><td>${r.D}</td><td>${r.L}</td>
               <td>${r.GF}</td><td>${r.GA}</td><td>${r.GD > 0 ? "+" : ""}${r.GD}</td>
               <td class="pts">${r.Pts}</td>
@@ -153,8 +155,8 @@ export function renderBracket(matches) {
         const hw = hasScore && hs > as, aw = hasScore && as > hs;
         const sc = (v) => hasScore ? `<span>${v}</span>` : "";
         return `<div class="bk">
-          <div class="r ${hw ? "win" : ""}"><span class="nm">${esc(m.home.name)}</span>${sc(hs)}</div>
-          <div class="r ${aw ? "win" : ""}"><span class="nm">${esc(m.away.name)}</span>${sc(as)}</div>
+          <div class="r ${hw ? "win" : ""}"><span class="nm">${esc(tn(m.home.name))}</span>${sc(hs)}</div>
+          <div class="r ${aw ? "win" : ""}"><span class="nm">${esc(tn(m.away.name))}</span>${sc(as)}</div>
         </div>`;
       }).join("")
     }</div>`;
@@ -169,7 +171,7 @@ export function renderScorers(list) {
     <div class="scorer">
       <span class="rank">${i + 1}</span>
       ${flagImg(s.country)}
-      <span class="who"><div class="nm">${esc(s.name)}</div><div class="ct">${esc(s.country)}</div></span>
+      <span class="who"><div class="nm">${esc(s.name)}</div><div class="ct">${esc(tn(s.country))}</div></span>
       <span class="goals">${s.goals}${s.penalties ? ` <small>(${s.penalties}p)</small>` : ""}</span>
     </div>`).join("");
 }
@@ -191,7 +193,7 @@ export function renderVenues() {
       <div class="venue-body">
         <div class="venue-fifa">${esc(v.fifa)}</div>
         <div class="vn">${esc(v.stadium)}</div>
-        <div class="vc">${esc(v.city)}, ${esc(v.country)}</div>
+        <div class="vc">${esc(v.city)}, ${esc(tn(v.country))}</div>
         <div class="venue-stats">
           <div><span class="vk">Inaugurado</span><span class="vv">${v.built}</span></div>
           <div><span class="vk">Capacidad</span><span class="vv">${fmtInt(v.capacity)}</span></div>
@@ -281,9 +283,9 @@ function liveCard(m) {
       <span class="live-round">${esc(m.round)}</span>
     </div>
     <div class="live-score">
-      <div class="lt home">${flagImg(m.home.name)}<span class="nm">${esc(m.home.name)}</span></div>
+      <div class="lt home">${flagImg(m.home.name)}<span class="nm">${esc(tn(m.home.name))}</span></div>
       <div class="lsc">${h} <span>–</span> ${a}</div>
-      <div class="lt away"><span class="nm">${esc(m.away.name)}</span>${flagImg(m.away.name)}</div>
+      <div class="lt away"><span class="nm">${esc(tn(m.away.name))}</span>${flagImg(m.away.name)}</div>
     </div>
     <div class="live-goals">
       <ul class="gl home">${goalTimeline(m, "home")}</ul>
@@ -298,12 +300,12 @@ function liveCard(m) {
 function upcomingCard(m) {
   return `
   <div class="match">
-    <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(m.home.name)}</span></div>
+    <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(tn(m.home.name))}</span></div>
     <div class="center">
       <span class="badge up">Próximo</span>
       <div class="meta">${esc(kickoffDateTime(m) || kickoffLabel(m) || "Por definir")}</div>
     </div>
-    <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(m.away.name)}</span></div>
+    <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(tn(m.away.name))}</span></div>
   </div>`;
 }
 
@@ -353,7 +355,7 @@ export function renderFacts(facts) {
   const wrap = document.getElementById("facts-grid");
   if (!wrap) return;
 
-  const pair = (m) => m ? `${esc(m.home.name)} vs ${esc(m.away.name)}` : "—";
+  const pair = (m) => m ? `${esc(tn(m.home.name))} vs ${esc(tn(m.away.name))}` : "—";
   const cards = [];
 
   if (facts.highest)
@@ -380,7 +382,7 @@ export function renderFacts(facts) {
   cards.push(fact("🎯", "Goles de penal", String(facts.penaltyGoals), "Anotados desde el manchón"));
   if (facts.topTeams[0])
     cards.push(fact("👑", "Ataque más letal",
-      `${facts.topTeams[0].goals} goles`, esc(facts.topTeams[0].name)));
+      `${facts.topTeams[0].goals} goles`, esc(tn(facts.topTeams[0].name))));
 
   wrap.innerHTML = cards.join("");
 }
@@ -402,7 +404,7 @@ export function renderDiscipline(disc) {
   // KPI cards: most fouls + least efficacy (shots per goal).
   const kpiWrap = document.getElementById("disc-kpis");
   if (kpiWrap) {
-    const mf = disc.mostFouls, le = disc.leastEfficacy;
+    const mf = disc.mostFouls, le = disc.leastEfficacy, me = disc.mostEfficacy;
     const cards = [];
     if (mf) cards.push(`
       <div class="fact">
@@ -410,16 +412,25 @@ export function renderDiscipline(disc) {
         <div class="fact-body">
           <div class="fact-value">${fmtInt(mf.fouls)} faltas</div>
           <div class="fact-label">Selección más infractora</div>
-          <div class="fact-detail">${flagImg(mf.name)} ${esc(mf.name)}</div>
+          <div class="fact-detail">${flagImg(mf.name)} ${esc(tn(mf.name))}</div>
+        </div>
+      </div>`);
+    if (me) cards.push(`
+      <div class="fact">
+        <div class="fact-icon">🎯</div>
+        <div class="fact-body">
+          <div class="fact-value">${me.ratio.toFixed(1)} tiros/gol</div>
+          <div class="fact-label">Mayor eficacia (tiros a arco ÷ goles)</div>
+          <div class="fact-detail">${flagImg(me.name)} ${esc(tn(me.name))} · ${me.shots} tiros · ${me.goals} goles</div>
         </div>
       </div>`);
     if (le) cards.push(`
       <div class="fact">
-        <div class="fact-icon">🎯</div>
+        <div class="fact-icon">🥅</div>
         <div class="fact-body">
           <div class="fact-value">${le.ratio.toFixed(1)} tiros/gol</div>
           <div class="fact-label">Menor eficacia (tiros a arco ÷ goles)</div>
-          <div class="fact-detail">${flagImg(le.name)} ${esc(le.name)} · ${le.shots} tiros · ${le.goals} goles</div>
+          <div class="fact-detail">${flagImg(le.name)} ${esc(tn(le.name))} · ${le.shots} tiros · ${le.goals} goles</div>
         </div>
       </div>`);
     kpiWrap.innerHTML = cards.join("");
@@ -435,7 +446,7 @@ export function renderDiscipline(disc) {
         <tbody>${rows.map((r, i) => `
           <tr>
             <td class="rk">${i + 1}</td>
-            <td class="team">${flagImg(r.name)}<span>${esc(r.name)}</span></td>
+            <td class="team">${flagImg(r.name)}<span>${esc(tn(r.name))}</span></td>
             <td class="val">${fmtInt(r.fouls)}</td>
           </tr>`).join("")}
         </tbody>
@@ -506,13 +517,13 @@ export function renderInsightStrip(stats, facts, disc) {
     out.push(card(stats.avg.toFixed(2), `goles por partido en <b>${fmtInt(stats.played)}</b> partidos disputados`));
   const lead = facts?.topTeams?.[0];
   if (lead)
-    out.push(card(fmtInt(lead.goals), `goles de <b>${esc(lead.name)}</b>, el ataque más letal`, "gold"));
+    out.push(card(fmtInt(lead.goals), `goles de <b>${esc(tn(lead.name))}</b>, el ataque más letal`, "gold"));
   if (facts?.highest)
     out.push(card(fmtInt(facts.highest.total),
-      `goles en el duelo más loco: <b>${esc(facts.highest.m.home.name)} ${facts.highest.score} ${esc(facts.highest.m.away.name)}</b>`));
+      `goles en el duelo más loco: <b>${esc(tn(facts.highest.m.home.name))} ${facts.highest.score} ${esc(tn(facts.highest.m.away.name))}</b>`));
   const foul = disc?.foulsRanking?.[0];
   if (foul)
-    out.push(card(fmtInt(foul.fouls), `faltas de <b>${esc(foul.name)}</b>, la más infractora`, "live"));
+    out.push(card(fmtInt(foul.fouls), `faltas de <b>${esc(tn(foul.name))}</b>, la más infractora`, "live"));
 
   el.innerHTML = out.join("");
 }

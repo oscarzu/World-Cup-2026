@@ -1,7 +1,7 @@
 // app.js — orchestration: load, render, tabs, theme, search/filter, live polling.
 
 import { CONFIG } from "./config.js";
-import { loadBase, applyLive, loadTeamStats } from "./api.js";
+import { loadBase, applyLive, loadTeamStats, loadEfficacyHistory } from "./api.js";
 import { computeStandings } from "./standings.js";
 import { computeScorers, goalStats } from "./scorers.js";
 import { computeFacts } from "./facts.js";
@@ -15,6 +15,7 @@ const state = {
   matches: [], source: "", online: true,
   teamStats: { teams: {}, yellowCards: [] },
   liveMatches: [], liveProvider: false, liveUpdatedAt: null,
+  effHistory: [],
 };
 
 // ---- theme ----
@@ -82,7 +83,7 @@ function renderAll() {
   const disc = computeDiscipline(state.teamStats);
   UI.renderDiscipline(disc);
   UI.renderInsightStrip(stats, facts, disc);
-  renderCharts(stats, facts, disc);
+  renderCharts(stats, facts, disc, state.effHistory);
 
   // Live indicator + freshness.
   const liveCount = (state.liveMatches.length ? state.liveMatches : state.matches)
@@ -163,11 +164,14 @@ async function boot() {
   initMatchControls();
 
   try {
-    const [data, teamStats] = await Promise.all([loadBase(), loadTeamStats()]);
+    const [data, teamStats, effHistory] = await Promise.all([
+      loadBase(), loadTeamStats(), loadEfficacyHistory(),
+    ]);
     state.matches = data.matches;
     state.source = data.source;
     state.online = data.online;
     state.teamStats = teamStats;
+    state.effHistory = effHistory;
     UI.fillMatchFilter(state.matches);
     renderAll();
   } catch (err) {

@@ -1,0 +1,71 @@
+{
+ "note": "Illustrative per-matchday shooting efficacy (shots on target ÷ goals). Lower = more efficient.",
+ "history": [
+  {
+   "matchday": 1,
+   "best": {
+    "team": "Bosnia & Herzegovina",
+    "ratio": 3.3
+   },
+   "worst": {
+    "team": "Turkey",
+    "ratio": 27.2
+   }
+  },
+  {
+   "matchday": 2,
+   "best": {
+    "team": "Tunisia",
+    "ratio": 3.6
+   },
+   "worst": {
+    "team": "Czech Republic",
+    "ratio": 16.3
+   }
+  },
+  {
+   "matchday": 3,
+   "best": {
+    "team": "Switzerland",
+    "ratio": 3.0
+   },
+   "worst": {
+    "team": "Bosnia & Herzegovina",
+    "ratio": 25.1
+   }
+  },
+  {
+   "matchday": 4,
+   "best": {
+    "team": "New Zealand",
+    "ratio": 3.1
+   },
+   "worst": {
+    "team": "Morocco",
+    "ratio": 33.2
+   }
+  },
+  {
+   "matchday": 5,
+   "best": {
+    "team": "Iran",
+    "ratio": 3.6
+   },
+   "worst": {
+    "team": "USA",
+    "ratio": 15.8
+   }
+  },
+  {
+   "matchday": 6,
+   "best": {
+    "team": "Morocco",
+    "ratio": 2.2
+   },
+   "worst": {
+    "team": "Egypt",
+    "ratio": 33.6
+   }
+  }
+ ]
+}
