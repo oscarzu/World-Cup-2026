@@ -215,7 +215,7 @@ function relTime(ts) {
 export function renderLiveStatus({ provider, updatedAt, intervalMin }) {
   const el = document.getElementById("live-status");
   if (!el) return;
-  const src = provider ? "API-Football" : "datos del torneo (sin proveedor en vivo)";
+  const src = provider ? "ESPN (en vivo)" : "datos del torneo (sin proveedor en vivo)";
   el.innerHTML = `
     <span class="live-status-dot ${provider ? "on" : ""}"></span>
     <span class="live-status-txt">Fuente: <b>${src}</b> · se actualiza cada ${intervalMin} min</span>
