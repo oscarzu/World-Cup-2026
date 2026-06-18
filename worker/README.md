@@ -1,74 +1,65 @@
-# Shared real-time collector (API-Football → KV → dashboard)
+# Shared live collector (ESPN → KV → dashboard)
 
-This Cloudflare Worker turns API-Football into a **single shared source of
-truth** for the dashboard:
+This Cloudflare Worker gives the dashboard **real World Cup 2026 data for free**,
+using ESPN's public API (`fifa.world`) — **no API key, no season restriction**.
 
 ```
-            (every 5 min, ONE consumer)              (unlimited reads, 0 API cost)
+            (every 5 min, ONE consumer)              (unlimited reads, 0 cost)
 Cron Trigger ─────────────────────────▶ Worker ──▶ KV store ──▶ every visitor's browser
                                           │
                                           └─ accumulates our own dataset (agg)
 ```
 
-- A **Cron Trigger** runs the Worker on a schedule and calls API-Football
-  **once**, then stores the normalized result in **KV**.
-- Browsers only **read** the stored snapshot, so everyone sees the **same data**
-  (even after a refresh) and API usage does **not** grow with traffic.
-- A **daily budget counter** caps upstream calls (`MAX_DAILY`, default 95) so you
-  never blow the free 100/day quota — once spent, the last snapshot keeps serving.
-- Each run also merges live fouls/shots/goals into `agg`, building **your own
-  dataset** over the tournament (served at `/teamstats`).
+- A **Cron Trigger** runs the Worker, calls ESPN **once**, and stores a
+  normalized snapshot in **KV**.
+- Browsers only **read** that snapshot → everyone sees the **same data**, even
+  after refreshing, and usage does **not** grow with traffic.
+- Each run also merges live fouls/shots/goals and yellow-card events into `agg`,
+  building **your own dataset** over the tournament (served at `/teamstats`).
 
-## 1. Get an API-Football key
-Create a free account at https://dashboard.api-football.com/ (the direct
-`api-sports.io` plan, not RapidAPI) and copy your key.
+> ESPN's endpoints are unofficial (no uptime guarantee) but free and key-less.
+> If ESPN ever changes, the dashboard simply falls back to the bundled data.
 
-## 2. Create the KV store (once)
+## 1. Create the KV store (once)
 From this `worker/` folder:
 ```bash
 npx wrangler kv namespace create WC26
 ```
-It prints something like:
-```
-[[kv_namespaces]]
-binding = "WC26"
-id = "abcd1234..."
-```
-Copy that `id` into **`wrangler.toml`** (replace `PASTE_YOUR_KV_NAMESPACE_ID_HERE`).
+Copy the printed `id` into **`wrangler.toml`** (the `id = "…"` line under
+`[[kv_namespaces]]`). _(You've already done this.)_
 
-## 3. Set the secret + deploy
+## 2. Deploy
 ```bash
-npx wrangler login                       # if not already
-npx wrangler secret put API_FOOTBALL_KEY # paste your key (stays server-side)
-npx wrangler deploy                      # registers the worker, KV binding and 5-min cron
+npx wrangler login        # if needed
+npx wrangler deploy        # registers the worker, KV binding and 5-min cron
 ```
+No secret/API key is required anymore. (You can remove the old one with
+`npx wrangler secret delete API_FOOTBALL_KEY`.)
 
-## 4. First fill (optional)
-The cron fires every 5 min; to populate immediately, open once:
+## 3. Fill + verify
 ```
-https://wc26-football-proxy.<your-subdomain>.workers.dev/refresh
+https://wc26-football-proxy.<your-subdomain>.workers.dev/refresh   ← collect now
+https://wc26-football-proxy.<your-subdomain>.workers.dev/health    ← see status
 ```
-Then check it stored data:
+`/refresh` returns diagnostics, e.g.:
+```json
+{ "ok": true, "source": "espn", "events": 4, "live": 2, "enriched": 2, "yellowCards": 7, "fetches": 3, "error": null }
 ```
-https://wc26-football-proxy.<your-subdomain>.workers.dev/health
-```
-You should see `apiCallsUsedToday` and a `snapshotUpdatedAt` timestamp.
+- `events` > 0 → ESPN returned the day's matches.
+- `live` → matches in play right now (0 is normal outside match hours).
+- `snapshotUpdatedAt` in `/health` should be a timestamp (not null).
 
-## 5. Point the dashboard at it
-In **`js/config.js`** set `LIVE_PROXY_URL` to your Worker URL, commit & push.
-(That's already done if you've configured it before — no change needed.)
+## 4. Point the dashboard at it
+`js/config.js` → `LIVE_PROXY_URL` already holds your Worker URL. Done.
 
-## Routes (read-only, browser-facing)
-- `GET /snapshot`   → `{ updatedAt, live:[…], yellowCards:[…] }` (what the UI reads)
-- `GET /teamstats`  → `{ teams: { name: { fouls, shotsOnTarget, goals } } }` (our own accumulated data)
-- `GET /health`     → status + API calls used today
-- `GET /refresh`    → force a collection now (still respects the daily budget)
+## Routes
+- `GET /snapshot`  → `{ updatedAt, live:[…], yellowCards:[…] }` (what the UI reads)
+- `GET /teamstats` → `{ teams: { name: { fouls, shotsOnTarget, goals } } }`
+- `GET /health`    → status + fetches used today + last run diagnostics
+- `GET /refresh`   → force a collection now
 
-## Tuning (in `wrangler.toml` → `[vars]`)
-- `MAX_DAILY` — hard cap on API-Football calls/day (default 95).
-- `ENRICH_LIMIT` — how many live fixtures get fouls/shots each run (default 4).
-- Cron cadence — edit `crons = ["*/5 * * * *"]` (e.g. `*/10` to stretch the quota).
+## Tuning (`wrangler.toml` → `[vars]`)
+- `ENRICH_LIMIT` — live matches enriched with fouls/shots/cards per run (default 6).
+- `MAX_DAILY` — safety cap on ESPN fetches/day (default 2000).
+- Cron cadence — `crons = ["*/5 * * * *"]`.
 - `ALLOW_ORIGIN` — lock CORS to your site instead of `*`.
-
-For sustained 24/7 live coverage, raise the cadence or upgrade the API-Football
-plan; the budget counter guarantees you never exceed the free tier regardless.

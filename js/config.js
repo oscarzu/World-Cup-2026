@@ -83,6 +83,11 @@ export const FLAGS = {
   Scotland: "gb-sct", Senegal: "sn", "South Africa": "za", "South Korea": "kr",
   Spain: "es", Sweden: "se", Switzerland: "ch", Tunisia: "tn", Turkey: "tr",
   USA: "us", Uruguay: "uy", Uzbekistan: "uz",
+  // Aliases for ESPN naming variants (so live flags resolve).
+  "United States": "us", "Korea Republic": "kr", "IR Iran": "ir",
+  "Côte d'Ivoire": "ci", "Cote d'Ivoire": "ci", Czechia: "cz",
+  "Cabo Verde": "cv", "Türkiye": "tr", Turkiye: "tr",
+  "Bosnia and Herzegovina": "ba", "Czech Republic ": "cz",
 };
 
 // Venue metadata keyed by the "ground" string used in the base data.

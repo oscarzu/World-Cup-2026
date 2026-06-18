@@ -260,7 +260,7 @@ function goalTimeline(m, side) {
 
 function liveCard(m) {
   const h = m.score?.home ?? 0, a = m.score?.away ?? 0;
-  const clock = m.elapsed != null ? `${m.elapsed}'` : "En vivo";
+  const clock = m.clock || (m.elapsed != null ? `${m.elapsed}'` : "En vivo");
 
   // Optional live statistics row (only when the provider supplies them).
   let statsRow = "";

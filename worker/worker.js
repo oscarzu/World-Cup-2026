@@ -1,20 +1,18 @@
-// Cloudflare Worker — API-Football collector + snapshot store (KV + Cron).
+// Cloudflare Worker — World Cup 2026 live collector using ESPN's FREE public API.
 //
-// Model: a Cron Trigger runs this Worker on a schedule (independent of any
-// visitor), calls API-Football ONCE, normalizes the result, and stores it in
-// KV. Browsers only READ the stored snapshot — so the data is identical for
-// everyone, survives refreshes, and the API usage does NOT grow with traffic.
-// A daily budget counter guarantees we never exceed the free 100/day quota.
+// Why ESPN: it serves the 2026 World Cup (`fifa.world`) with no API key and no
+// season restriction (unlike API-Football's free plan). A Cron Trigger collects
+// once, stores a normalized snapshot in KV, and browsers read that shared
+// snapshot — identical for everyone, refresh-proof, and independent of traffic.
+// It also accumulates our OWN dataset (per-team fouls/shots/goals + per-player
+// yellow cards) from match summaries, exposed at /teamstats and in the snapshot.
 //
-// It also accumulates our OWN dataset: per-fixture fouls/shots/goals captured
-// from the live feed are merged into `agg`, exposed at /teamstats.
-//
-// Deploy: see worker/README.md (needs a KV namespace + cron trigger).
+// Unofficial endpoints (no SLA) but free and key-less. Deploy: see README.md.
 
-const API_BASE = "https://v3.football.api-sports.io";
+const ESPN = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world";
 
 export default {
-  // ---- HTTP: browsers read stored snapshots (no API calls here) ----
+  // ---- HTTP: browsers read stored snapshots (no upstream calls here) ----
   async fetch(request, env, ctx) {
     const cors = {
       "Access-Control-Allow-Origin": env.ALLOW_ORIGIN || "*",
@@ -38,147 +36,185 @@ export default {
     }
     if (path === "/health") {
       const today = new Date().toISOString().slice(0, 10);
-      const used = Number((await env.WC26.get(`budget:${today}`)) || 0);
+      const used = Number((await env.WC26.get(`fetches:${today}`)) || 0);
       const snap = JSON.parse((await env.WC26.get("snapshot")) || "{}");
       const lastResult = JSON.parse((await env.WC26.get("lastResult")) || "null");
-      return json({ ok: true, date: today, apiCallsUsedToday: used,
+      return json({ ok: true, source: "espn", date: today, fetchesToday: used,
         snapshotUpdatedAt: snap.updatedAt || null, lastResult }, 200, cors);
     }
-    // On-demand refresh (also respects the daily budget). Returns diagnostics.
     if (path === "/refresh") { const r = await collect(env); return json(r, 200, cors); }
 
     return json({ error: "not found", routes: ["/snapshot", "/teamstats", "/health", "/refresh"] }, 404, cors);
   },
 
   // ---- Cron: the only consumer of the upstream API ----
-  async scheduled(event, env, ctx) {
-    ctx.waitUntil(collect(env));
-  },
+  async scheduled(event, env, ctx) { ctx.waitUntil(collect(env)); },
 };
 
-// Pull from API-Football (budget-guarded) and persist snapshot + aggregates.
-// Returns a diagnostics object so /refresh can surface what happened.
 async function collect(env) {
-  const result = { ok: false, fixtures: 0, live: 0, yellowCards: 0, apiCalls: 0, error: null };
-  if (!env.API_FOOTBALL_KEY) { result.error = "API_FOOTBALL_KEY secret not set"; return result; }
+  const result = { ok: false, source: "espn", events: 0, live: 0, enriched: 0, yellowCards: 0, fetches: 0, error: null };
   if (!env.WC26) { result.error = "KV namespace 'WC26' not bound"; return result; }
-
-  const LEAGUE = Number(env.LIVE_LEAGUE || 1);
-  const SEASON = Number(env.LIVE_SEASON || 2026);
-  const MAX = Number(env.MAX_DAILY || 95);
-  const ENRICH = Number(env.ENRICH_LIMIT || 4);
+  const MAX = Number(env.MAX_DAILY || 2000);
+  const ENRICH = Number(env.ENRICH_LIMIT || 6);
 
   const today = new Date().toISOString().slice(0, 10);
-  const bKey = `budget:${today}`;
+  const bKey = `fetches:${today}`;
   let used = Number((await env.WC26.get(bKey)) || 0);
   const startUsed = used;
-  if (used >= MAX) { result.error = `daily budget reached (${used}/${MAX})`; return result; }
+  if (used >= MAX) { result.error = `daily fetch cap reached (${used}/${MAX})`; return result; }
 
-  const af = async (path, params) => {
-    const u = new URL(API_BASE + path);
-    Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+  const getJSON = async (url) => {
     used++;
-    const r = await fetch(u, { headers: { "x-apisports-key": env.API_FOOTBALL_KEY } });
-    const j = await r.json();
-    const e = j.errors;
-    if (e && (Array.isArray(e) ? e.length : Object.keys(e).length)) {
-      throw new Error(typeof e === "object" ? JSON.stringify(e) : String(e));
-    }
-    return j.response || [];
+    const r = await fetch(url, { headers: { "User-Agent": "wc26-dashboard/1.0", "Accept": "application/json" } });
+    if (!r.ok) throw new Error("ESPN HTTP " + r.status);
+    return r.json();
   };
 
   try {
-    const fixtures = await af("/fixtures", { league: LEAGUE, season: SEASON, live: "all" });
-    result.fixtures = fixtures.length;
+    const sb = await getJSON(`${ESPN}/scoreboard`);
+    const events = sb.events || [];
+    result.events = events.length;
     const agg = JSON.parse((await env.WC26.get("agg")) || '{"fixtures":{}}');
     const live = [];
+    let enriched = 0;
 
-    for (let i = 0; i < fixtures.length; i++) {
-      const fx = fixtures[i];
-      let events = [], stats = [];
-      if (i < ENRICH && used < MAX - 1) {
-        try { events = await af("/fixtures/events", { fixture: fx.fixture.id }); } catch (_) {}
-        try { stats = await af("/fixtures/statistics", { fixture: fx.fixture.id }); } catch (_) {}
+    for (const ev of events) {
+      const state = ev.status?.type?.state;
+      let summary = null;
+      if (state === "in" && enriched < ENRICH && used < MAX) {
+        try { summary = await getJSON(`${ESPN}/summary?event=${ev.id}`); enriched++; } catch (_) {}
       }
-      live.push(mapFixture(fx, events, stats));
-      if (stats.length) agg.fixtures[fx.fixture.id] = extractAgg(fx, stats);
+      const m = mapEvent(ev, summary);
+      if (m.status === "live") live.push(m);
+      if (summary) agg.fixtures[ev.id] = extractAgg(ev, summary, m); // build our own dataset
     }
     result.live = live.length;
-
-    let yellowCards = [];
-    if (used < MAX) {
-      const rows = await af("/players/topyellowcards", { league: LEAGUE, season: SEASON });
-      yellowCards = rows.map((r) => ({
-        name: r.player?.name,
-        country: r.statistics?.[0]?.team?.name,
-        cards: (r.statistics || []).reduce((n, s) => n + (s.cards?.yellow || 0), 0),
-      })).filter((x) => x.name && x.cards).slice(0, 10);
-    }
-    result.yellowCards = yellowCards.length;
+    result.enriched = enriched;
 
     agg.updatedAt = Date.now();
+    const yellowCards = aggregateCards(agg);
+    result.yellowCards = yellowCards.length;
+
     await env.WC26.put("snapshot", JSON.stringify({ updatedAt: Date.now(), live, yellowCards }));
     await env.WC26.put("agg", JSON.stringify(agg));
     result.ok = true;
   } catch (e) {
     result.error = String(e && e.message ? e.message : e);
   } finally {
-    result.apiCalls = used - startUsed;
+    result.fetches = used - startUsed;
     await env.WC26.put(bKey, String(used), { expirationTtl: 172800 });
     await env.WC26.put("lastResult", JSON.stringify({ ...result, at: Date.now() }));
   }
   return result;
 }
 
-// ---- mapping helpers (server-side, so the client just consumes JSON) ----
-const LIVE_SHORT = new Set(["1H", "2H", "HT", "ET", "BT", "P", "LIVE"]);
-function mapStatus(s) {
-  if (LIVE_SHORT.has(s)) return "live";
-  if (["FT", "AET", "PEN"].includes(s)) return "finished";
-  return "scheduled";
+// ---- ESPN → app shape mapping ----
+function num(v) { const n = parseInt(v, 10); return Number.isNaN(n) ? null : n; }
+
+function sideOf(teamId, home, away) {
+  const id = String(teamId ?? "");
+  if (id && id === String(home.team?.id)) return "home";
+  if (id && id === String(away.team?.id)) return "away";
+  return null;
 }
-function mapFixture(fx, events, stats) {
-  const hId = fx.teams.home.id, aId = fx.teams.away.id;
-  const goals = (events || [])
-    .filter((e) => e.type === "Goal" && !/missed/i.test(e.detail || ""))
-    .map((e) => ({
-      team: e.team?.id === hId ? "home" : "away",
-      name: e.player?.name || "",
-      minute: String(e.time?.elapsed ?? ""),
-      penalty: /penalty/i.test(e.detail || ""),
-    }));
+
+function mapEvent(ev, summary) {
+  const comp = ev.competitions?.[0] || {};
+  const cs = comp.competitors || [];
+  const home = cs.find((c) => c.homeAway === "home") || cs[0] || {};
+  const away = cs.find((c) => c.homeAway === "away") || cs[1] || {};
+  const state = ev.status?.type?.state;
+  const status = state === "in" ? "live" : state === "post" ? "finished" : "scheduled";
   return {
-    id: "af" + fx.fixture.id,
-    round: fx.league?.round || "",
-    date: (fx.fixture?.date || "").slice(0, 10),
-    home: { name: fx.teams.home.name },
-    away: { name: fx.teams.away.name },
-    score: { home: fx.goals.home, away: fx.goals.away },
-    status: mapStatus(fx.fixture?.status?.short),
-    elapsed: fx.fixture?.status?.elapsed ?? null,
-    ground: fx.fixture?.venue?.name || "",
-    goals,
-    stats: {
-      home: { fouls: stat(stats, hId, "Fouls"), shots: stat(stats, hId, "Shots on Goal") },
-      away: { fouls: stat(stats, aId, "Fouls"), shots: stat(stats, aId, "Shots on Goal") },
-    },
+    id: "espn" + ev.id,
+    round: comp.notes?.[0]?.headline || ev.season?.slug || "",
+    date: (ev.date || "").slice(0, 10),
+    home: { name: home.team?.displayName || home.team?.name || "" },
+    away: { name: away.team?.displayName || away.team?.name || "" },
+    score: { home: num(home.score), away: num(away.score) },
+    status,
+    clock: ev.status?.type?.shortDetail || ev.status?.displayClock || null,
+    ground: comp.venue?.fullName || "",
+    goals: extractGoals(comp, home, away, summary),
+    stats: extractStats(summary, home, away),
   };
 }
-function stat(stats, teamId, type) {
-  const t = (stats || []).find((s) => s.team?.id === teamId);
-  const row = t?.statistics?.find((x) => x.type === type);
-  return row && row.value != null ? Number(row.value) || 0 : null;
+
+function eventList(comp, summary) {
+  if (summary?.keyEvents?.length) return summary.keyEvents;
+  return comp.details || [];
 }
-function extractAgg(fx, stats) {
-  const g = (teamId, type) => {
-    const v = stat(stats, teamId, type);
-    return v == null ? 0 : v;
-  };
+function athleteName(e) {
+  return e.athletesInvolved?.[0]?.displayName
+    || e.participants?.[0]?.athlete?.displayName
+    || e.athletesInvolved?.[0]?.fullName || "";
+}
+function extractGoals(comp, home, away, summary) {
+  const out = [];
+  for (const e of eventList(comp, summary)) {
+    const txt = (e.type?.text || "").toLowerCase();
+    const isGoal = e.scoringPlay === true || (txt.includes("goal") && !txt.includes("own"));
+    const isOwn = txt.includes("own goal");
+    if (!isGoal && !isOwn) continue;
+    const side = sideOf(e.team?.id, home, away);
+    if (!side) continue;
+    out.push({
+      team: side,
+      name: athleteName(e) || (isOwn ? "(autogol)" : ""),
+      minute: String((e.clock?.displayValue || "").replace("'", "")),
+      penalty: /penalt/i.test(txt),
+    });
+  }
+  return out;
+}
+
+function statVal(arr, keys) {
+  const norm = (s) => (s || "").toLowerCase().replace(/[^a-z]/g, "");
+  const want = keys.map(norm);
+  for (const s of arr || []) {
+    const n = norm(s.name || s.abbreviation || s.label);
+    if (want.includes(n)) return num(s.displayValue ?? s.value);
+  }
+  for (const s of arr || []) {
+    const n = norm(s.name || s.label);
+    if (want.some((w) => n.includes(w))) return num(s.displayValue ?? s.value);
+  }
+  return null;
+}
+function teamStatsArr(summary, side) {
+  const teams = summary?.boxscore?.teams || [];
+  const t = teams.find((t) => String(t.team?.id) === String(side.team?.id));
+  return t?.statistics || [];
+}
+function extractStats(summary, home, away) {
+  const hs = teamStatsArr(summary, home), as = teamStatsArr(summary, away);
   return {
-    home: { name: fx.teams.home.name, fouls: g(fx.teams.home.id, "Fouls"), shots: g(fx.teams.home.id, "Shots on Goal"), goals: fx.goals.home || 0 },
-    away: { name: fx.teams.away.name, fouls: g(fx.teams.away.id, "Fouls"), shots: g(fx.teams.away.id, "Shots on Goal"), goals: fx.goals.away || 0 },
+    home: { fouls: statVal(hs, ["foulsCommitted", "fouls"]), shots: statVal(hs, ["shotsOnTarget", "shotsOnGoal"]) },
+    away: { fouls: statVal(as, ["foulsCommitted", "fouls"]), shots: statVal(as, ["shotsOnTarget", "shotsOnGoal"]) },
   };
 }
+
+function extractAgg(ev, summary, m) {
+  const comp = ev.competitions?.[0] || {};
+  const cs = comp.competitors || [];
+  const home = cs.find((c) => c.homeAway === "home") || cs[0] || {};
+  const away = cs.find((c) => c.homeAway === "away") || cs[1] || {};
+  const yc = [];
+  for (const e of (summary?.keyEvents || [])) {
+    const txt = (e.type?.text || "").toLowerCase();
+    if (!txt.includes("yellow")) continue;
+    const side = sideOf(e.team?.id, home, away);
+    const country = side === "home" ? m.home.name : side === "away" ? m.away.name : "";
+    const who = athleteName(e);
+    if (who) yc.push({ name: who, country });
+  }
+  return {
+    home: { name: m.home.name, fouls: m.stats.home.fouls || 0, shots: m.stats.home.shots || 0, goals: m.score.home || 0 },
+    away: { name: m.away.name, fouls: m.stats.away.fouls || 0, shots: m.stats.away.shots || 0, goals: m.score.away || 0 },
+    yc,
+  };
+}
+
 function aggregateTeams(agg) {
   const teams = {};
   for (const id in (agg.fixtures || {})) {
@@ -191,6 +227,17 @@ function aggregateTeams(agg) {
     }
   }
   return teams;
+}
+function aggregateCards(agg) {
+  const c = {};
+  for (const id in (agg.fixtures || {})) {
+    for (const e of (agg.fixtures[id].yc || [])) {
+      const k = e.name + "|" + (e.country || "");
+      if (!c[k]) c[k] = { name: e.name, country: e.country, cards: 0 };
+      c[k].cards++;
+    }
+  }
+  return Object.values(c).sort((a, b) => b.cards - a.cards).slice(0, 10);
 }
 
 function json(obj, status, cors) {

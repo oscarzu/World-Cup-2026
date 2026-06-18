@@ -16,11 +16,10 @@ binding = "WC26"
 id = "8fb63d9aa3634b199b3d5f5872997fe3"
 
 [vars]
-LIVE_LEAGUE = "1"
-LIVE_SEASON = "2026"
-MAX_DAILY = "95"     # hard cap on upstream API calls per day (free tier = 100)
-ENRICH_LIMIT = "4"   # how many live fixtures to enrich with fouls/shots per run
+MAX_DAILY = "2000"   # safety cap on ESPN fetches per day (ESPN is free/key-less)
+ENRICH_LIMIT = "6"   # how many live matches to enrich with fouls/shots/cards per run
 # ALLOW_ORIGIN = "https://oscarzu.github.io"   # optional: lock CORS to your site
 
-# The API-Football key is a SECRET, not a var. Set it with:
-#   npx wrangler secret put API_FOOTBALL_KEY
+# Source: ESPN's free public API (https://site.api.espn.com/.../soccer/fifa.world).
+# No API key required — you can remove the old API_FOOTBALL_KEY secret if you like:
+#   npx wrangler secret delete API_FOOTBALL_KEY
