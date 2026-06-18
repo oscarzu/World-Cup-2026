@@ -48,6 +48,7 @@
         <h2 class="hero-title">La 23.ª Copa Mundial de la FIFA</h2>
         <p class="hero-text">Primera edición con <strong>48 selecciones</strong>, repartida en
           tres países anfitriones y <strong>16 sedes</strong>.</p>
+        <p class="hero-lead" id="hero-lead"></p>
         <div class="host-row">
           <span class="host-pill">🇨🇦 Canadá</span>
           <span class="host-pill">🇲🇽 México</span>
@@ -61,14 +62,20 @@
           <h3>Próximos y en vivo</h3>
           <div id="overview-live" class="match-list compact"></div>
         </div>
-        <div class="card">
-          <h3>Goleo por jornada</h3>
+        <div class="card viz">
+          <p class="card-kicker">Goleo</p>
+          <h3>Goles por jornada</h3>
+          <p class="card-sub" id="sub-overview">—</p>
           <div class="chart-box"><canvas id="chart-overview"></canvas></div>
+          <p class="card-foot">Goles anotados en cada jornada · Fuente: ESPN</p>
         </div>
       </div>
 
-      <h3 class="section-title">Reglas esenciales de esta Copa</h3>
-      <p class="section-sub">Lo nuevo que debes saber para el Mundial 2026.</p>
+      <div class="section-head">
+        <p class="kicker">Reglamento</p>
+        <h3 class="section-title">Reglas esenciales de esta Copa</h3>
+        <p class="section-sub">Lo nuevo que debes saber para el Mundial 2026.</p>
+      </div>
       <div class="rules-grid">
         <div class="rule"><span class="rule-ic">🌎</span><div><b>48 selecciones</b><p>Formato ampliado: 12 grupos de 4 equipos, 104 partidos en total.</p></div></div>
         <div class="rule"><span class="rule-ic">🪜</span><div><b>Nueva ronda de 32</b><p>Avanzan los 2 primeros de cada grupo + los 8 mejores terceros (32 a eliminatorias).</p></div></div>
@@ -85,8 +92,11 @@
     <section id="live" class="panel">
       <div id="live-status" class="live-status"></div>
       <div id="live-feed" class="live-feed"></div>
-      <h3 class="section-title">Redes en vivo</h3>
-      <p class="section-sub">Cobertura oficial del torneo en X e Instagram.</p>
+      <div class="section-head">
+        <p class="kicker">Social</p>
+        <h3 class="section-title">Redes en vivo</h3>
+        <p class="section-sub">Cobertura oficial del torneo en X e Instagram.</p>
+      </div>
       <div id="social-wrap"></div>
     </section>
 
@@ -124,31 +134,81 @@
 
     <!-- Stats -->
     <section id="stats" class="panel">
+      <div class="section-head lead">
+        <p class="kicker">Panorama</p>
+        <h2 class="section-title big">El Mundial 2026, contado con datos</h2>
+        <p class="section-sub">Lo más relevante de lo que va de la Copa, de un vistazo.</p>
+      </div>
+      <div class="insight-strip" id="insight-strip"></div>
+
+      <div class="section-head">
+        <p class="kicker">KPIs</p>
+        <h3 class="section-title">El torneo en cifras</h3>
+      </div>
       <div class="stat-grid" id="stats-kpis"></div>
 
-      <h3 class="section-title">Datos curiosos del torneo</h3>
-      <p class="section-sub">Hallazgos extraídos de los 104 partidos.</p>
+      <div class="section-head">
+        <p class="kicker">Curiosidades</p>
+        <h3 class="section-title">Datos curiosos del torneo</h3>
+        <p class="section-sub">Hallazgos extraídos de los partidos disputados.</p>
+      </div>
       <div class="facts-grid" id="facts-grid"></div>
 
-      <h3 class="section-title">Agregados del torneo</h3>
-      <p class="section-sub">Fueras de lugar, goles anulados, VAR, tarjetas y más.</p>
+      <div class="section-head">
+        <p class="kicker">Agregados</p>
+        <h3 class="section-title">Fueras de lugar, VAR, tarjetas y más</h3>
+        <p class="section-sub">Totales del torneo que no se ven en el marcador.</p>
+      </div>
       <div class="stat-grid agg-grid" id="agg-grid"></div>
 
-      <h3 class="section-title">Gráficas</h3>
+      <div class="section-head">
+        <p class="kicker">Visualizaciones</p>
+        <h3 class="section-title">Dónde se deciden los partidos</h3>
+        <p class="section-sub">Goleo, ataque y los momentos que marcan el torneo.</p>
+      </div>
       <div class="charts-grid">
-        <div class="card"><h3>Goles por grupo</h3><div class="chart-box"><canvas id="chart-groups"></canvas></div></div>
-        <div class="card"><h3>Selecciones más goleadoras</h3><div class="chart-box"><canvas id="chart-teams"></canvas></div></div>
-        <div class="card"><h3>Momentos del torneo</h3><div class="chart-box"><canvas id="chart-moments"></canvas></div></div>
+        <div class="card viz">
+          <p class="card-kicker">Goleo</p><h3>Goles por grupo</h3>
+          <p class="card-sub" id="sub-groups">—</p>
+          <div class="chart-box"><canvas id="chart-groups"></canvas></div>
+          <p class="card-foot">Goles por grupo · Fuente: ESPN</p>
+        </div>
+        <div class="card viz">
+          <p class="card-kicker">Ataque</p><h3>Selecciones más goleadoras</h3>
+          <p class="card-sub" id="sub-teams">—</p>
+          <div class="chart-box"><canvas id="chart-teams"></canvas></div>
+          <p class="card-foot">Top 8 por goles anotados · Fuente: ESPN</p>
+        </div>
+        <div class="card viz">
+          <p class="card-kicker">Drama</p><h3>Momentos del torneo</h3>
+          <p class="card-sub" id="sub-moments">—</p>
+          <div class="chart-box"><canvas id="chart-moments"></canvas></div>
+          <p class="card-foot">Conteo de partidos memorables · Fuente: ESPN</p>
+        </div>
       </div>
 
-      <h3 class="section-title">Disciplina y eficacia</h3>
-      <p class="section-sub">Faltas, tarjetas y puntería por selección (datos ilustrativos).</p>
+      <div class="section-head">
+        <p class="kicker">Disciplina y eficacia</p>
+        <h3 class="section-title">Quién pega, quién falla el arco</h3>
+        <p class="section-sub">Faltas, tarjetas y puntería por selección — datos reales de ESPN, que se completan conforme avanza el torneo.</p>
+      </div>
       <div class="facts-grid" id="disc-kpis"></div>
       <div class="charts-grid">
-        <div class="card"><h3>Selecciones con más faltas</h3><div class="chart-box"><canvas id="chart-fouls"></canvas></div></div>
-        <div class="card"><h3>Jugadores con más amarillas</h3><div class="chart-box"><canvas id="chart-cards"></canvas></div></div>
+        <div class="card viz">
+          <p class="card-kicker">Juego brusco</p><h3>Selecciones con más faltas</h3>
+          <p class="card-sub" id="sub-fouls">—</p>
+          <div class="chart-box"><canvas id="chart-fouls"></canvas></div>
+          <p class="card-foot">Top 10 selecciones · Fuente: ESPN</p>
+        </div>
+        <div class="card viz">
+          <p class="card-kicker">Tarjetas</p><h3>Jugadores con más amarillas</h3>
+          <p class="card-sub" id="sub-cards">—</p>
+          <div class="chart-box"><canvas id="chart-cards"></canvas></div>
+          <p class="card-foot">Top 10 jugadores · Fuente: ESPN</p>
+        </div>
       </div>
-      <div class="card" style="margin-top:1.2rem">
+      <div class="card viz" style="margin-top:1.2rem">
+        <p class="card-kicker">Ranking</p>
         <h3>Top 10 selecciones con más faltas</h3>
         <div id="fouls-table"></div>
       </div>
@@ -157,8 +217,9 @@
 
   <footer class="site-footer">
     <p id="data-source" class="data-source"></p>
-    <p class="credit">Datos: openfootball (dominio público) · worldcup26.ir (en vivo) ·
-      Banderas: flagcdn.com — sin API key.</p>
+    <p class="credit">En vivo y estadísticas: ESPN · Calendario base: openfootball (dominio público) ·
+      Banderas: flagcdn.com · Visualización con Chart.js.</p>
+    <p class="credit dim">Diseño orientado a data storytelling — etiquetas directas, color con intención y un titular por gráfica.</p>
   </footer>
 
   <script type="module" src="./js/app.js"></script>

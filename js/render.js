@@ -483,6 +483,40 @@ function loadScript(src, onload) {
   document.body.appendChild(s);
 }
 
+// ---- editorial hero lead (key numbers in one line) ----
+export function renderHeroLead(stats) {
+  const el = document.getElementById("hero-lead");
+  if (!el) return;
+  if (!stats || !stats.played) { el.textContent = ""; return; }
+  el.innerHTML =
+    `<strong>${fmtInt(stats.played)}</strong> partidos jugados · ` +
+    `<strong>${fmtInt(stats.goals)}</strong> goles · ` +
+    `<strong>${stats.avg.toFixed(2)}</strong> por partido.`;
+}
+
+// ---- insight strip: big number + context (data-journalism style) ----
+export function renderInsightStrip(stats, facts, disc) {
+  const el = document.getElementById("insight-strip");
+  if (!el) return;
+  const card = (big, cap, mod = "") =>
+    `<div class="insight ${mod}"><div class="big">${big}</div><div class="cap">${cap}</div></div>`;
+  const out = [];
+
+  if (stats && stats.played)
+    out.push(card(stats.avg.toFixed(2), `goles por partido en <b>${fmtInt(stats.played)}</b> partidos disputados`));
+  const lead = facts?.topTeams?.[0];
+  if (lead)
+    out.push(card(fmtInt(lead.goals), `goles de <b>${esc(lead.name)}</b>, el ataque más letal`, "gold"));
+  if (facts?.highest)
+    out.push(card(fmtInt(facts.highest.total),
+      `goles en el duelo más loco: <b>${esc(facts.highest.m.home.name)} ${facts.highest.score} ${esc(facts.highest.m.away.name)}</b>`));
+  const foul = disc?.foulsRanking?.[0];
+  if (foul)
+    out.push(card(fmtInt(foul.fouls), `faltas de <b>${esc(foul.name)}</b>, la más infractora`, "live"));
+
+  el.innerHTML = out.join("");
+}
+
 // Small count-up animation for overview numbers.
 export function animateCounts(root = document) {
   for (const el of root.querySelectorAll("[data-count]")) {
