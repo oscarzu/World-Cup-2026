@@ -35,63 +35,82 @@ export default {
       return json({ teams: aggregateTeams(agg), updatedAt: agg.updatedAt || null }, 200, cors);
     }
     if (path === "/health") {
-      const today = new Date().toISOString().slice(0, 10);
-      const used = Number((await env.WC26.get(`fetches:${today}`)) || 0);
+      const agg = JSON.parse((await env.WC26.get("agg")) || '{"fixtures":{}}');
       const snap = JSON.parse((await env.WC26.get("snapshot")) || "{}");
       const lastResult = JSON.parse((await env.WC26.get("lastResult")) || "null");
-      return json({ ok: true, source: "espn", date: today, fetchesToday: used,
+      return json({ ok: true, source: "espn",
+        capturedMatches: Object.keys(agg.fixtures || {}).length,
         snapshotUpdatedAt: snap.updatedAt || null, lastResult }, 200, cors);
     }
     if (path === "/refresh") { const r = await collect(env); return json(r, 200, cors); }
+    // Audit/rebuild: backfill every played match (chunked). ?reset=1 starts fresh.
+    if (path === "/rebuild") {
+      const reset = new URL(request.url).searchParams.get("reset") === "1";
+      const r = await collect(env, { reset, backfillLimit: 40 });
+      return json(r, 200, cors);
+    }
 
-    return json({ error: "not found", routes: ["/snapshot", "/teamstats", "/health", "/refresh"] }, 404, cors);
+    return json({ error: "not found", routes: ["/snapshot", "/teamstats", "/health", "/refresh", "/rebuild"] }, 404, cors);
   },
 
   // ---- Cron: the only consumer of the upstream API ----
   async scheduled(event, env, ctx) { ctx.waitUntil(collect(env)); },
 };
 
-async function collect(env) {
-  const result = { ok: false, source: "espn", events: 0, live: 0, enriched: 0, yellowCards: 0, fetches: 0, error: null };
+async function collect(env, { reset = false, backfillLimit } = {}) {
+  const result = { ok: false, source: "espn", events: 0, totalPlayed: 0, live: 0,
+    enriched: 0, backfilled: 0, captured: 0, yellowCards: 0, calls: 0, error: null };
   if (!env.WC26) { result.error = "KV namespace 'WC26' not bound"; return result; }
-  const MAX = Number(env.MAX_DAILY || 2000);
   const ENRICH = Number(env.ENRICH_LIMIT || 6);
+  const BATCH = backfillLimit ?? Number(env.BACKFILL_BATCH || 12);
+  const SUBREQ_MAX = 45; // Cloudflare free plan allows 50 subrequests per invocation
+  const RANGE = `${env.WC_START || "20260611"}-${env.WC_END || "20260719"}`;
 
-  const today = new Date().toISOString().slice(0, 10);
-  const bKey = `fetches:${today}`;
-  let used = Number((await env.WC26.get(bKey)) || 0);
-  const startUsed = used;
-  if (used >= MAX) { result.error = `daily fetch cap reached (${used}/${MAX})`; return result; }
-
+  let calls = 0;
   const getJSON = async (url) => {
-    used++;
+    calls++;
     const r = await fetch(url, { headers: { "User-Agent": "wc26-dashboard/1.0", "Accept": "application/json" } });
     if (!r.ok) throw new Error("ESPN HTTP " + r.status);
     return r.json();
   };
 
   try {
-    const sb = await getJSON(`${ESPN}/scoreboard`);
+    // Full tournament fixture universe (one call).
+    const sb = await getJSON(`${ESPN}/scoreboard?dates=${RANGE}&limit=400`);
     const events = sb.events || [];
     result.events = events.length;
-    const agg = JSON.parse((await env.WC26.get("agg")) || '{"fixtures":{}}');
-    const live = [];
-    let enriched = 0;
+    result.totalPlayed = events.filter((e) => ["in", "post"].includes(e.status?.type?.state)).length;
 
+    const agg = reset ? { fixtures: {} } : JSON.parse((await env.WC26.get("agg")) || '{"fixtures":{}}');
+    const live = [];
+
+    // 1) Live matches: enrich up to ENRICH, always list them.
     for (const ev of events) {
-      const state = ev.status?.type?.state;
+      if (ev.status?.type?.state !== "in") continue;
       let summary = null;
-      if (state === "in" && enriched < ENRICH && used < MAX) {
-        try { summary = await getJSON(`${ESPN}/summary?event=${ev.id}`); enriched++; } catch (_) {}
+      if (result.enriched < ENRICH && calls < SUBREQ_MAX) {
+        try { summary = await getJSON(`${ESPN}/summary?event=${ev.id}`); result.enriched++; } catch (_) {}
       }
       const m = mapEvent(ev, summary);
-      if (m.status === "live") live.push(m);
-      if (summary) agg.fixtures[ev.id] = extractAgg(ev, summary, m); // build our own dataset
+      live.push(m);
+      if (summary) agg.fixtures[ev.id] = extractAgg(ev, summary, m);
     }
     result.live = live.length;
-    result.enriched = enriched;
+
+    // 2) Backfill finished matches we don't have yet (so the dataset becomes
+    //    the complete, exact tournament record over a few runs).
+    for (const ev of events) {
+      if (result.backfilled >= BATCH || calls >= SUBREQ_MAX) break;
+      if (ev.status?.type?.state !== "post" || agg.fixtures[ev.id]) continue;
+      let summary = null;
+      try { summary = await getJSON(`${ESPN}/summary?event=${ev.id}`); } catch (_) { continue; }
+      const m = mapEvent(ev, summary);
+      agg.fixtures[ev.id] = extractAgg(ev, summary, m);
+      result.backfilled++;
+    }
 
     agg.updatedAt = Date.now();
+    result.captured = Object.keys(agg.fixtures).length;
     const yellowCards = aggregateCards(agg);
     result.yellowCards = yellowCards.length;
 
@@ -101,8 +120,7 @@ async function collect(env) {
   } catch (e) {
     result.error = String(e && e.message ? e.message : e);
   } finally {
-    result.fetches = used - startUsed;
-    await env.WC26.put(bKey, String(used), { expirationTtl: 172800 });
+    result.calls = calls;
     await env.WC26.put("lastResult", JSON.stringify({ ...result, at: Date.now() }));
   }
   return result;
