@@ -88,7 +88,7 @@ function renderAll() {
   $("#live-indicator").hidden = liveCount === 0;
   $("#updated").textContent = "Act. " + new Date().toLocaleTimeString("es-MX",
     { timeZone: CONFIG.TIMEZONE, hour: "2-digit", minute: "2-digit" }) + " " + CONFIG.TIMEZONE_LABEL;
-  const provider = state.liveProvider ? "API-Football (en vivo)" : state.source;
+  const provider = state.liveProvider ? "ESPN (en vivo)" : state.source;
   $("#data-source").textContent =
     `Fuente: ${provider}${state.online ? "" : " (sin conexión)"} · ` +
     `${state.matches.filter((m) => m.score?.home != null).length} partidos con marcador.`;
