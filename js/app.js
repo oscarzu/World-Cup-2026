@@ -66,6 +66,7 @@ function renderAll() {
   const stats = goalStats(state.matches);
   const facts = computeFacts(state.matches);
   UI.renderOverview(state.matches, stats, CONFIG.TOURNAMENT);
+  UI.renderHeroLead(stats);
   UI.animateCounts($("#overview-stats"));
   UI.renderMatches(state.matches);
   UI.renderStandings(computeStandings(state.matches));
@@ -80,6 +81,7 @@ function renderAll() {
   UI.animateCounts($("#agg-grid"));
   const disc = computeDiscipline(state.teamStats);
   UI.renderDiscipline(disc);
+  UI.renderInsightStrip(stats, facts, disc);
   renderCharts(stats, facts, disc);
 
   // Live indicator + freshness.
