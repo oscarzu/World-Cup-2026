@@ -419,6 +419,26 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 .ig-fallback { color: var(--muted); font-size: 0.86rem; text-align: center; }
 .social-link { color: var(--accent); font-weight: 600; font-size: 0.86rem; text-decoration: none; align-self: flex-start; }
 .social-link:hover { text-decoration: underline; }
+.lw-iframe { width: 100%; min-height: 480px; border: 0; border-radius: var(--radius); background: var(--surface-2); }
+
+/* social archive — per-day / per-venue Instagram timeline */
+.social-archive { display: grid; gap: .9rem; }
+.archive-day { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); overflow: hidden; }
+.archive-day > summary { cursor: pointer; list-style: none; display: flex; align-items: baseline;
+  justify-content: space-between; gap: 1rem; padding: .85rem 1.1rem; font-weight: 700; }
+.archive-day > summary::-webkit-details-marker { display: none; }
+.ad-date { text-transform: capitalize; }
+.ad-date::before { content: "▸"; color: var(--accent); margin-right: .5rem; display: inline-block; transition: transform var(--t); }
+.archive-day[open] .ad-date::before { transform: rotate(90deg); }
+.ad-count { color: var(--muted); font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.archive-venues { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0 1.1rem .9rem; }
+.venue-chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px;
+  padding: .35rem .75rem; font-size: .8rem; font-weight: 600; color: var(--text); text-decoration: none;
+  transition: border-color var(--t), transform var(--t); }
+.venue-chip:hover { border-color: var(--accent); transform: translateY(-1px); }
+.archive-empty { color: var(--muted); font-size: .82rem; padding: 0 1.1rem 1rem; }
+.ig-posts { display: flex; flex-wrap: wrap; gap: 1rem; padding: 0 1.1rem 1.1rem; }
 
 /* ---- ranking table ---- */
 .rank-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }

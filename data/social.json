@@ -1,0 +1,9 @@
+{
+  "_note": "Instagram posts por fecha (YYYY-MM-DD). Pega permalinks de publicaciones (https://www.instagram.com/p/XXXX/ o /reel/XXXX/). El sitio agrupa por día y sede automáticamente; las jornadas pasadas quedan como histórico. Ejemplo:",
+  "_example": {
+    "2026-06-11": [
+      "https://www.instagram.com/p/EXAMPLE1/",
+      { "permalink": "https://www.instagram.com/reel/EXAMPLE2/", "venue": "Mexico City" }
+    ]
+  }
+}
