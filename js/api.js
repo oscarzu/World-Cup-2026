@@ -194,6 +194,16 @@ export async function loadEfficacyHistory() {
   }
 }
 
+// Curated Instagram posts per date for the social archive. Never throws.
+export async function loadSocial() {
+  try {
+    const d = await cachedFetch(CONFIG.SOCIAL_DATA_URL, CONFIG.BASE_TTL);
+    return d && typeof d === "object" ? d : {};
+  } catch (_) {
+    return {};
+  }
+}
+
 // Try the live API and overlay it; never throws.
 export async function applyLive(matches) {
   try {

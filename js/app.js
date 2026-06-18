@@ -1,7 +1,7 @@
 // app.js — orchestration: load, render, tabs, theme, search/filter, live polling.
 
 import { CONFIG } from "./config.js";
-import { loadBase, applyLive, loadTeamStats, loadEfficacyHistory } from "./api.js";
+import { loadBase, applyLive, loadTeamStats, loadEfficacyHistory, loadSocial } from "./api.js";
 import { computeStandings } from "./standings.js";
 import { computeScorers, goalStats } from "./scorers.js";
 import { computeFacts } from "./facts.js";
@@ -15,7 +15,7 @@ const state = {
   matches: [], source: "", online: true,
   teamStats: { teams: {}, yellowCards: [] },
   liveMatches: [], liveProvider: false, liveUpdatedAt: null,
-  effHistory: [],
+  effHistory: [], social: {},
 };
 
 // ---- theme ----
@@ -44,7 +44,7 @@ function initTabs() {
     const id = btn.dataset.tab;
     document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("is-active", p.id === id));
     if (id === "stats" || id === "overview") renderCharts();
-    if (id === "live") UI.renderSocial();
+    if (id === "live") { UI.renderSocial(); UI.renderSocialArchive(state.matches, state.social); }
   });
 }
 
@@ -164,14 +164,15 @@ async function boot() {
   initMatchControls();
 
   try {
-    const [data, teamStats, effHistory] = await Promise.all([
-      loadBase(), loadTeamStats(), loadEfficacyHistory(),
+    const [data, teamStats, effHistory, social] = await Promise.all([
+      loadBase(), loadTeamStats(), loadEfficacyHistory(), loadSocial(),
     ]);
     state.matches = data.matches;
     state.source = data.source;
     state.online = data.online;
     state.teamStats = teamStats;
     state.effHistory = effHistory;
+    state.social = social;
     UI.fillMatchFilter(state.matches);
     renderAll();
   } catch (err) {

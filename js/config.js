@@ -16,6 +16,11 @@ export const CONFIG = {
   // Per-matchday shooting-efficacy history (illustrative; powers the historical chart).
   EFFICACY_HISTORY_URL: "./data/efficacy-history.json",
 
+  // Curated Instagram posts per date (YYYY-MM-DD) for the "social por jornada" archive.
+  SOCIAL_DATA_URL: "./data/social.json",
+  // Optional live Instagram feed widget (LightWidget / Behold) iframe URL. Empty = off.
+  SOCIAL_WIDGET_URL: "",
+
   // Optional real-time community API (CORS enabled). Best-effort enhancement only:
   // if it is unreachable / requires auth, the dashboard keeps working on base data.
   LIVE_API_BASE: "https://worldcup26.ir",

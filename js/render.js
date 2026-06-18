@@ -1,6 +1,6 @@
 // render.js — pure DOM rendering helpers. No data fetching here.
 
-import { VENUES, teamES } from "./config.js";
+import { VENUES, teamES, CONFIG } from "./config.js";
 import { flagUrl, kickoffLabel, kickoffDateTime, kickoffDate } from "./api.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -454,11 +454,23 @@ export function renderDiscipline(disc) {
   }
 }
 
-// ---- social feeds (X + Instagram) for the live tab ----
+// ---- social: X timeline + optional widget + per-matchday Instagram archive ----
 export function renderSocial() {
   const wrap = document.getElementById("social-wrap");
   if (!wrap || wrap.dataset.ready) return;
   wrap.dataset.ready = "1";
+
+  // Optional live Instagram feed via a third-party widget (LightWidget / Behold).
+  const widgetUrl = (CONFIG.SOCIAL_WIDGET_URL || "").trim();
+  const widget = widgetUrl
+    ? `<div class="card social-card">
+         <h3>📸 Feed en vivo · Instagram</h3>
+         <div class="social-embed"><iframe class="lw-iframe" src="${esc(widgetUrl)}"
+            allowtransparency="true" frameborder="0" scrolling="no"></iframe></div>
+         <a class="social-link" href="https://www.instagram.com/fifaworldcup/" target="_blank" rel="noopener">Abrir en Instagram ↗</a>
+       </div>`
+    : "";
+
   wrap.innerHTML = `
     <div class="social-grid">
       <div class="card social-card">
@@ -469,22 +481,72 @@ export function renderSocial() {
         </div>
         <a class="social-link" href="https://x.com/FIFAWorldCup" target="_blank" rel="noopener">Abrir en X ↗</a>
       </div>
-      <div class="card social-card">
-        <h3>📸 · @fifaworldcup</h3>
-        <div class="social-embed ig">
-          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/fifaworldcup/"
-            data-instgrm-version="14"></blockquote>
-          <div class="ig-fallback">
-            <p>Sigue la cobertura oficial en Instagram para fotos y reels del torneo.</p>
-          </div>
-        </div>
-        <a class="social-link" href="https://www.instagram.com/fifaworldcup/" target="_blank" rel="noopener">Abrir en Instagram ↗</a>
-      </div>
-    </div>`;
+      ${widget}
+    </div>
+    <div class="section-head" style="margin-top:1.6rem">
+      <p class="kicker">Archivo social</p>
+      <h3 class="section-title">Instagram por jornada y sede</h3>
+      <p class="section-sub">Cada día se arma solo con las sedes de esos partidos. Explora por estadio o mira las
+        publicaciones guardadas; las jornadas pasadas quedan como histórico.</p>
+    </div>
+    <div id="social-archive" class="social-archive"></div>`;
 
-  // Load widget scripts once (best-effort; links remain if they don't load).
   loadScript("https://platform.twitter.com/widgets.js", () => window.twttr?.widgets?.load(wrap));
   loadScript("https://www.instagram.com/embed.js", () => window.instgrm?.Embeds?.process());
+}
+
+// Per-day / per-venue Instagram archive, auto-built from played fixtures.
+// `social` maps "YYYY-MM-DD" -> [permalink | {permalink}] of curated IG posts.
+export function renderSocialArchive(matches, social = {}) {
+  const wrap = document.getElementById("social-archive");
+  if (!wrap) return;
+  const today = new Date().toISOString().slice(0, 10);
+
+  const byDate = new Map();
+  for (const m of matches) {
+    if (!m.date || m.date > today) continue;
+    if (!byDate.has(m.date)) byDate.set(m.date, []);
+    byDate.get(m.date).push(m);
+  }
+  const dates = [...byDate.keys()].sort().reverse();
+  if (!dates.length) { wrap.innerHTML = `<p class="empty">Aún no hay jornadas disputadas.</p>`; return; }
+
+  wrap.innerHTML = dates.map((date, idx) => {
+    const games = byDate.get(date);
+    const venues = [...new Set(games.map((g) => g.ground).filter(Boolean))];
+    const chips = venues.map((g) => {
+      const info = VENUES[g];
+      const stad = info ? info.stadium : g;
+      const tag = stad.replace(/[^A-Za-z0-9]/g, "").toLowerCase();
+      return `<a class="venue-chip" href="https://www.instagram.com/explore/tags/${tag}/" target="_blank" rel="noopener">📍 ${esc(stad)}</a>`;
+    }).join("");
+    const posts = social[date] || [];
+    const embeds = posts.length
+      ? `<div class="ig-posts">${posts.map(igEmbed).join("")}</div>`
+      : `<p class="archive-empty">Sin publicaciones guardadas para esta jornada — explora por estadio ↑</p>`;
+    return `
+      <details class="archive-day"${idx === 0 ? " open" : ""}>
+        <summary>
+          <span class="ad-date">${fmtDateLong(date)}</span>
+          <span class="ad-count">${games.length} partidos · ${venues.length} sedes</span>
+        </summary>
+        <div class="archive-venues">${chips}</div>
+        ${embeds}
+      </details>`;
+  }).join("");
+
+  if (window.instgrm?.Embeds) window.instgrm.Embeds.process();
+}
+
+function igEmbed(p) {
+  const url = typeof p === "string" ? p : (p && p.permalink) || "";
+  if (!url) return "";
+  return `<blockquote class="instagram-media" data-instgrm-permalink="${esc(url)}"
+    data-instgrm-version="14" style="max-width:540px;width:100%"></blockquote>`;
+}
+function fmtDateLong(d) {
+  const dt = new Date(d + "T00:00:00");
+  return dt.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
 }
 
 function loadScript(src, onload) {
