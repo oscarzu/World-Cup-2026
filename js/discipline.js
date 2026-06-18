@@ -26,8 +26,9 @@ export function computeDiscipline(teamStats) {
   return {
     foulsRanking,
     mostFouls: foulsRanking[0] || null,
-    leastEfficacy: efficacy[0] || null,
-    mostEfficacy: efficacy[efficacy.length - 1] || null,
+    efficacy,                                   // full list, worst → best (ratio desc)
+    leastEfficacy: efficacy[0] || null,         // worst finishing (highest ratio)
+    mostEfficacy: efficacy[efficacy.length - 1] || null, // best finishing (lowest ratio)
     yellow,
   };
 }

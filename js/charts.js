@@ -5,6 +5,8 @@
 //  • Minimal gridlines / no redundant axes (declutter).
 //  • A one-line takeaway under each chart (title = what, subtitle = so-what).
 
+import { teamES } from "./config.js";
+
 const charts = {};
 const FONT = (getComputedStyle(document.documentElement).getPropertyValue("--font") || "system-ui").trim()
   || "system-ui, sans-serif";
@@ -61,9 +63,11 @@ function ensurePlugin() {
 }
 
 // Build per-bar colours: the leader in `signal`, everyone else muted context.
-function emphasize(data, signal, context) {
+// leadFirst highlights index 0 (already-sorted rankings); otherwise the max.
+function emphasize(data, signal, context, leadFirst = false) {
   const vals = data.filter((v) => v != null);
   if (!vals.length) return data.map(() => signal);
+  if (leadFirst) return data.map((_, i) => (i === 0 ? signal : context));
   const max = Math.max(...vals);
   return data.map((v) => (v === max ? signal : context));
 }
@@ -110,7 +114,7 @@ function upsert(id, type, labels, data, label, opts = {}) {
 
   const isLine = type === "line";
   const bg = Array.isArray(opts.colors) ? opts.colors
-    : opts.emphasis ? emphasize(data, opts.color || t.accent, t.context)
+    : opts.emphasis ? emphasize(data, opts.color || t.accent, t.context, opts.leadFirst)
     : isLine ? (opts.color || t.accent) + "22"
     : (opts.color || t.accent);
 
@@ -142,12 +146,13 @@ function setSub(id, text) {
 }
 const topOf = (arr, key) => (arr && arr.length ? arr[0] : null);
 
-let lastStats = null, lastFacts = null, lastDisc = null;
+let lastStats = null, lastFacts = null, lastDisc = null, lastEffHist = null;
 
-export function renderCharts(stats, facts, disc) {
+export function renderCharts(stats, facts, disc, effHist) {
   if (stats) lastStats = stats;
   if (facts) lastFacts = facts;
   if (disc) lastDisc = disc;
+  if (effHist) lastEffHist = effHist;
   const t = theme();
 
   if (lastStats) {
@@ -172,10 +177,10 @@ export function renderCharts(stats, facts, disc) {
   if (lastFacts) {
     const tt = lastFacts.topTeams || [];
     upsert("chart-teams", "bar",
-      tt.map((x) => x.name), tt.map((x) => x.goals), "Goles",
+      tt.map((x) => teamES(x.name)), tt.map((x) => x.goals), "Goles",
       { horizontal: true, emphasis: true, color: t.gold });
     const lead = topOf(tt);
-    if (lead) setSub("sub-teams", `${lead.name} encabeza el ataque con ${lead.goals} goles.`);
+    if (lead) setSub("sub-teams", `${teamES(lead.name)} encabeza el ataque con ${lead.goals} goles.`);
 
     upsert("chart-moments", "bar",
       ["Remontadas", "Penales", "Goleadas 3+", "0–0", "Hat-tricks"],
@@ -188,16 +193,90 @@ export function renderCharts(stats, facts, disc) {
   if (lastDisc) {
     const fr = (lastDisc.foulsRanking || []).slice(0, 10);
     upsert("chart-fouls", "bar",
-      fr.map((x) => x.name), fr.map((x) => x.fouls), "Faltas",
+      fr.map((x) => teamES(x.name)), fr.map((x) => x.fouls), "Faltas",
       { horizontal: true, emphasis: true, color: t.live });
-    if (fr.length) setSub("sub-fouls", `${fr[0].name} es la más infractora, con ${fmt(fr[0].fouls)} faltas.`);
+    if (fr.length) setSub("sub-fouls", `${teamES(fr[0].name)} es la más infractora, con ${fmt(fr[0].fouls)} faltas.`);
 
     const yc = lastDisc.yellow || [];
     upsert("chart-cards", "bar",
       yc.map((x) => x.name), yc.map((x) => x.cards), "Amarillas",
       { horizontal: true, emphasis: true, color: t.gold });
     if (yc.length) setSub("sub-cards", `${yc[0].name} lidera con ${yc[0].cards} amarillas.`);
+
+    // Efficacy = shots on target ÷ goals. Lower ratio = better finishing.
+    const eff = lastDisc.efficacy || [];
+    const worst = eff.slice(0, 10);                      // highest ratio = least efficient
+    const best = eff.slice(-10).reverse();               // lowest ratio = most efficient
+    if (best.length) {
+      upsert("chart-eff-best", "bar",
+        best.map((x) => teamES(x.name)), best.map((x) => round1(x.ratio)), "Tiros por gol",
+        { horizontal: true, emphasis: true, leadFirst: true, color: t.accent });
+      setSub("sub-eff-best", `${teamES(best[0].name)} es la más eficaz: ${round1(best[0].ratio)} tiros por gol.`);
+    }
+    if (worst.length) {
+      upsert("chart-eff-worst", "bar",
+        worst.map((x) => teamES(x.name)), worst.map((x) => round1(x.ratio)), "Tiros por gol",
+        { horizontal: true, emphasis: true, leadFirst: true, color: t.live });
+      setSub("sub-eff-worst", `${teamES(worst[0].name)} es la menos eficaz: ${round1(worst[0].ratio)} tiros por gol.`);
+    }
   }
+
+  if (lastEffHist && lastEffHist.length) renderEffHistory(lastEffHist, t);
+}
+
+const round1 = (n) => Math.round(n * 10) / 10;
+
+// Per-matchday efficacy: best (most efficient) vs worst (least), team in tooltip.
+function renderEffHistory(history, t) {
+  if (typeof Chart === "undefined") return;
+  const el = document.getElementById("chart-eff-history");
+  if (!el) return;
+  ensurePlugin();
+  if (charts["chart-eff-history"]) { charts["chart-eff-history"].destroy(); delete charts["chart-eff-history"]; }
+
+  const labels = history.map((h) => `J${h.matchday}`);
+  const bestTeams = history.map((h) => teamES(h.best.team));
+  const worstTeams = history.map((h) => teamES(h.worst.team));
+
+  charts["chart-eff-history"] = new Chart(el, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        { label: "Más eficaz", data: history.map((h) => round1(h.best.ratio)),
+          borderColor: t.accent, backgroundColor: t.accent + "22", tension: 0.4,
+          pointRadius: 4, pointBackgroundColor: t.accent, borderWidth: 2.5, fill: false },
+        { label: "Menos eficaz", data: history.map((h) => round1(h.worst.ratio)),
+          borderColor: t.live, backgroundColor: t.live + "22", tension: 0.4,
+          pointRadius: 4, pointBackgroundColor: t.live, borderWidth: 2.5, fill: false },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 700, easing: "easeOutQuart" },
+      plugins: {
+        valueLabels: { display: false },
+        legend: { display: true, position: "top", align: "end",
+          labels: { color: t.text, font: { family: FONT, size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true } },
+        tooltip: {
+          backgroundColor: t.tooltipBg, titleColor: t.textStrong, bodyColor: t.textStrong,
+          borderColor: t.border, borderWidth: 1, padding: 10, cornerRadius: 10,
+          titleFont: { family: FONT, weight: "700" }, bodyFont: { family: FONT },
+          callbacks: {
+            label(ctx) {
+              const team = ctx.datasetIndex === 0 ? bestTeams[ctx.dataIndex] : worstTeams[ctx.dataIndex];
+              return `${ctx.dataset.label}: ${team} (${ctx.formattedValue} tiros/gol)`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false, drawBorder: false }, ticks: { color: t.text, font: { size: 11, family: FONT } } },
+        y: { grid: { display: true, color: t.grid, drawBorder: false }, ticks: { color: t.text, font: { size: 11, family: FONT } }, beginAtZero: true },
+      },
+    },
+  });
+  setSub("sub-eff-history", "Menor número = más eficaz. Pasa el cursor para ver la selección de cada jornada.");
 }
 
 // Re-draw with current theme colours (after a dark/light toggle).

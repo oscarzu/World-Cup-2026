@@ -490,6 +490,14 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 
 .credit.dim { opacity: .6; margin-top: .3rem; }
 
+/* large aggregate numbers (e.g. attendance 5,104,000) must fit their card */
+.agg-grid { grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); }
+.stat.agg .num { font-size: clamp(1.05rem, 2.3vw, 1.35rem); white-space: nowrap; letter-spacing: -.02em; }
+.stat.agg { overflow: hidden; }
+
+/* taller box for the per-matchday efficacy line chart */
+.chart-box.tall { height: 300px; }
+
 /* ---- responsive ---- */
 @media (max-width: 820px) {
   .overview-split, .charts-grid, .social-grid { grid-template-columns: 1fr; }

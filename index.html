@@ -207,6 +207,34 @@
           <p class="card-foot">Top 10 jugadores · Fuente: ESPN</p>
         </div>
       </div>
+
+      <div class="section-head">
+        <p class="kicker">Eficacia de cara al arco</p>
+        <h3 class="section-title">Puntería: tiros a arco por gol</h3>
+        <p class="section-sub">Métrica = tiros a puerta ÷ goles. <strong>Menos tiros por gol = más eficaz.</strong></p>
+      </div>
+      <div class="charts-grid">
+        <div class="card viz">
+          <p class="card-kicker">Más eficaces</p><h3>Top 10 mayor eficacia</h3>
+          <p class="card-sub" id="sub-eff-best">—</p>
+          <div class="chart-box"><canvas id="chart-eff-best"></canvas></div>
+          <p class="card-foot">Menos tiros por gol es mejor · Fuente: ESPN</p>
+        </div>
+        <div class="card viz">
+          <p class="card-kicker">Menos eficaces</p><h3>Top 10 menor eficacia</h3>
+          <p class="card-sub" id="sub-eff-worst">—</p>
+          <div class="chart-box"><canvas id="chart-eff-worst"></canvas></div>
+          <p class="card-foot">Más tiros por gol = falla más el arco · Fuente: ESPN</p>
+        </div>
+      </div>
+      <div class="card viz" style="margin-top:1.2rem">
+        <p class="card-kicker">Histórico por jornada</p>
+        <h3>Más eficaz vs. menos eficaz, jornada a jornada</h3>
+        <p class="card-sub" id="sub-eff-history">—</p>
+        <div class="chart-box tall"><canvas id="chart-eff-history"></canvas></div>
+        <p class="card-foot">Datos ilustrativos por jornada · tiros a arco ÷ goles</p>
+      </div>
+
       <div class="card viz" style="margin-top:1.2rem">
         <p class="card-kicker">Ranking</p>
         <h3>Top 10 selecciones con más faltas</h3>
