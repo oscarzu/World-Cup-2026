@@ -27,7 +27,7 @@
    "fouls": 45,
    "shotsOnTarget": 14,
    "goals": 4,
-   "redCards": 2
+   "redCards": 1
   },
   "South Korea": {
    "matches": 1,
@@ -48,7 +48,7 @@
    "fouls": 18,
    "shotsOnTarget": 21,
    "goals": 10,
-   "redCards": 1
+   "redCards": 0
   },
   "Japan": {
    "matches": 1,
@@ -69,7 +69,7 @@
    "fouls": 22,
    "shotsOnTarget": 10,
    "goals": 3,
-   "redCards": 1
+   "redCards": 0
   },
   "Czech Republic": {
    "matches": 1,
@@ -90,14 +90,14 @@
    "fouls": 30,
    "shotsOnTarget": 10,
    "goals": 3,
-   "redCards": 1
+   "redCards": 0
   },
   "Qatar": {
    "matches": 1,
    "fouls": 12,
    "shotsOnTarget": 8,
    "goals": 3,
-   "redCards": 1
+   "redCards": 0
   },
   "Switzerland": {
    "matches": 2,
@@ -118,7 +118,7 @@
    "fouls": 45,
    "shotsOnTarget": 21,
    "goals": 4,
-   "redCards": 2
+   "redCards": 1
   },
   "Scotland": {
    "matches": 3,
@@ -139,7 +139,7 @@
    "fouls": 30,
    "shotsOnTarget": 15,
    "goals": 6,
-   "redCards": 1
+   "redCards": 0
   },
   "Ivory Coast": {
    "matches": 2,
@@ -153,14 +153,14 @@
    "fouls": 42,
    "shotsOnTarget": 24,
    "goals": 10,
-   "redCards": 1
+   "redCards": 0
   },
   "Belgium": {
    "matches": 1,
    "fouls": 16,
    "shotsOnTarget": 4,
    "goals": 1,
-   "redCards": 1
+   "redCards": 0
   },
   "Egypt": {
    "matches": 2,
@@ -174,21 +174,21 @@
    "fouls": 32,
    "shotsOnTarget": 8,
    "goals": 1,
-   "redCards": 0
+   "redCards": 1
   },
   "Uruguay": {
    "matches": 3,
    "fouls": 51,
    "shotsOnTarget": 10,
    "goals": 3,
-   "redCards": 1
+   "redCards": 0
   },
   "South Africa": {
    "matches": 3,
    "fouls": 30,
    "shotsOnTarget": 18,
    "goals": 6,
-   "redCards": 1
+   "redCards": 0
   },
   "Spain": {
    "matches": 3,
@@ -278,7 +278,7 @@
    "cards": 2
   }
  ],
- "redCardsTotal": 15,
+ "redCardsTotal": 5,
  "seriousInjuries": [
   {
    "player": "Akram Afif",

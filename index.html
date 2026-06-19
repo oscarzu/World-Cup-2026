@@ -10,6 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
+  <div class="topbar">
   <header class="site-header">
     <div class="brand">
       <span class="logo" aria-hidden="true">⚽</span>
@@ -19,9 +20,6 @@
       </div>
     </div>
     <div class="header-meta">
-      <span id="live-indicator" class="live-pill" hidden>
-        <span class="dot"></span> <span data-i18n="hdr.live">EN VIVO</span>
-      </span>
       <span id="updated" class="updated"></span>
       <div class="seg" id="lang-toggle" role="group" aria-label="Language / Idioma">
         <button type="button" data-lang="es">ES</button>
@@ -43,6 +41,7 @@
     <button class="tab" data-tab="scorers" data-i18n="tab.scorers">Goleadores</button>
     <button class="tab" data-tab="venues" data-i18n="tab.venues">Sedes</button>
   </nav>
+  </div>
 
   <main id="app">
     <!-- Overview -->
@@ -70,7 +69,7 @@
           <h3 data-i18n="ov.goalsByMd">Goles por jornada</h3>
           <p class="card-sub" id="sub-overview">—</p>
           <div class="chart-box"><canvas id="chart-overview"></canvas></div>
-          <p class="card-foot" data-i18n="foot.goalsByMd">Goles anotados en cada jornada · Fuente: ESPN</p>
+          <p class="card-foot" data-i18n="foot.goalsByMd">Goles anotados en cada jornada</p>
         </div>
       </div>
 
@@ -174,19 +173,19 @@
           <p class="card-kicker">Goleo</p><h3 data-i18n="groupsChart.title">Goles por grupo</h3>
           <p class="card-sub" id="sub-groups">—</p>
           <div class="chart-box"><canvas id="chart-groups"></canvas></div>
-          <p class="card-foot" data-i18n="groupsChart.foot">Goles por grupo · Fuente: ESPN</p>
+          <p class="card-foot" data-i18n="groupsChart.foot">Goles por grupo</p>
         </div>
         <div class="card viz">
           <p class="card-kicker">Ataque</p><h3 data-i18n="teamsChart.title">Selecciones más goleadoras</h3>
           <p class="card-sub" id="sub-teams">—</p>
           <div class="chart-box"><canvas id="chart-teams"></canvas></div>
-          <p class="card-foot" data-i18n="teamsChart.foot">Top 8 por goles anotados · Fuente: ESPN</p>
+          <p class="card-foot" data-i18n="teamsChart.foot">Top 8 por goles anotados</p>
         </div>
         <div class="card viz">
           <p class="card-kicker">Drama</p><h3 data-i18n="momentsChart.title">Momentos del torneo</h3>
           <p class="card-sub" id="sub-moments">—</p>
           <div class="chart-box"><canvas id="chart-moments"></canvas></div>
-          <p class="card-foot" data-i18n="momentsChart.foot">Conteo de partidos memorables · Fuente: ESPN</p>
+          <p class="card-foot" data-i18n="momentsChart.foot">Conteo de partidos memorables</p>
         </div>
       </div>
 
@@ -201,13 +200,13 @@
           <p class="card-kicker" data-i18n="kick.fouls">Juego brusco</p><h3 data-i18n="foulsChart.title">Selecciones con más faltas (por partido)</h3>
           <p class="card-sub" id="sub-fouls">—</p>
           <div class="chart-box"><canvas id="chart-fouls"></canvas></div>
-          <p class="card-foot" data-i18n="foulsChart.foot">Promedio de faltas por partido · Fuente: ESPN</p>
+          <p class="card-foot" data-i18n="foulsChart.foot">Promedio de faltas por partido</p>
         </div>
         <div class="card viz">
           <p class="card-kicker">Tarjetas</p><h3 data-i18n="cardsChart.title">Jugadores con más amarillas</h3>
           <p class="card-sub" id="sub-cards">—</p>
           <div class="chart-box"><canvas id="chart-cards"></canvas></div>
-          <p class="card-foot" data-i18n="cardsChart.foot">Top 10 jugadores · Fuente: ESPN</p>
+          <p class="card-foot" data-i18n="cardsChart.foot">Top 10 jugadores</p>
         </div>
       </div>
 
@@ -221,13 +220,13 @@
           <p class="card-kicker" data-i18n="eff.best">Más eficaces</p><h3 data-i18n="eff.bestTitle">Top 10 mayor eficacia</h3>
           <p class="card-sub" id="sub-eff-best">—</p>
           <div class="chart-box"><canvas id="chart-eff-best"></canvas></div>
-          <p class="card-foot" data-i18n="eff.footBest">Mayor % de conversión = mejor · Fuente: ESPN</p>
+          <p class="card-foot" data-i18n="eff.footBest">Mayor % de conversión = mejor</p>
         </div>
         <div class="card viz">
           <p class="card-kicker" data-i18n="eff.worst">Menos eficaces</p><h3 data-i18n="eff.worstTitle">Top 10 menor eficacia</h3>
           <p class="card-sub" id="sub-eff-worst">—</p>
           <div class="chart-box"><canvas id="chart-eff-worst"></canvas></div>
-          <p class="card-foot" data-i18n="eff.footWorst">Menor % de conversión = falla más el arco · Fuente: ESPN</p>
+          <p class="card-foot" data-i18n="eff.footWorst">Menor % de conversión = falla más el arco</p>
         </div>
       </div>
       <div class="charts-grid">
@@ -258,12 +257,12 @@
           <p class="card-kicker" data-i18n="rc.total">Tarjetas rojas</p><h3 data-i18n="rc.byTeam">Tarjetas rojas por selección</h3>
           <p class="card-sub" id="sub-red">—</p>
           <div class="chart-box"><canvas id="chart-red"></canvas></div>
-          <p class="card-foot" data-i18n="rc.foot">Expulsiones acumuladas · Fuente: ESPN</p>
+          <p class="card-foot" data-i18n="rc.foot">Expulsiones acumuladas</p>
         </div>
         <div class="card">
           <h3 data-i18n="rc.injList">Bajas destacadas</h3>
           <div id="injuries-list" class="injuries-list"></div>
-          <p class="card-foot">Datos ilustrativos</p>
+          <p class="card-foot" data-i18n="rc.injFoot">Datos ilustrativos (no hay un feed fiable de lesiones)</p>
         </div>
       </div>
 
@@ -278,7 +277,7 @@
   <footer class="site-footer">
     <p id="data-source" class="data-source"></p>
     <p class="credit" data-i18n="credit">En vivo y estadísticas: ESPN · Calendario base: openfootball (dominio público) · Banderas: flagcdn.com · Visualización con Chart.js.</p>
-    <p class="credit dim" data-i18n="credit.dim">Diseño orientado a data storytelling — etiquetas directas, color con intención y un titular por gráfica.</p>
+    <p class="credit dim" data-i18n="credit.dim">Autor: Zuriel Santibañez</p>
   </footer>
 
   <script type="module" src="./js/app.js"></script>

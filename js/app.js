@@ -100,7 +100,8 @@ function renderAll() {
   const en = getLang() === "en";
   const liveCount = (state.liveMatches.length ? state.liveMatches : state.matches)
     .filter((m) => m.status === "live").length;
-  $("#live-indicator").hidden = liveCount === 0;
+  // Colour the "Live" tab only while a match is actually live.
+  document.querySelector('.tab[data-tab="live"]')?.classList.toggle("has-live", liveCount > 0);
   const time = new Date().toLocaleTimeString(en ? "en-US" : "es-MX",
     { timeZone: CONFIG.TIMEZONE, hour: "2-digit", minute: "2-digit" });
   $("#updated").textContent = `${en ? "Upd." : "Act."} ${time} ${CONFIG.TIMEZONE_LABEL}`;

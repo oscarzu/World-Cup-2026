@@ -217,18 +217,21 @@ function extractAgg(ev, summary, m) {
   const cs = comp.competitors || [];
   const home = cs.find((c) => c.homeAway === "home") || cs[0] || {};
   const away = cs.find((c) => c.homeAway === "away") || cs[1] || {};
-  const yc = [];
+  const yc = []; let homeRed = 0, awayRed = 0;
   for (const e of (summary?.keyEvents || [])) {
     const txt = (e.type?.text || "").toLowerCase();
-    if (!txt.includes("yellow")) continue;
     const side = sideOf(e.team?.id, home, away);
-    const country = side === "home" ? m.home.name : side === "away" ? m.away.name : "";
-    const who = athleteName(e);
-    if (who) yc.push({ name: who, country });
+    if (txt.includes("yellow")) {
+      const country = side === "home" ? m.home.name : side === "away" ? m.away.name : "";
+      const who = athleteName(e);
+      if (who) yc.push({ name: who, country });
+    } else if (txt.includes("red")) {
+      if (side === "home") homeRed++; else if (side === "away") awayRed++;
+    }
   }
   return {
-    home: { name: m.home.name, fouls: m.stats.home.fouls || 0, shots: m.stats.home.shots || 0, goals: m.score.home || 0 },
-    away: { name: m.away.name, fouls: m.stats.away.fouls || 0, shots: m.stats.away.shots || 0, goals: m.score.away || 0 },
+    home: { name: m.home.name, fouls: m.stats.home.fouls || 0, shots: m.stats.home.shots || 0, goals: m.score.home || 0, red: homeRed },
+    away: { name: m.away.name, fouls: m.stats.away.fouls || 0, shots: m.stats.away.shots || 0, goals: m.score.away || 0, red: awayRed },
     yc,
   };
 }
@@ -239,8 +242,9 @@ function aggregateTeams(agg) {
     for (const side of ["home", "away"]) {
       const s = agg.fixtures[id][side];
       if (!s || !s.name) continue;
-      const t = teams[s.name] || { fouls: 0, shotsOnTarget: 0, goals: 0 };
+      const t = teams[s.name] || { fouls: 0, shotsOnTarget: 0, goals: 0, red: 0, matches: 0 };
       t.fouls += s.fouls; t.shotsOnTarget += s.shots; t.goals += s.goals;
+      t.red += s.red || 0; t.matches += 1;
       teams[s.name] = t;
     }
   }

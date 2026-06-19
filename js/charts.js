@@ -62,7 +62,8 @@ function emphasize(data, signal, context, leadFirst = false) {
 }
 
 function baseOpts(t2, { horizontal = false, valueLabels = true, valueColor, suffix = "", lineY = false } = {}) {
-  const ticks = { color: t2.text, font: { size: 11, family: FONT } };
+  const ticks = { color: t2.text, font: { size: 11, family: FONT }, autoSkip: false };
+  const catTicks = { color: t2.textStrong, font: { size: 11, family: FONT, weight: "600" }, autoSkip: false };
   return {
     responsive: true, maintainAspectRatio: false,
     indexAxis: horizontal ? "y" : "x",
@@ -78,8 +79,8 @@ function baseOpts(t2, { horizontal = false, valueLabels = true, valueColor, suff
       },
     },
     scales: {
-      x: { grid: { display: false, drawBorder: false }, ticks: horizontal ? { display: false } : ticks, beginAtZero: true },
-      y: { grid: { display: lineY, color: t2.grid, drawBorder: false }, ticks: horizontal ? ticks : (lineY ? ticks : { display: false }), beginAtZero: true },
+      x: { grid: { display: false, drawBorder: false }, ticks: horizontal ? { display: false } : catTicks, beginAtZero: true },
+      y: { grid: { display: lineY, color: t2.grid, drawBorder: false }, ticks: horizontal ? catTicks : (lineY ? ticks : { display: false }), beginAtZero: true },
     },
   };
 }
@@ -142,9 +143,14 @@ export function renderCharts(stats, facts, disc, effHist) {
     const tt = lastFacts.topTeams || [];
     upsert("chart-teams", "bar", tt.map((x) => tName(x.name)), tt.map((x) => x.goals), t("u.goals"),
       { horizontal: true, emphasis: true, color: tc.gold });
-    const lead = topOf(tt);
-    if (lead) setSub("sub-teams", sub(`${tName(lead.name)} encabeza el ataque con ${lead.goals} goles.`,
-      `${tName(lead.name)} leads the attack with ${lead.goals} goals.`));
+    if (tt.length) {
+      const maxG = tt[0].goals;
+      const lead = tt.filter((x) => x.goals === maxG);
+      const names = lead.map((x) => tName(x.name)).join(getLang() === "en" ? " & " : " y ");
+      const many = lead.length > 1;
+      setSub("sub-teams", sub(`${names} encabeza${many ? "n" : ""} el ataque con ${maxG} goles.`,
+        `${names} lead${many ? "" : "s"} the attack with ${maxG} goals.`));
+    }
 
     upsert("chart-moments", "bar",
       [t("f.comebacks"), t("f.shootouts"), t("f.blowouts"), t("f.zerozero"), t("f.hattricks")],
