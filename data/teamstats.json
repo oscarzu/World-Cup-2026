@@ -1,165 +1,229 @@
 {
- "note": "Illustrative team & player stats (fouls, shots on target, cards) layered on top of openfootball fixtures.",
+ "note": "Illustrative team & player stats layered on openfootball fixtures.",
  "teams": {
   "Germany": {
-   "fouls": 85,
-   "shotsOnTarget": 49,
-   "goals": 15
+   "matches": 3,
+   "fouls": 11,
+   "shotsOnTarget": 20,
+   "goals": 11,
+   "redCards": 0
   },
   "Sweden": {
-   "fouls": 114,
-   "shotsOnTarget": 52,
-   "goals": 15
+   "matches": 2,
+   "fouls": 28,
+   "shotsOnTarget": 16,
+   "goals": 6,
+   "redCards": 0
   },
   "USA": {
-   "fouls": 114,
-   "shotsOnTarget": 33,
-   "goals": 12
+   "matches": 2,
+   "fouls": 30,
+   "shotsOnTarget": 10,
+   "goals": 3,
+   "redCards": 0
   },
   "Mexico": {
-   "fouls": 121,
-   "shotsOnTarget": 29,
-   "goals": 6
+   "matches": 3,
+   "fouls": 45,
+   "shotsOnTarget": 14,
+   "goals": 4,
+   "redCards": 2
   },
   "South Korea": {
-   "fouls": 115,
-   "shotsOnTarget": 59,
-   "goals": 3
+   "matches": 1,
+   "fouls": 12,
+   "shotsOnTarget": 9,
+   "goals": 3,
+   "redCards": 0
   },
   "Australia": {
-   "fouls": 99,
-   "shotsOnTarget": 30,
-   "goals": 3
+   "matches": 3,
+   "fouls": 45,
+   "shotsOnTarget": 12,
+   "goals": 5,
+   "redCards": 0
   },
   "Netherlands": {
-   "fouls": 78,
-   "shotsOnTarget": 38,
-   "goals": 15
+   "matches": 3,
+   "fouls": 18,
+   "shotsOnTarget": 21,
+   "goals": 10,
+   "redCards": 1
   },
   "Japan": {
-   "fouls": 88,
-   "shotsOnTarget": 47,
-   "goals": 13
+   "matches": 1,
+   "fouls": 13,
+   "shotsOnTarget": 5,
+   "goals": 1,
+   "redCards": 0
   },
   "Iran": {
-   "fouls": 107,
-   "shotsOnTarget": 57,
-   "goals": 12
+   "matches": 1,
+   "fouls": 13,
+   "shotsOnTarget": 9,
+   "goals": 2,
+   "redCards": 1
   },
   "New Zealand": {
-   "fouls": 73,
-   "shotsOnTarget": 53,
-   "goals": 7
+   "matches": 2,
+   "fouls": 22,
+   "shotsOnTarget": 10,
+   "goals": 3,
+   "redCards": 1
   },
   "Czech Republic": {
-   "fouls": 97,
-   "shotsOnTarget": 30,
-   "goals": 2
+   "matches": 1,
+   "fouls": 10,
+   "shotsOnTarget": 4,
+   "goals": 1,
+   "redCards": 0
   },
   "Canada": {
-   "fouls": 107,
-   "shotsOnTarget": 61,
-   "goals": 3
+   "matches": 3,
+   "fouls": 36,
+   "shotsOnTarget": 21,
+   "goals": 6,
+   "redCards": 0
   },
   "Bosnia & Herzegovina": {
-   "fouls": 117,
-   "shotsOnTarget": 41,
-   "goals": 4
+   "matches": 2,
+   "fouls": 30,
+   "shotsOnTarget": 10,
+   "goals": 3,
+   "redCards": 1
   },
   "Qatar": {
-   "fouls": 92,
-   "shotsOnTarget": 72,
-   "goals": 15
+   "matches": 1,
+   "fouls": 12,
+   "shotsOnTarget": 8,
+   "goals": 3,
+   "redCards": 1
   },
   "Switzerland": {
-   "fouls": 109,
-   "shotsOnTarget": 31,
-   "goals": 14
+   "matches": 2,
+   "fouls": 28,
+   "shotsOnTarget": 14,
+   "goals": 6,
+   "redCards": 0
   },
   "Brazil": {
-   "fouls": 90,
-   "shotsOnTarget": 47,
-   "goals": 2
+   "matches": 3,
+   "fouls": 36,
+   "shotsOnTarget": 21,
+   "goals": 3,
+   "redCards": 1
   },
   "Morocco": {
-   "fouls": 118,
-   "shotsOnTarget": 39,
-   "goals": 10
+   "matches": 3,
+   "fouls": 45,
+   "shotsOnTarget": 21,
+   "goals": 4,
+   "redCards": 2
   },
   "Scotland": {
-   "fouls": 73,
-   "shotsOnTarget": 37,
-   "goals": 8
+   "matches": 3,
+   "fouls": 39,
+   "shotsOnTarget": 21,
+   "goals": 9,
+   "redCards": 0
   },
   "Paraguay": {
-   "fouls": 77,
-   "shotsOnTarget": 44,
-   "goals": 14
+   "matches": 1,
+   "fouls": 16,
+   "shotsOnTarget": 8,
+   "goals": 3,
+   "redCards": 0
   },
   "Curaçao": {
-   "fouls": 76,
-   "shotsOnTarget": 63,
-   "goals": 8
+   "matches": 3,
+   "fouls": 30,
+   "shotsOnTarget": 15,
+   "goals": 6,
+   "redCards": 1
   },
   "Ivory Coast": {
-   "fouls": 112,
-   "shotsOnTarget": 71,
-   "goals": 2
+   "matches": 2,
+   "fouls": 30,
+   "shotsOnTarget": 18,
+   "goals": 1,
+   "redCards": 0
   },
   "Tunisia": {
-   "fouls": 82,
-   "shotsOnTarget": 34,
-   "goals": 4
+   "matches": 3,
+   "fouls": 42,
+   "shotsOnTarget": 24,
+   "goals": 10,
+   "redCards": 1
   },
   "Belgium": {
-   "fouls": 90,
-   "shotsOnTarget": 28,
-   "goals": 14
+   "matches": 1,
+   "fouls": 16,
+   "shotsOnTarget": 4,
+   "goals": 1,
+   "redCards": 1
   },
   "Egypt": {
-   "fouls": 103,
-   "shotsOnTarget": 30,
-   "goals": 4
+   "matches": 2,
+   "fouls": 32,
+   "shotsOnTarget": 12,
+   "goals": 4,
+   "redCards": 0
   },
   "Saudi Arabia": {
-   "fouls": 90,
-   "shotsOnTarget": 66,
-   "goals": 5
+   "matches": 2,
+   "fouls": 32,
+   "shotsOnTarget": 8,
+   "goals": 1,
+   "redCards": 0
   },
   "Uruguay": {
-   "fouls": 134,
-   "shotsOnTarget": 75,
-   "goals": 11
+   "matches": 3,
+   "fouls": 51,
+   "shotsOnTarget": 10,
+   "goals": 3,
+   "redCards": 1
   },
   "South Africa": {
-   "fouls": 78,
-   "shotsOnTarget": 74,
-   "goals": 4
-  },
-  "Haiti": {
-   "fouls": 92,
-   "shotsOnTarget": 67,
-   "goals": 13
-  },
-  "Turkey": {
-   "fouls": 83,
-   "shotsOnTarget": 60,
-   "goals": 11
-  },
-  "Ecuador": {
-   "fouls": 100,
-   "shotsOnTarget": 70,
-   "goals": 3
+   "matches": 3,
+   "fouls": 30,
+   "shotsOnTarget": 18,
+   "goals": 6,
+   "redCards": 1
   },
   "Spain": {
-   "fouls": 113,
-   "shotsOnTarget": 78,
-   "goals": 4
+   "matches": 3,
+   "fouls": 36,
+   "shotsOnTarget": 24,
+   "goals": 2,
+   "redCards": 0
+  },
+  "Ecuador": {
+   "matches": 1,
+   "fouls": 14,
+   "shotsOnTarget": 4,
+   "goals": 1,
+   "redCards": 0
+  },
+  "Turkey": {
+   "matches": 3,
+   "fouls": 30,
+   "shotsOnTarget": 24,
+   "goals": 4,
+   "redCards": 0
+  },
+  "Haiti": {
+   "matches": 1,
+   "fouls": 9,
+   "shotsOnTarget": 7,
+   "goals": 2,
+   "redCards": 0
   },
   "Cape Verde": {
-   "fouls": 76,
-   "shotsOnTarget": 63,
-   "goals": 3
+   "matches": 2,
+   "fouls": 28,
+   "shotsOnTarget": 14,
+   "goals": 5,
+   "redCards": 0
   }
  },
  "yellowCards": [
@@ -212,6 +276,27 @@
    "name": "Aziz Behich",
    "country": "Australia",
    "cards": 2
+  }
+ ],
+ "redCardsTotal": 15,
+ "seriousInjuries": [
+  {
+   "player": "Akram Afif",
+   "team": "Qatar",
+   "kind": "Fractura de peroné",
+   "date": "2026-06-17"
+  },
+  {
+   "player": "Marco Reus",
+   "team": "Germany",
+   "kind": "Lesión de rodilla",
+   "date": "2026-06-13"
+  },
+  {
+   "player": "Achraf Hakimi",
+   "team": "Morocco",
+   "kind": "Esguince de tobillo",
+   "date": "2026-06-16"
   }
  ]
 }

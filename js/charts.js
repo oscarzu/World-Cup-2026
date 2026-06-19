@@ -1,35 +1,32 @@
 // charts.js — data-storytelling visualizations (Chart.js).
-// Principles applied:
-//  • Direct value labels on marks → less axis-reading (Tufte's data-ink ratio).
-//  • One "signal" colour + muted context bars → guide the eye (Knaflic).
-//  • Minimal gridlines / no redundant axes (declutter).
-//  • A one-line takeaway under each chart (title = what, subtitle = so-what).
+//  • Direct value labels on marks (less axis-reading).
+//  • One "signal" colour + muted context (guide the eye).
+//  • Minimal gridlines; a one-line takeaway under each chart.
+//  • Bilingual (ES/EN) labels and takeaways.
 
-import { teamES } from "./config.js";
+import { tName, t, getLang } from "./i18n.js";
 
 const charts = {};
 const FONT = (getComputedStyle(document.documentElement).getPropertyValue("--font") || "system-ui").trim()
   || "system-ui, sans-serif";
 const fmt = (n) => (typeof n === "number" ? n.toLocaleString("en-US") : n);
+const round1 = (n) => Math.round(n * 10) / 10;
+const sub = (es, en) => (getLang() === "en" ? en : es);
 
 function theme() {
   const cs = getComputedStyle(document.documentElement);
   const v = (k, d) => (cs.getPropertyValue(k).trim() || d);
   return {
-    accent: v("--accent", "#2fd968"),
-    accent2: v("--accent-2", "#14b8a6"),
-    gold: v("--gold", "#ffd23f"),
-    live: v("--live", "#ff453a"),
+    accent: v("--accent", "#2fd968"), accent2: v("--accent-2", "#14b8a6"),
+    gold: v("--gold", "#ffd23f"), live: v("--live", "#ff453a"),
     context: v("--chart-context", "rgba(150,160,175,.35)"),
     grid: v("--chart-grid", "rgba(150,160,175,.16)"),
-    text: v("--muted", "#8b94a3"),
-    textStrong: v("--text", "#eef1f5"),
-    tooltipBg: v("--surface-solid", "#14161c"),
-    border: v("--border-strong", "rgba(255,255,255,.16)"),
+    text: v("--muted", "#8b94a3"), textStrong: v("--text", "#eef1f5"),
+    tooltipBg: v("--surface-solid", "#14161c"), border: v("--border-strong", "rgba(255,255,255,.16)"),
   };
 }
 
-// Plugin: render each value at the end of its bar / above its point.
+// Plugin: render each value at the end of its bar / above its point (+ optional suffix).
 const ValueLabels = {
   id: "valueLabels",
   afterDatasetsDraw(chart, _args, opts) {
@@ -37,20 +34,15 @@ const ValueLabels = {
     const ds = chart.data.datasets[0];
     const meta = chart.getDatasetMeta(0);
     const horizontal = chart.options.indexAxis === "y";
-    const ctx = chart.ctx;
+    const ctx = chart.ctx; const sfx = opts.suffix || "";
     ctx.save();
     ctx.font = `700 11px ${FONT}`;
     ctx.fillStyle = opts.color || "#999";
     meta.data.forEach((el, i) => {
       const val = ds.data[i];
       if (val == null) return;
-      if (horizontal) {
-        ctx.textAlign = "left"; ctx.textBaseline = "middle";
-        ctx.fillText(fmt(val), el.x + 6, el.y);
-      } else {
-        ctx.textAlign = "center"; ctx.textBaseline = "bottom";
-        ctx.fillText(fmt(val), el.x, el.y - 5);
-      }
+      if (horizontal) { ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText(fmt(val) + sfx, el.x + 6, el.y); }
+      else { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText(fmt(val) + sfx, el.x, el.y - 5); }
     });
     ctx.restore();
   },
@@ -58,12 +50,9 @@ const ValueLabels = {
 let pluginReady = false;
 function ensurePlugin() {
   if (pluginReady || typeof Chart === "undefined") return;
-  Chart.register(ValueLabels);
-  pluginReady = true;
+  Chart.register(ValueLabels); pluginReady = true;
 }
 
-// Build per-bar colours: the leader in `signal`, everyone else muted context.
-// leadFirst highlights index 0 (already-sorted rankings); otherwise the max.
 function emphasize(data, signal, context, leadFirst = false) {
   const vals = data.filter((v) => v != null);
   if (!vals.length) return data.map(() => signal);
@@ -72,34 +61,25 @@ function emphasize(data, signal, context, leadFirst = false) {
   return data.map((v) => (v === max ? signal : context));
 }
 
-function baseOpts(t, { horizontal = false, valueLabels = true, valueColor, lineY = false } = {}) {
-  const ticks = { color: t.text, font: { size: 11, family: FONT } };
+function baseOpts(t2, { horizontal = false, valueLabels = true, valueColor, suffix = "", lineY = false } = {}) {
+  const ticks = { color: t2.text, font: { size: 11, family: FONT } };
   return {
-    responsive: true,
-    maintainAspectRatio: false,
+    responsive: true, maintainAspectRatio: false,
     indexAxis: horizontal ? "y" : "x",
-    layout: { padding: horizontal ? { right: 40, left: 2 } : { top: 20 } },
+    layout: { padding: horizontal ? { right: 44, left: 2 } : { top: 20 } },
     animation: { duration: 750, easing: "easeOutQuart" },
     plugins: {
       legend: { display: false },
-      valueLabels: { display: valueLabels, color: valueColor || t.textStrong },
+      valueLabels: { display: valueLabels, color: valueColor || t2.textStrong, suffix },
       tooltip: {
-        backgroundColor: t.tooltipBg, titleColor: t.textStrong, bodyColor: t.textStrong,
-        borderColor: t.border, borderWidth: 1, padding: 10, cornerRadius: 10, displayColors: false,
+        backgroundColor: t2.tooltipBg, titleColor: t2.textStrong, bodyColor: t2.textStrong,
+        borderColor: t2.border, borderWidth: 1, padding: 10, cornerRadius: 10, displayColors: false,
         titleFont: { family: FONT, weight: "700" }, bodyFont: { family: FONT },
       },
     },
     scales: {
-      x: {
-        grid: { display: false, drawBorder: false },
-        ticks: horizontal ? { display: false } : ticks,
-        beginAtZero: true,
-      },
-      y: {
-        grid: { display: lineY, color: t.grid, drawBorder: false },
-        ticks: horizontal ? ticks : (lineY ? ticks : { display: false }),
-        beginAtZero: true,
-      },
+      x: { grid: { display: false, drawBorder: false }, ticks: horizontal ? { display: false } : ticks, beginAtZero: true },
+      y: { grid: { display: lineY, color: t2.grid, drawBorder: false }, ticks: horizontal ? ticks : (lineY ? ticks : { display: false }), beginAtZero: true },
     },
   };
 }
@@ -109,42 +89,26 @@ function upsert(id, type, labels, data, label, opts = {}) {
   const el = document.getElementById(id);
   if (!el) return;
   ensurePlugin();
-  const t = theme();
+  const t2 = theme();
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-
   const isLine = type === "line";
   const bg = Array.isArray(opts.colors) ? opts.colors
-    : opts.emphasis ? emphasize(data, opts.color || t.accent, t.context, opts.leadFirst)
-    : isLine ? (opts.color || t.accent) + "22"
-    : (opts.color || t.accent);
-
+    : opts.emphasis ? emphasize(data, opts.color || t2.accent, t2.context, opts.leadFirst)
+    : isLine ? (opts.color || t2.accent) + "22" : (opts.color || t2.accent);
   charts[id] = new Chart(el, {
     type,
-    data: {
-      labels,
-      datasets: [{
-        label, data,
-        backgroundColor: bg,
-        borderColor: opts.color || t.accent,
-        borderRadius: isLine ? 0 : 7,
-        borderWidth: isLine ? 2.5 : 0,
-        maxBarThickness: 30,
-        tension: 0.4,
-        pointRadius: isLine ? 3.5 : 0,
-        pointHoverRadius: 5,
-        pointBackgroundColor: opts.color || t.accent,
-        fill: isLine ? { target: "origin" } : false,
-      }],
-    },
-    options: baseOpts(t, opts),
+    data: { labels, datasets: [{
+      label, data, backgroundColor: bg, borderColor: opts.color || t2.accent,
+      borderRadius: isLine ? 0 : 7, borderWidth: isLine ? 2.5 : 0, maxBarThickness: 30,
+      tension: 0.4, pointRadius: isLine ? 3.5 : 0, pointHoverRadius: 5,
+      pointBackgroundColor: opts.color || t2.accent, fill: isLine ? { target: "origin" } : false,
+    }] },
+    options: baseOpts(t2, opts),
   });
 }
 
-function setSub(id, text) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = text || "";
-}
-const topOf = (arr, key) => (arr && arr.length ? arr[0] : null);
+function setSub(id, text) { const el = document.getElementById(id); if (el) el.textContent = text || ""; }
+const topOf = (arr) => (arr && arr.length ? arr[0] : null);
 
 let lastStats = null, lastFacts = null, lastDisc = null, lastEffHist = null;
 
@@ -153,131 +117,160 @@ export function renderCharts(stats, facts, disc, effHist) {
   if (facts) lastFacts = facts;
   if (disc) lastDisc = disc;
   if (effHist) lastEffHist = effHist;
-  const t = theme();
+  const tc = theme();
 
   if (lastStats) {
     const md = lastStats.byMatchday;
-    upsert("chart-overview", "line",
-      md.map(([k]) => `J${k}`), md.map(([, v]) => v), "Goles",
-      { color: t.accent, lineY: true, valueLabels: true, valueColor: t.text });
+    upsert("chart-overview", "line", md.map(([k]) => `J${k}`), md.map(([, v]) => v), t("u.goals"),
+      { color: tc.accent, lineY: true, valueLabels: true, valueColor: tc.text });
     if (md.length) {
       const peak = md.reduce((a, b) => (b[1] > a[1] ? b : a));
-      setSub("sub-overview", `Pico de ${peak[1]} goles en la jornada ${peak[0]}.`);
+      setSub("sub-overview", sub(`Pico de ${peak[1]} goles en la jornada ${peak[0]}.`,
+        `Peak of ${peak[1]} goals on matchday ${peak[0]}.`));
     }
-
     upsert("chart-groups", "bar",
       lastStats.byGroup.map(([k]) => k.replace("Group ", "")),
-      lastStats.byGroup.map(([, v]) => v), "Goles", { emphasis: true, color: t.accent });
+      lastStats.byGroup.map(([, v]) => v), t("u.goals"), { emphasis: true, color: tc.accent });
     if (lastStats.byGroup.length) {
       const g = lastStats.byGroup.reduce((a, b) => (b[1] > a[1] ? b : a));
-      setSub("sub-groups", `El grupo ${g[0].replace("Group ", "")} es el más goleador, con ${g[1]} goles.`);
+      setSub("sub-groups", sub(`El grupo ${g[0].replace("Group ", "")} es el más goleador, con ${g[1]} goles.`,
+        `Group ${g[0].replace("Group ", "")} is the highest-scoring, with ${g[1]} goals.`));
     }
   }
 
   if (lastFacts) {
     const tt = lastFacts.topTeams || [];
-    upsert("chart-teams", "bar",
-      tt.map((x) => teamES(x.name)), tt.map((x) => x.goals), "Goles",
-      { horizontal: true, emphasis: true, color: t.gold });
+    upsert("chart-teams", "bar", tt.map((x) => tName(x.name)), tt.map((x) => x.goals), t("u.goals"),
+      { horizontal: true, emphasis: true, color: tc.gold });
     const lead = topOf(tt);
-    if (lead) setSub("sub-teams", `${teamES(lead.name)} encabeza el ataque con ${lead.goals} goles.`);
+    if (lead) setSub("sub-teams", sub(`${tName(lead.name)} encabeza el ataque con ${lead.goals} goles.`,
+      `${tName(lead.name)} leads the attack with ${lead.goals} goals.`));
 
     upsert("chart-moments", "bar",
-      ["Remontadas", "Penales", "Goleadas 3+", "0–0", "Hat-tricks"],
-      [lastFacts.comebacks, lastFacts.shootouts, lastFacts.blowouts,
-        lastFacts.zeroZero, lastFacts.hatTricks.length], "Partidos",
-      { colors: [t.accent, t.live, t.gold, t.context, t.accent2] });
-    setSub("sub-moments", `${lastFacts.comebacks} remontadas y ${lastFacts.shootouts} tandas de penales hasta ahora.`);
+      [t("f.comebacks"), t("f.shootouts"), t("f.blowouts"), t("f.zerozero"), t("f.hattricks")],
+      [lastFacts.comebacks, lastFacts.shootouts, lastFacts.blowouts, lastFacts.zeroZero, lastFacts.hatTricks.length],
+      t("u.matches"), { colors: [tc.accent, tc.live, tc.gold, tc.context, tc.accent2] });
+    setSub("sub-moments", sub(`${lastFacts.comebacks} remontadas y ${lastFacts.shootouts} tandas de penales hasta ahora.`,
+      `${lastFacts.comebacks} comebacks and ${lastFacts.shootouts} shootouts so far.`));
   }
 
   if (lastDisc) {
+    // Fouls per match (normalised).
     const fr = (lastDisc.foulsRanking || []).slice(0, 10);
-    upsert("chart-fouls", "bar",
-      fr.map((x) => teamES(x.name)), fr.map((x) => x.fouls), "Faltas",
-      { horizontal: true, emphasis: true, color: t.live });
-    if (fr.length) setSub("sub-fouls", `${teamES(fr[0].name)} es la más infractora, con ${fmt(fr[0].fouls)} faltas.`);
+    upsert("chart-fouls", "bar", fr.map((x) => tName(x.name)), fr.map((x) => round1(x.perMatch)), t("u.fouls"),
+      { horizontal: true, emphasis: true, color: tc.live });
+    if (fr.length) setSub("sub-fouls", sub(`${tName(fr[0].name)} es la más infractora: ${round1(fr[0].perMatch)} faltas por partido.`,
+      `${tName(fr[0].name)} fouls the most: ${round1(fr[0].perMatch)} per match.`));
 
     const yc = lastDisc.yellow || [];
-    upsert("chart-cards", "bar",
-      yc.map((x) => x.name), yc.map((x) => x.cards), "Amarillas",
-      { horizontal: true, emphasis: true, color: t.gold });
-    if (yc.length) setSub("sub-cards", `${yc[0].name} lidera con ${yc[0].cards} amarillas.`);
+    upsert("chart-cards", "bar", yc.map((x) => x.name), yc.map((x) => x.cards), t("u.cards"),
+      { horizontal: true, emphasis: true, color: tc.gold });
+    if (yc.length) setSub("sub-cards", sub(`${yc[0].name} lidera con ${yc[0].cards} amarillas.`,
+      `${yc[0].name} leads with ${yc[0].cards} yellow cards.`));
 
-    // Efficacy = shots on target ÷ goals. Lower ratio = better finishing.
-    const eff = lastDisc.efficacy || [];
-    const worst = eff.slice(0, 10);                      // highest ratio = least efficient
-    const best = eff.slice(-10).reverse();               // lowest ratio = most efficient
+    // Red cards by team.
+    const rb = (lastDisc.redByTeam || []).slice(0, 8);
+    if (rb.length) {
+      upsert("chart-red", "bar", rb.map((x) => tName(x.name)), rb.map((x) => x.red), t("a.red"),
+        { horizontal: true, emphasis: true, leadFirst: true, color: tc.live });
+      setSub("sub-red", sub(`${rb.length} selecciones con expulsión · ${lastDisc.redTotal} rojas en total.`,
+        `${rb.length} teams sent off · ${lastDisc.redTotal} red cards in total.`));
+    }
+
+    // Efficacy = conversion % (goals ÷ shots on target). Higher = better.
+    const eff = lastDisc.efficacy || [];          // sorted best → worst (pct desc)
+    const best = eff.slice(0, 10);
+    const worst = eff.slice(-10).reverse();        // lowest pct first
     if (best.length) {
-      upsert("chart-eff-best", "bar",
-        best.map((x) => teamES(x.name)), best.map((x) => round1(x.ratio)), "Tiros por gol",
-        { horizontal: true, emphasis: true, leadFirst: true, color: t.accent });
-      setSub("sub-eff-best", `${teamES(best[0].name)} es la más eficaz: ${round1(best[0].ratio)} tiros por gol.`);
+      upsert("chart-eff-best", "bar", best.map((x) => tName(x.name)), best.map((x) => Math.round(x.pct)), "%",
+        { horizontal: true, emphasis: true, leadFirst: true, color: tc.accent, suffix: "%" });
+      setSub("sub-eff-best", sub(`${tName(best[0].name)} es la más eficaz: ${Math.round(best[0].pct)}% de conversión.`,
+        `${tName(best[0].name)} is the most efficient: ${Math.round(best[0].pct)}% conversion.`));
     }
     if (worst.length) {
-      upsert("chart-eff-worst", "bar",
-        worst.map((x) => teamES(x.name)), worst.map((x) => round1(x.ratio)), "Tiros por gol",
-        { horizontal: true, emphasis: true, leadFirst: true, color: t.live });
-      setSub("sub-eff-worst", `${teamES(worst[0].name)} es la menos eficaz: ${round1(worst[0].ratio)} tiros por gol.`);
+      upsert("chart-eff-worst", "bar", worst.map((x) => tName(x.name)), worst.map((x) => Math.round(x.pct)), "%",
+        { horizontal: true, emphasis: true, leadFirst: true, color: tc.live, suffix: "%" });
+      setSub("sub-eff-worst", sub(`${tName(worst[0].name)} es la menos eficaz: ${Math.round(worst[0].pct)}% de conversión.`,
+        `${tName(worst[0].name)} is the least efficient: ${Math.round(worst[0].pct)}% conversion.`));
     }
   }
 
-  if (lastEffHist && lastEffHist.length) renderEffHistory(lastEffHist, t);
+  if (lastEffHist && lastEffHist.length) {
+    effSeries("chart-eff-jornada", lastEffHist, "perJornada", tc);
+    effSeries("chart-eff-cumulative", lastEffHist, "accumulated", tc);
+    const note = sub("Etiquetas sobre cada punto: selección y su % de conversión.",
+      "Labels on each point: team and its conversion %.");
+    setSub("sub-eff-jornada", note); setSub("sub-eff-cumulative", note);
+  }
 }
 
-const round1 = (n) => Math.round(n * 10) / 10;
-
-// Per-matchday efficacy: best (most efficient) vs worst (least), team in tooltip.
-function renderEffHistory(history, t) {
+// Two-line efficacy chart (best vs worst) with the team labelled at every point.
+function effSeries(canvasId, history, kind, tc) {
   if (typeof Chart === "undefined") return;
-  const el = document.getElementById("chart-eff-history");
+  const el = document.getElementById(canvasId);
   if (!el) return;
   ensurePlugin();
-  if (charts["chart-eff-history"]) { charts["chart-eff-history"].destroy(); delete charts["chart-eff-history"]; }
+  if (charts[canvasId]) { charts[canvasId].destroy(); delete charts[canvasId]; }
 
-  const labels = history.map((h) => `J${h.matchday}`);
-  const bestTeams = history.map((h) => teamES(h.best.team));
-  const worstTeams = history.map((h) => teamES(h.worst.team));
+  const mdPre = getLang() === "en" ? "MD" : "J";
+  const labels = history.map((h) => `${mdPre}${h.matchday}`);
+  const bestTeams = history.map((h) => tName(h[kind].best.team));
+  const worstTeams = history.map((h) => tName(h[kind].worst.team));
+  const bestData = history.map((h) => h[kind].best.pct);
+  const worstData = history.map((h) => h[kind].worst.pct);
 
-  charts["chart-eff-history"] = new Chart(el, {
-    type: "line",
-    data: {
-      labels,
-      datasets: [
-        { label: "Más eficaz", data: history.map((h) => round1(h.best.ratio)),
-          borderColor: t.accent, backgroundColor: t.accent + "22", tension: 0.4,
-          pointRadius: 4, pointBackgroundColor: t.accent, borderWidth: 2.5, fill: false },
-        { label: "Menos eficaz", data: history.map((h) => round1(h.worst.ratio)),
-          borderColor: t.live, backgroundColor: t.live + "22", tension: 0.4,
-          pointRadius: 4, pointBackgroundColor: t.live, borderWidth: 2.5, fill: false },
-      ],
+  const pointLabels = {
+    id: "pointLabels",
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx; ctx.save(); ctx.font = `700 10px ${FONT}`; ctx.textAlign = "center";
+      chart.data.datasets.forEach((ds, di) => {
+        const meta = chart.getDatasetMeta(di);
+        const teams = di === 0 ? bestTeams : worstTeams;
+        const above = di === 0;
+        ctx.fillStyle = ds.borderColor;
+        ctx.textBaseline = above ? "bottom" : "top";
+        meta.data.forEach((pt, i) => {
+          ctx.fillText(`${teams[i]} ${ds.data[i]}%`, pt.x, pt.y + (above ? -9 : 9));
+        });
+      });
+      ctx.restore();
     },
+  };
+
+  charts[canvasId] = new Chart(el, {
+    type: "line",
+    data: { labels, datasets: [
+      { label: t("eff.seriesBest"), data: bestData, borderColor: tc.accent, backgroundColor: tc.accent + "22",
+        tension: 0.35, pointRadius: 4, pointBackgroundColor: tc.accent, borderWidth: 2.5, fill: false },
+      { label: t("eff.seriesWorst"), data: worstData, borderColor: tc.live, backgroundColor: tc.live + "22",
+        tension: 0.35, pointRadius: 4, pointBackgroundColor: tc.live, borderWidth: 2.5, fill: false },
+    ] },
     options: {
       responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 22, bottom: 22, left: 8, right: 8 } },
       animation: { duration: 700, easing: "easeOutQuart" },
       plugins: {
         valueLabels: { display: false },
         legend: { display: true, position: "top", align: "end",
-          labels: { color: t.text, font: { family: FONT, size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true } },
+          labels: { color: tc.text, font: { family: FONT, size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true } },
         tooltip: {
-          backgroundColor: t.tooltipBg, titleColor: t.textStrong, bodyColor: t.textStrong,
-          borderColor: t.border, borderWidth: 1, padding: 10, cornerRadius: 10,
-          titleFont: { family: FONT, weight: "700" }, bodyFont: { family: FONT },
-          callbacks: {
-            label(ctx) {
-              const team = ctx.datasetIndex === 0 ? bestTeams[ctx.dataIndex] : worstTeams[ctx.dataIndex];
-              return `${ctx.dataset.label}: ${team} (${ctx.formattedValue} tiros/gol)`;
-            },
-          },
+          backgroundColor: tc.tooltipBg, titleColor: tc.textStrong, bodyColor: tc.textStrong,
+          borderColor: tc.border, borderWidth: 1, padding: 10, cornerRadius: 10,
+          callbacks: { label(ctx) {
+            const team = ctx.datasetIndex === 0 ? bestTeams[ctx.dataIndex] : worstTeams[ctx.dataIndex];
+            return `${ctx.dataset.label}: ${team} (${ctx.formattedValue}%)`;
+          } },
         },
       },
       scales: {
-        x: { grid: { display: false, drawBorder: false }, ticks: { color: t.text, font: { size: 11, family: FONT } } },
-        y: { grid: { display: true, color: t.grid, drawBorder: false }, ticks: { color: t.text, font: { size: 11, family: FONT } }, beginAtZero: true },
+        x: { grid: { display: false, drawBorder: false }, ticks: { color: tc.text, font: { size: 11, family: FONT } } },
+        y: { min: 0, max: 100, grid: { display: true, color: tc.grid, drawBorder: false },
+          ticks: { color: tc.text, font: { size: 11, family: FONT }, callback: (v) => v + "%" } },
       },
     },
+    plugins: [pointLabels],
   });
-  setSub("sub-eff-history", "Menor número = más eficaz. Pasa el cursor para ver la selección de cada jornada.");
 }
 
-// Re-draw with current theme colours (after a dark/light toggle).
+// Re-draw with current theme colours / language.
 export function rethemeCharts() { renderCharts(); }

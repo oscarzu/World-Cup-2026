@@ -1,10 +1,11 @@
 // render.js — pure DOM rendering helpers. No data fetching here.
 
-import { VENUES, teamES, CONFIG } from "./config.js";
+import { VENUES, CONFIG } from "./config.js";
 import { flagUrl, kickoffLabel, kickoffDateTime, kickoffDate } from "./api.js";
+import { t, tName, getLang } from "./i18n.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
-const tn = teamES; // selección name → Spanish (es-MX) for display
+const tn = tName; // selección name in the active language (EN = original)
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -26,9 +27,9 @@ function flagImg(team, cls = "flag") {
 }
 
 const STATUS = {
-  live: { cls: "live", label: "En vivo" },
-  finished: { cls: "ft", label: "Final" },
-  scheduled: { cls: "up", label: "Próximo" },
+  live: { cls: "live", key: "badge.live" },
+  finished: { cls: "ft", key: "badge.ft" },
+  scheduled: { cls: "up", key: "badge.up" },
 };
 
 function fmtDate(d) {
@@ -43,7 +44,7 @@ export function matchCard(m, { showGoals = true } = {}) {
   const hasScore = m.score && m.score.home != null;
   const center = hasScore
     ? `<div class="score">${m.score.home} – ${m.score.away}</div>`
-    : `<div class="meta">${esc(kickoffLabel(m) || "Por definir")}</div>`;
+    : `<div class="meta">${esc(kickoffLabel(m) || t("tbd"))}</div>`;
   const pen = m.score?.penHome != null
     ? `<div class="meta">pen. ${m.score.penHome}–${m.score.penAway}</div>` : "";
 
@@ -60,7 +61,7 @@ export function matchCard(m, { showGoals = true } = {}) {
   <div class="match ${m.status === "live" ? "is-live" : ""}">
     <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(tn(m.home.name))}</span></div>
     <div class="center">
-      <span class="badge ${st.cls}">${st.label}</span>
+      <span class="badge ${st.cls}">${t(st.key)}</span>
       ${center}${pen}
     </div>
     <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(tn(m.away.name))}</span></div>
@@ -74,12 +75,12 @@ export function renderOverview(matches, stats, tournament) {
     `11 jun – 19 jul 2026 · ${tournament.hosts.join(" · ")}`;
 
   const kpis = [
-    ["Selecciones", tournament.teams],
-    ["Grupos", tournament.groups],
-    ["Partidos", tournament.matches],
-    ["Sedes", tournament.stadiums],
-    ["Goles", stats.goals],
-    ["Goles/partido", stats.avg ? stats.avg.toFixed(2) : "0.00"],
+    [t("kpi.teams"), tournament.teams],
+    [t("kpi.groups"), tournament.groups],
+    [t("kpi.matches"), tournament.matches],
+    [t("kpi.venues"), tournament.stadiums],
+    [t("kpi.goals"), stats.goals],
+    [t("kpi.gpm"), stats.avg ? stats.avg.toFixed(2) : "0.00"],
   ];
   $("#overview-stats").innerHTML = kpis.map(([l, n]) =>
     `<div class="stat"><div class="num" data-count="${n}">${fmtInt(n)}</div><div class="label">${l}</div></div>`
@@ -92,13 +93,13 @@ export function renderOverview(matches, stats, tournament) {
     .slice(0, 6 - live.length);
   $("#overview-live").innerHTML = (live.length || upcoming.length)
     ? [...live.map((m) => matchCard(m, { showGoals: false })), ...upcoming.map(upcomingCard)].join("")
-    : `<p class="empty">No hay partidos próximos en la programación.</p>`;
+    : `<p class="empty">${t("empty.noUpcoming")}</p>`;
 }
 
 // ---- matches tab ----
 export function renderMatches(matches) {
   const wrap = $("#match-list");
-  if (!matches.length) { wrap.innerHTML = `<p class="empty">Sin resultados.</p>`; return; }
+  if (!matches.length) { wrap.innerHTML = `<p class="empty">${t("empty.noResults")}</p>`; return; }
   let html = "", lastDay = "";
   for (const m of matches) {
     if (m.date !== lastDay) { html += `<div class="day-sep">${fmtDate(m.date)} — ${esc(m.round)}</div>`; lastDay = m.date; }
@@ -110,19 +111,19 @@ export function renderMatches(matches) {
 export function fillMatchFilter(matches) {
   const sel = $("#match-filter");
   const rounds = [...new Set(matches.map((m) => m.round))];
-  sel.innerHTML = `<option value="">Todas las fases</option>` +
+  sel.innerHTML = `<option value="">${t("matches.allRounds")}</option>` +
     rounds.map((r) => `<option value="${esc(r)}">${esc(r)}</option>`).join("");
 }
 
 // ---- standings ----
 export function renderStandings(groupsMap) {
   const grid = $("#groups-grid");
-  if (!groupsMap.size) { grid.innerHTML = `<p class="empty">Aún sin partidos jugados.</p>`; return; }
+  if (!groupsMap.size) { grid.innerHTML = `<p class="empty">${t("empty.noPlayed")}</p>`; return; }
   grid.innerHTML = [...groupsMap.entries()].map(([g, rows]) => `
     <div class="group-card">
       <h3>${esc(g)}</h3>
       <table class="standings">
-        <thead><tr><th class="team" style="text-align:left">Equipo</th>
+        <thead><tr><th class="team" style="text-align:left">${t("st.team")}</th>
           <th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead>
         <tbody>
           ${rows.map((r, i) => `
@@ -141,8 +142,8 @@ export function renderStandings(groupsMap) {
 export function renderBracket(matches) {
   const order = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"];
   const labels = {
-    "Round of 32": "Dieciseisavos", "Round of 16": "Octavos",
-    "Quarter-final": "Cuartos", "Semi-final": "Semifinal", "Final": "Final",
+    "Round of 32": t("br.r32"), "Round of 16": t("br.r16"),
+    "Quarter-final": t("br.qf"), "Semi-final": t("br.sf"), "Final": t("br.final"),
   };
   const wrap = $("#bracket-wrap");
   wrap.innerHTML = order.map((round) => {
@@ -166,7 +167,7 @@ export function renderBracket(matches) {
 // ---- scorers ----
 export function renderScorers(list) {
   const wrap = $("#scorers-list");
-  if (!list.length) { wrap.innerHTML = `<p class="empty">Aún no hay goles registrados.</p>`; return; }
+  if (!list.length) { wrap.innerHTML = `<p class="empty">${t("empty.noGoals")}</p>`; return; }
   wrap.innerHTML = list.slice(0, 40).map((s, i) => `
     <div class="scorer">
       <span class="rank">${i + 1}</span>
@@ -207,21 +208,23 @@ export function renderVenues() {
 // ---- live status legend (cadence + last-updated) ----
 function relTime(ts) {
   if (!ts) return "—";
+  const en = getLang() === "en";
   const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
-  if (s < 60) return `hace ${s}s`;
+  const wrap = (v) => (en ? `${v} ago` : `hace ${v}`);
+  if (s < 60) return wrap(`${s}s`);
   const m = Math.round(s / 60);
-  if (m < 60) return `hace ${m} min`;
-  return `hace ${Math.round(m / 60)} h`;
+  if (m < 60) return wrap(`${m} min`);
+  return wrap(`${Math.round(m / 60)} h`);
 }
 
 export function renderLiveStatus({ provider, updatedAt, intervalMin }) {
   const el = document.getElementById("live-status");
   if (!el) return;
-  const src = provider ? "ESPN (en vivo)" : "datos del torneo (sin proveedor en vivo)";
+  const src = provider ? t("live.srcOn") : t("live.srcOff");
   el.innerHTML = `
     <span class="live-status-dot ${provider ? "on" : ""}"></span>
-    <span class="live-status-txt">Fuente: <b>${src}</b> · se actualiza cada ${intervalMin} min</span>
-    <span class="live-status-ago">Actualizado ${relTime(updatedAt)}</span>`;
+    <span class="live-status-txt">${t("live.source")}: <b>${src}</b> · ${t("live.everyPre")} ${intervalMin} min</span>
+    <span class="live-status-ago">${t("live.updated")} ${relTime(updatedAt)}</span>`;
 }
 
 // ---- live match centre ----
@@ -240,11 +243,11 @@ export function renderLive(matches, upcomingSource = matches) {
     <div class="live-empty card">
       <div class="live-empty-dot"></div>
       <div>
-        <h3>No hay partidos en vivo ahora</h3>
-        <p class="section-sub" style="margin:.2rem 0 0">En cuanto ruede el balón, el marcador y los goles aparecerán aquí en tiempo real.</p>
+        <h3>${t("live.none")}</h3>
+        <p class="section-sub" style="margin:.2rem 0 0">${t("live.noneSub")}</p>
       </div>
     </div>
-    ${upcoming.length ? `<h3 class="section-title">Próximos partidos</h3>
+    ${upcoming.length ? `<h3 class="section-title">${t("live.next")}</h3>
     <div class="match-list">${upcoming.map(upcomingCard).join("")}</div>` : ""}`;
 }
 
@@ -302,7 +305,7 @@ function upcomingCard(m) {
   <div class="match">
     <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(tn(m.home.name))}</span></div>
     <div class="center">
-      <span class="badge up">Próximo</span>
+      <span class="badge up">${t("badge.up")}</span>
       <div class="meta">${esc(kickoffDateTime(m) || kickoffLabel(m) || "Por definir")}</div>
     </div>
     <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(tn(m.away.name))}</span></div>
@@ -314,12 +317,12 @@ export function renderStatsKpis(stats, matches) {
   const finished = matches.filter((m) => m.status === "finished").length;
   const live = matches.filter((m) => m.status === "live").length;
   const kpis = [
-    ["Partidos jugados", stats.played],
-    ["Goles totales", stats.goals],
-    ["Promedio de goles", stats.avg ? stats.avg.toFixed(2) : "0.00"],
-    ["En vivo ahora", live],
-    ["Finalizados", finished],
-    ["Restantes", matches.length - finished],
+    [t("s.played"), stats.played],
+    [t("s.goalsTotal"), stats.goals],
+    [t("s.avg"), stats.avg ? stats.avg.toFixed(2) : "0.00"],
+    [t("s.live"), live],
+    [t("s.finished"), finished],
+    [t("s.remaining"), matches.length - finished],
   ];
   $("#stats-kpis").innerHTML = kpis.map(([l, n]) =>
     `<div class="stat"><div class="num">${fmtInt(n)}</div><div class="label">${l}</div></div>`).join("");
@@ -329,16 +332,16 @@ export function renderStatsKpis(stats, matches) {
 export function renderAggregates(facts) {
   const a = facts.aggregates || {};
   const items = [
-    ["🚩", "Fueras de lugar", a.offsides],
-    ["🚫", "Goles anulados", a.disallowedGoals],
-    ["📺", "Revisiones VAR", a.varReviews],
-    ["🎯", "Penales señalados", a.penaltiesAwarded],
-    ["🟨", "Tarjetas amarillas", a.yellowCards],
-    ["🟥", "Tarjetas rojas", a.redCards],
-    ["⚠️", "Faltas cometidas", a.fouls],
-    ["📐", "Tiros de esquina", a.corners],
-    ["🧤", "Atajadas", a.saves],
-    ["👥", "Asistencia total", a.attendance],
+    ["🚩", t("a.offsides"), a.offsides],
+    ["🚫", t("a.disallowed"), a.disallowedGoals],
+    ["📺", t("a.var"), a.varReviews],
+    ["🎯", t("a.pens"), a.penaltiesAwarded],
+    ["🟨", t("a.yellow"), a.yellowCards],
+    ["🟥", t("a.red"), a.redCards],
+    ["⚠️", t("a.fouls"), a.fouls],
+    ["📐", t("a.corners"), a.corners],
+    ["🧤", t("a.saves"), a.saves],
+    ["👥", t("a.attendance"), a.attendance],
   ];
   const grid = document.getElementById("agg-grid");
   if (!grid) return;
@@ -359,30 +362,30 @@ export function renderFacts(facts) {
   const cards = [];
 
   if (facts.highest)
-    cards.push(fact("🔥", "Partido más goleador",
-      `${facts.highest.total} goles`, `${pair(facts.highest.m)} (${facts.highest.score})`));
+    cards.push(fact("🔥", t("f.highest"),
+      `${facts.highest.total} ${t("u.goals")}`, `${pair(facts.highest.m)} (${facts.highest.score})`));
   if (facts.biggest)
-    cards.push(fact("💥", "Mayor goleada",
-      `${facts.biggest.margin} de diferencia`, `${pair(facts.biggest.m)} (${facts.biggest.score})`));
+    cards.push(fact("💥", t("f.biggest"),
+      `${facts.biggest.margin} ${t("f.diff")}`, `${pair(facts.biggest.m)} (${facts.biggest.score})`));
   if (facts.fastest)
-    cards.push(fact("⚡", "Gol más madrugador",
-      `Min. ${facts.fastest.min}'`, esc(facts.fastest.name || "—")));
+    cards.push(fact("⚡", t("f.fastest"),
+      `${t("f.min")} ${facts.fastest.min}'`, esc(facts.fastest.name || "—")));
   if (facts.latest)
-    cards.push(fact("⏱️", "Gol más tardío",
-      `Min. ${facts.latest.min}'`, esc(facts.latest.name || "—")));
+    cards.push(fact("⏱️", t("f.latest"),
+      `${t("f.min")} ${facts.latest.min}'`, esc(facts.latest.name || "—")));
 
-  cards.push(fact("🎩", "Hat-tricks",
+  cards.push(fact("🎩", t("f.hattricks"),
     String(facts.hatTricks.length),
-    facts.hatTricks.length ? esc(facts.hatTricks[0].name) + (facts.hatTricks.length > 1 ? " y más" : "") : "Aún ninguno"));
-  cards.push(fact("🔄", "Remontadas", String(facts.comebacks), "Perdían al descanso y ganaron"));
-  cards.push(fact("🥅", "Tandas de penales", String(facts.shootouts), "Definidos desde los once pasos"));
-  cards.push(fact("🧱", "Porterías en cero", String(facts.cleanSheets), "Partidos con valla invicta"));
-  cards.push(fact("🥱", "Empates 0–0", String(facts.zeroZero), "Duelos sin goles"));
-  cards.push(fact("🏟️", "Goleadas (3+)", String(facts.blowouts), "Partidos con diferencia de 3 o más"));
-  cards.push(fact("🎯", "Goles de penal", String(facts.penaltyGoals), "Anotados desde el manchón"));
+    facts.hatTricks.length ? esc(facts.hatTricks[0].name) + (facts.hatTricks.length > 1 ? t("f.andMore") : "") : t("f.none")));
+  cards.push(fact("🔄", t("f.comebacks"), String(facts.comebacks), t("f.dmComeback")));
+  cards.push(fact("🥅", t("f.shootouts"), String(facts.shootouts), t("f.dmShootout")));
+  cards.push(fact("🧱", t("f.cleansheets"), String(facts.cleanSheets), t("f.dmClean")));
+  cards.push(fact("🥱", t("f.zerozero"), String(facts.zeroZero), t("f.dmZero")));
+  cards.push(fact("🏟️", t("f.blowouts"), String(facts.blowouts), t("f.dmBlow")));
+  cards.push(fact("🎯", t("f.pengoals"), String(facts.penaltyGoals), t("f.dmPen")));
   if (facts.topTeams[0])
-    cards.push(fact("👑", "Ataque más letal",
-      `${facts.topTeams[0].goals} goles`, esc(tn(facts.topTeams[0].name))));
+    cards.push(fact("👑", t("f.topattack"),
+      `${facts.topTeams[0].goals} ${t("u.goals")}`, esc(tn(facts.topTeams[0].name))));
 
   wrap.innerHTML = cards.join("");
 }
@@ -401,7 +404,6 @@ function fact(icon, label, value, detail) {
 
 // ---- discipline & shooting efficacy ----
 export function renderDiscipline(disc) {
-  // KPI cards: most fouls + least efficacy (shots per goal).
   const kpiWrap = document.getElementById("disc-kpis");
   if (kpiWrap) {
     const mf = disc.mostFouls, le = disc.leastEfficacy, me = disc.mostEfficacy;
@@ -410,47 +412,87 @@ export function renderDiscipline(disc) {
       <div class="fact">
         <div class="fact-icon">⚠️</div>
         <div class="fact-body">
-          <div class="fact-value">${fmtInt(mf.fouls)} faltas</div>
-          <div class="fact-label">Selección más infractora</div>
-          <div class="fact-detail">${flagImg(mf.name)} ${esc(tn(mf.name))}</div>
+          <div class="fact-value">${mf.perMatch.toFixed(1)} ${t("d.foulsPerMatch")}</div>
+          <div class="fact-label">${t("d.mostFouls")}</div>
+          <div class="fact-detail">${flagImg(mf.name)} ${esc(tn(mf.name))} · ${fmtInt(mf.fouls)} ${t("u.fouls")} / ${mf.matches}</div>
         </div>
       </div>`);
     if (me) cards.push(`
       <div class="fact">
         <div class="fact-icon">🎯</div>
         <div class="fact-body">
-          <div class="fact-value">${me.ratio.toFixed(1)} tiros/gol</div>
-          <div class="fact-label">Mayor eficacia (tiros a arco ÷ goles)</div>
-          <div class="fact-detail">${flagImg(me.name)} ${esc(tn(me.name))} · ${me.shots} tiros · ${me.goals} goles</div>
+          <div class="fact-value">${me.pct.toFixed(0)}%</div>
+          <div class="fact-label">${t("d.mostEff")}</div>
+          <div class="fact-detail">${flagImg(me.name)} ${esc(tn(me.name))} · ${me.goals}/${me.shots} ${t("u.shots")}</div>
         </div>
       </div>`);
     if (le) cards.push(`
       <div class="fact">
         <div class="fact-icon">🥅</div>
         <div class="fact-body">
-          <div class="fact-value">${le.ratio.toFixed(1)} tiros/gol</div>
-          <div class="fact-label">Menor eficacia (tiros a arco ÷ goles)</div>
-          <div class="fact-detail">${flagImg(le.name)} ${esc(tn(le.name))} · ${le.shots} tiros · ${le.goals} goles</div>
+          <div class="fact-value">${le.pct.toFixed(0)}%</div>
+          <div class="fact-label">${t("d.leastEff")}</div>
+          <div class="fact-detail">${flagImg(le.name)} ${esc(tn(le.name))} · ${le.goals}/${le.shots} ${t("u.shots")}</div>
         </div>
       </div>`);
     kpiWrap.innerHTML = cards.join("");
   }
 
-  // Top-10 fouls table.
+  // Top-10 fouls-per-match table.
   const tbl = document.getElementById("fouls-table");
   if (tbl) {
     const rows = disc.foulsRanking.slice(0, 10);
     tbl.innerHTML = `
       <table class="rank-table">
-        <thead><tr><th>#</th><th style="text-align:left">Selección</th><th>Faltas</th></tr></thead>
+        <thead><tr><th>#</th><th style="text-align:left">${t("st.team")}</th><th>${t("d.foulsPerMatch")}</th></tr></thead>
         <tbody>${rows.map((r, i) => `
           <tr>
             <td class="rk">${i + 1}</td>
             <td class="team">${flagImg(r.name)}<span>${esc(tn(r.name))}</span></td>
-            <td class="val">${fmtInt(r.fouls)}</td>
+            <td class="val">${r.perMatch.toFixed(1)}</td>
           </tr>`).join("")}
         </tbody>
       </table>`;
+  }
+
+  // Red cards + serious injuries KPIs.
+  const rcWrap = document.getElementById("rc-kpis");
+  if (rcWrap) {
+    const cards = [];
+    cards.push(`
+      <div class="fact">
+        <div class="fact-icon">🟥</div>
+        <div class="fact-body">
+          <div class="fact-value">${fmtInt(disc.redTotal || 0)}</div>
+          <div class="fact-label">${t("rc.total")}</div>
+          <div class="fact-detail">${(disc.redByTeam || []).slice(0, 3).map((x) => `${esc(tn(x.name))} (${x.red})`).join(" · ") || "—"}</div>
+        </div>
+      </div>`);
+    const inj = disc.injuries || [];
+    cards.push(`
+      <div class="fact">
+        <div class="fact-icon">🩹</div>
+        <div class="fact-body">
+          <div class="fact-value">${fmtInt(inj.length)}</div>
+          <div class="fact-label">${t("rc.injuries")}</div>
+          <div class="fact-detail">${t("rc.injuriesCap")}</div>
+        </div>
+      </div>`);
+    rcWrap.innerHTML = cards.join("");
+  }
+
+  // Serious injuries list.
+  const injWrap = document.getElementById("injuries-list");
+  if (injWrap) {
+    const inj = disc.injuries || [];
+    injWrap.innerHTML = inj.length
+      ? inj.map((x) => `
+        <div class="injury">
+          ${flagImg(x.team)}
+          <div class="inj-body"><div class="inj-name">${esc(x.player)} <span class="inj-team">· ${esc(tn(x.team))}</span></div>
+            <div class="inj-kind">${esc(x.kind)}${x.date ? ` · ${esc(x.date)}` : ""}</div></div>
+        </div>`).join("")
+      : `<p class="archive-empty">${t("empty.noResults")}</p>`;
   }
 }
 
@@ -463,10 +505,10 @@ export function renderSocial() {
   // Optional live Instagram feed via a third-party widget (LightWidget / Behold).
   const widgetUrl = (CONFIG.SOCIAL_WIDGET_URL || "").trim();
   const widget = widgetUrl
-    ? `<div class="card social-card">
+    ? `<div class="card social-card wide">
          <h3>📸 Feed en vivo · Instagram</h3>
-         <div class="social-embed"><iframe class="lw-iframe" src="${esc(widgetUrl)}"
-            allowtransparency="true" frameborder="0" scrolling="no"></iframe></div>
+         <div class="social-embed"><iframe class="lw-iframe" src="${esc(widgetUrl)}" title="Instagram feed"
+            loading="lazy" allowtransparency="true" frameborder="0" scrolling="no"></iframe></div>
          <a class="social-link" href="https://www.instagram.com/fifaworldcup/" target="_blank" rel="noopener">Abrir en Instagram ↗</a>
        </div>`
     : "";
@@ -509,7 +551,7 @@ export function renderSocialArchive(matches, social = {}) {
     byDate.get(m.date).push(m);
   }
   const dates = [...byDate.keys()].sort().reverse();
-  if (!dates.length) { wrap.innerHTML = `<p class="empty">Aún no hay jornadas disputadas.</p>`; return; }
+  if (!dates.length) { wrap.innerHTML = `<p class="empty">${t("arch.none")}</p>`; return; }
 
   wrap.innerHTML = dates.map((date, idx) => {
     const games = byDate.get(date);
@@ -523,12 +565,12 @@ export function renderSocialArchive(matches, social = {}) {
     const posts = social[date] || [];
     const embeds = posts.length
       ? `<div class="ig-posts">${posts.map(igEmbed).join("")}</div>`
-      : `<p class="archive-empty">Sin publicaciones guardadas para esta jornada — explora por estadio ↑</p>`;
+      : `<p class="archive-empty">${t("arch.empty")}</p>`;
     return `
       <details class="archive-day"${idx === 0 ? " open" : ""}>
         <summary>
           <span class="ad-date">${fmtDateLong(date)}</span>
-          <span class="ad-count">${games.length} partidos · ${venues.length} sedes</span>
+          <span class="ad-count">${games.length} ${t("u.matches")} · ${venues.length} ${t("u.venues")}</span>
         </summary>
         <div class="archive-venues">${chips}</div>
         ${embeds}
@@ -546,7 +588,8 @@ function igEmbed(p) {
 }
 function fmtDateLong(d) {
   const dt = new Date(d + "T00:00:00");
-  return dt.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
+  return dt.toLocaleDateString(getLang() === "en" ? "en-US" : "es-MX",
+    { weekday: "long", day: "numeric", month: "long" });
 }
 
 function loadScript(src, onload) {
@@ -561,10 +604,12 @@ export function renderHeroLead(stats) {
   const el = document.getElementById("hero-lead");
   if (!el) return;
   if (!stats || !stats.played) { el.textContent = ""; return; }
-  el.innerHTML =
-    `<strong>${fmtInt(stats.played)}</strong> partidos jugados · ` +
-    `<strong>${fmtInt(stats.goals)}</strong> goles · ` +
-    `<strong>${stats.avg.toFixed(2)}</strong> por partido.`;
+  const en = getLang() === "en";
+  const p = `<strong>${fmtInt(stats.played)}</strong>`, g = `<strong>${fmtInt(stats.goals)}</strong>`,
+    a = `<strong>${stats.avg.toFixed(2)}</strong>`;
+  el.innerHTML = en
+    ? `${p} matches played · ${g} goals · ${a} per match.`
+    : `${p} partidos jugados · ${g} goles · ${a} por partido.`;
 }
 
 // ---- insight strip: big number + context (data-journalism style) ----
@@ -573,19 +618,28 @@ export function renderInsightStrip(stats, facts, disc) {
   if (!el) return;
   const card = (big, cap, mod = "") =>
     `<div class="insight ${mod}"><div class="big">${big}</div><div class="cap">${cap}</div></div>`;
+  const en = getLang() === "en";
   const out = [];
 
   if (stats && stats.played)
-    out.push(card(stats.avg.toFixed(2), `goles por partido en <b>${fmtInt(stats.played)}</b> partidos disputados`));
+    out.push(card(stats.avg.toFixed(2), en
+      ? `goals per match across <b>${fmtInt(stats.played)}</b> matches played`
+      : `goles por partido en <b>${fmtInt(stats.played)}</b> partidos disputados`));
   const lead = facts?.topTeams?.[0];
   if (lead)
-    out.push(card(fmtInt(lead.goals), `goles de <b>${esc(tn(lead.name))}</b>, el ataque más letal`, "gold"));
+    out.push(card(fmtInt(lead.goals), en
+      ? `goals by <b>${esc(tn(lead.name))}</b>, the deadliest attack`
+      : `goles de <b>${esc(tn(lead.name))}</b>, el ataque más letal`, "gold"));
   if (facts?.highest)
-    out.push(card(fmtInt(facts.highest.total),
-      `goles en el duelo más loco: <b>${esc(tn(facts.highest.m.home.name))} ${facts.highest.score} ${esc(tn(facts.highest.m.away.name))}</b>`));
+    out.push(card(fmtInt(facts.highest.total), (en
+      ? `goals in the wildest game: `
+      : `goles en el duelo más loco: `) +
+      `<b>${esc(tn(facts.highest.m.home.name))} ${facts.highest.score} ${esc(tn(facts.highest.m.away.name))}</b>`));
   const foul = disc?.foulsRanking?.[0];
   if (foul)
-    out.push(card(fmtInt(foul.fouls), `faltas de <b>${esc(tn(foul.name))}</b>, la más infractora`, "live"));
+    out.push(card(foul.perMatch.toFixed(1), en
+      ? `fouls per match by <b>${esc(tn(foul.name))}</b>, the most aggressive`
+      : `faltas por partido de <b>${esc(tn(foul.name))}</b>, la más infractora`, "live"));
 
   el.innerHTML = out.join("");
 }

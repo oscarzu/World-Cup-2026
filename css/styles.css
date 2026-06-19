@@ -510,6 +510,24 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 
 .credit.dim { opacity: .6; margin-top: .3rem; }
 
+/* language segmented control (ES | EN) */
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
+  background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
+.seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: .74rem;
+  font-weight: 800; letter-spacing: .04em; padding: .42rem .62rem; cursor: pointer; transition: background var(--t), color var(--t); }
+.seg button:hover { color: var(--text); }
+.seg button.is-active { background: var(--accent-grad); color: #04140a; }
+[data-theme="light"] .seg button.is-active { color: #03210f; }
+
+/* serious injuries list */
+.injuries-list { display: grid; gap: .5rem; margin-top: .3rem; }
+.injury { display: flex; align-items: center; gap: .65rem; padding: .5rem 0; border-bottom: 1px solid var(--border); }
+.injury:last-child { border-bottom: 0; }
+.injury .flag { width: 26px; height: 17px; border-radius: 3px; object-fit: cover; flex: 0 0 auto; }
+.inj-name { font-weight: 600; font-size: .92rem; }
+.inj-team { color: var(--muted); font-weight: 500; font-size: .82rem; }
+.inj-kind { color: var(--muted); font-size: .8rem; }
+
 /* large aggregate numbers (e.g. attendance 5,104,000) must fit their card */
 .agg-grid { grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); }
 .stat.agg .num { font-size: clamp(1.05rem, 2.3vw, 1.35rem); white-space: nowrap; letter-spacing: -.02em; }
