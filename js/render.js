@@ -625,11 +625,14 @@ export function renderInsightStrip(stats, facts, disc) {
     out.push(card(stats.avg.toFixed(2), en
       ? `goals per match across <b>${fmtInt(stats.played)}</b> matches played`
       : `goles por partido en <b>${fmtInt(stats.played)}</b> partidos disputados`));
-  const lead = facts?.topTeams?.[0];
-  if (lead)
-    out.push(card(fmtInt(lead.goals), en
-      ? `goals by <b>${esc(tn(lead.name))}</b>, the deadliest attack`
-      : `goles de <b>${esc(tn(lead.name))}</b>, el ataque más letal`, "gold"));
+  const top = facts?.topTeams || [];
+  if (top.length) {
+    const maxG = top[0].goals;
+    const names = top.filter((x) => x.goals === maxG).map((x) => esc(tn(x.name))).join(en ? " & " : " y ");
+    out.push(card(fmtInt(maxG), en
+      ? `goals by <b>${names}</b>, the deadliest attack`
+      : `goles de <b>${names}</b>, el ataque más letal`, "gold"));
+  }
   if (facts?.highest)
     out.push(card(fmtInt(facts.highest.total), (en
       ? `goals in the wildest game: `

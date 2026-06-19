@@ -30,13 +30,14 @@ export function computeDiscipline(teamStats, matchesByTeam = {}) {
   const yellow = [...(teamStats?.yellowCards || [])]
     .sort((a, b) => b.cards - a.cards).slice(0, 10);
 
-  // Red cards by selección (desc).
+  // Red cards by selección (desc). Prefer real ESPN counts (s.red) over curated.
   const redByTeam = entries
-    .map(([name, s]) => ({ name, red: s.redCards ?? 0 }))
+    .map(([name, s]) => ({ name, red: s.red ?? s.redCards ?? 0 }))
     .filter((x) => x.red > 0)
     .sort((a, b) => b.red - a.red);
-  const redTotal = teamStats?.redCardsTotal ??
-    redByTeam.reduce((n, x) => n + x.red, 0);
+  const redTotal = redByTeam.some((x) => x.red)
+    ? redByTeam.reduce((n, x) => n + x.red, 0)
+    : (teamStats?.redCardsTotal ?? 0);
 
   const injuries = teamStats?.seriousInjuries || [];
 
