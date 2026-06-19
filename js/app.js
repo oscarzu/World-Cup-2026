@@ -1,6 +1,7 @@
 // app.js — orchestration: load, render, tabs, theme, search/filter, live polling.
 
-import { CONFIG } from "./config.js";
+import { CONFIG, teamES } from "./config.js";
+import { getLang, setLang, applyStatic } from "./i18n.js";
 import { loadBase, applyLive, loadTeamStats, loadEfficacyHistory, loadSocial } from "./api.js";
 import { computeStandings } from "./standings.js";
 import { computeScorers, goalStats } from "./scorers.js";
@@ -80,21 +81,34 @@ function renderAll() {
   UI.renderAggregates(facts);
   UI.renderFacts(facts);
   UI.animateCounts($("#agg-grid"));
-  const disc = computeDiscipline(state.teamStats);
+
+  // Matches played per team (for fouls-per-match), keyed like discipline expects.
+  const matchesByTeam = {};
+  for (const m of state.matches) {
+    if (!(m.score && m.score.home != null)) continue;
+    for (const nm of [m.home.name, m.away.name]) {
+      const k = teamES(nm); matchesByTeam[k] = (matchesByTeam[k] || 0) + 1;
+    }
+  }
+  const disc = computeDiscipline(state.teamStats, matchesByTeam);
   UI.renderDiscipline(disc);
   UI.renderInsightStrip(stats, facts, disc);
   renderCharts(stats, facts, disc, state.effHistory);
+  UI.renderSocialArchive(state.matches, state.social);
 
   // Live indicator + freshness.
+  const en = getLang() === "en";
   const liveCount = (state.liveMatches.length ? state.liveMatches : state.matches)
     .filter((m) => m.status === "live").length;
   $("#live-indicator").hidden = liveCount === 0;
-  $("#updated").textContent = "Act. " + new Date().toLocaleTimeString("es-MX",
-    { timeZone: CONFIG.TIMEZONE, hour: "2-digit", minute: "2-digit" }) + " " + CONFIG.TIMEZONE_LABEL;
-  const provider = state.liveProvider ? "ESPN (en vivo)" : state.source;
-  $("#data-source").textContent =
-    `Fuente: ${provider}${state.online ? "" : " (sin conexión)"} · ` +
-    `${state.matches.filter((m) => m.score?.home != null).length} partidos con marcador.`;
+  const time = new Date().toLocaleTimeString(en ? "en-US" : "es-MX",
+    { timeZone: CONFIG.TIMEZONE, hour: "2-digit", minute: "2-digit" });
+  $("#updated").textContent = `${en ? "Upd." : "Act."} ${time} ${CONFIG.TIMEZONE_LABEL}`;
+  const provider = state.liveProvider ? (en ? "ESPN (live)" : "ESPN (en vivo)") : state.source;
+  const withScore = state.matches.filter((m) => m.score?.home != null).length;
+  $("#data-source").textContent = en
+    ? `Source: ${provider}${state.online ? "" : " (offline)"} · ${withScore} matches with a result.`
+    : `Fuente: ${provider}${state.online ? "" : " (sin conexión)"} · ${withScore} partidos con marcador.`;
 }
 
 // ---- live polling ----
@@ -157,9 +171,28 @@ function startLiveLoop() {
   setInterval(() => UI.renderLiveStatus(liveStatusArgs()), 30 * 1000);
 }
 
+// ---- language (ES/EN) ----
+function initLang() {
+  const buttons = document.querySelectorAll("#lang-toggle button");
+  const paint = () => buttons.forEach((b) => b.classList.toggle("is-active", b.dataset.lang === getLang()));
+  document.documentElement.lang = getLang();
+  applyStatic();
+  paint();
+  buttons.forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.lang === getLang()) return;
+    setLang(b.dataset.lang);
+    document.documentElement.lang = getLang();
+    applyStatic();
+    paint();
+    renderAll();
+    UI.renderLiveStatus(liveStatusArgs());
+  }));
+}
+
 // ---- boot ----
 async function boot() {
   initTheme();
+  initLang();
   initTabs();
   initMatchControls();
 
