@@ -107,6 +107,7 @@ function normalizeMatch(raw, idx) {
 
   return {
     id: `m${idx}`,
+    num: raw.num ?? null,
     round: raw.round || "",
     matchday: mdMatch ? Number(mdMatch[1]) : null,
     stage,
