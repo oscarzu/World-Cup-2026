@@ -66,6 +66,7 @@ export const CONFIG = {
     aggregates: {
       offsides: 218,          // total fueras de lugar
       disallowedGoals: 14,    // goles anulados (VAR / fuera de lugar)
+      varRestoredGoals: 9,    // goles desanulados (validados tras revisión del VAR)
       varReviews: 142,        // revisiones del VAR
       penaltiesAwarded: 29,   // penales señalados
       yellowCards: 389,       // tarjetas amarillas
