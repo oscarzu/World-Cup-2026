@@ -167,6 +167,7 @@ const STR = {
   "s.finished": ["Finalizados", "Finished"], "s.remaining": ["Restantes", "Remaining"],
   // aggregates
   "a.offsides": ["Fueras de lugar", "Offsides"], "a.disallowed": ["Goles anulados", "Disallowed goals"],
+  "a.restored": ["Goles desanulados por VAR", "Goals restored by VAR"],
   "a.var": ["Revisiones VAR", "VAR reviews"], "a.pens": ["Penales señalados", "Penalties awarded"],
   "a.yellow": ["Tarjetas amarillas", "Yellow cards"], "a.red": ["Tarjetas rojas", "Red cards"],
   "a.fouls": ["Faltas cometidas", "Fouls committed"], "a.corners": ["Tiros de esquina", "Corners"],

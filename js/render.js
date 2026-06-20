@@ -495,6 +495,7 @@ export function renderAggregates(facts) {
   const items = [
     ["🚩", t("a.offsides"), a.offsides],
     ["🚫", t("a.disallowed"), a.disallowedGoals],
+    ["✅", t("a.restored"), a.varRestoredGoals],
     ["📺", t("a.var"), a.varReviews],
     ["🎯", t("a.pens"), a.penaltiesAwarded],
     ["🟨", t("a.yellow"), a.yellowCards],
