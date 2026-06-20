@@ -195,6 +195,39 @@ const STR = {
   // bracket
   "br.r32": ["Dieciseisavos", "Round of 32"], "br.r16": ["Octavos", "Round of 16"],
   "br.qf": ["Cuartos", "Quarter-finals"], "br.sf": ["Semifinal", "Semi-finals"], "br.final": ["Final", "Final"],
+  "br.third": ["Tercer lugar", "Third place"],
+  "br.matchday": ["Jornada", "Matchday"],
+  "br.legend": ["Cuadro proyectado en vivo con la clasificación actual. Toca un duelo para ver sede y horario.",
+                "Live projected bracket from current standings. Tap a tie for venue and kickoff."],
+  "br.proj": ["proy.", "proj."],
+  "br.qualified": ["clasificado", "qualified"],
+  "br.winner": ["Ganador", "Winner"],
+  "br.best3": ["Mejor 3.º", "Best 3rd"],
+  "br.pos1": ["1.º", "1st"], "br.pos2": ["2.º", "2nd"],
+  "br.tbdNote": ["Por definir según resultados", "To be decided by results"],
+
+  // chart drill-down
+  "drill.hint": ["Toca una barra para ver el detalle ↗", "Tap a bar to see details ↗"],
+  "drill.close": ["Cerrar", "Close"],
+  "drill.matches": ["Partidos", "Matches"],
+  "drill.noData": ["Sin detalle disponible todavía.", "No detail available yet."],
+  "drill.group": ["Grupo", "Group"],
+  "drill.played": ["jugados", "played"],
+  "drill.goalsFor": ["Goles a favor", "Goals for"],
+  "drill.shotsOn": ["Tiros a puerta", "Shots on target"],
+  "drill.conv": ["Conversión", "Conversion"],
+  "drill.foulsPm": ["Faltas por partido", "Fouls per match"],
+  "drill.pts": ["Puntos", "Points"],
+
+  // social fallback
+  "social.fail": ["No se pudo cargar el feed aquí — ábrelo en la app ↗", "Couldn't load the feed here — open it in the app ↗"],
+
+  // stats in-page sub-nav
+  "subnav.kpis": ["Cifras", "Numbers"], "subnav.facts": ["Curiosidades", "Fun facts"],
+  "subnav.agg": ["Agregados", "Aggregates"], "subnav.viz": ["Gráficas", "Charts"],
+  "subnav.disc": ["Disciplina", "Discipline"], "subnav.eff": ["Eficacia", "Efficiency"],
+  "subnav.rc": ["Rojas y lesiones", "Reds & injuries"],
+
 
   // host pills + short card kickers
   "host.ca": ["🇨🇦 Canadá", "🇨🇦 Canada"], "host.mx": ["🇲🇽 México", "🇲🇽 Mexico"], "host.us": ["🇺🇸 USA", "🇺🇸 USA"],
@@ -217,6 +250,8 @@ const STR = {
                "<b>16 venues, 3 countries</b><p>Canada, Mexico and the USA; the final is at MetLife Stadium (New York/New Jersey).</p>"],
   "rules.r8": ["<b>39 días de torneo</b><p>Del 11 de junio al 19 de julio de 2026, la Copa del Mundo más larga de la historia.</p>",
                "<b>39-day tournament</b><p>From 11 June to 19 July 2026 — the longest World Cup ever.</p>"],
+  "rules.r9": ["<b>Pausas de hidratación</b><p>En sedes con calor extremo (México, Dallas, Houston…) el árbitro detiene el juego ~3 min cerca del minuto 30 y 75 para que los jugadores se hidraten.</p>",
+               "<b>Hydration breaks</b><p>At hot venues (Mexico City, Dallas, Houston…) the referee pauses play ~3 min around the 30th and 75th minute so players can rehydrate.</p>"],
 };
 
 export function t(key) {

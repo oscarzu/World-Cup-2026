@@ -90,8 +90,28 @@ const STATUS = {
 function fmtDate(d) {
   if (!d) return "";
   const dt = new Date(d + "T00:00:00");
-  return dt.toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "short" });
+  return dt.toLocaleDateString(getLang() === "en" ? "en-US" : "es-MX",
+    { weekday: "short", day: "numeric", month: "short" });
 }
+
+// Translate a round/stage name to the active language.
+const KO_KEY = {
+  "Round of 32": "br.r32", "Round of 16": "br.r16", "Quarter-final": "br.qf",
+  "Semi-final": "br.sf", "Final": "br.final", "Match for third place": "br.third",
+};
+export function roundLabel(round) {
+  const md = /Matchday (\d+)/.exec(round || "");
+  if (md) return `${t("br.matchday")} ${md[1]}`;
+  return KO_KEY[round] ? t(KO_KEY[round]) : (round || "");
+}
+
+// Chronological comparison by date then kickoff time.
+const byKickoff = (a, b) => {
+  if (a.date !== b.date) return (a.date || "").localeCompare(b.date || "");
+  const ta = kickoffDate(a)?.getTime() ?? Infinity;
+  const tb = kickoffDate(b)?.getTime() ?? Infinity;
+  return ta - tb;
+};
 
 // ---- match card ----
 export function matchCard(m, { showGoals = true } = {}) {
@@ -155,9 +175,10 @@ export function renderOverview(matches, stats, tournament) {
 export function renderMatches(matches) {
   const wrap = $("#match-list");
   if (!matches.length) { wrap.innerHTML = `<p class="empty">${t("empty.noResults")}</p>`; return; }
+  const ordered = [...matches].sort(byKickoff); // chronological
   let html = "", lastDay = "";
-  for (const m of matches) {
-    if (m.date !== lastDay) { html += `<div class="day-sep">${fmtDate(m.date)} — ${esc(m.round)}</div>`; lastDay = m.date; }
+  for (const m of ordered) {
+    if (m.date !== lastDay) { html += `<div class="day-sep">${fmtDate(m.date)} — ${esc(roundLabel(m.round))}</div>`; lastDay = m.date; }
     html += matchCard(m);
   }
   wrap.innerHTML = html;
@@ -185,7 +206,7 @@ export function fillMatchFilter(matches) {
   const sel = $("#match-filter");
   const rounds = [...new Set(matches.map((m) => m.round))];
   sel.innerHTML = `<option value="">${t("matches.allRounds")}</option>` +
-    rounds.map((r) => `<option value="${esc(r)}">${esc(r)}</option>`).join("");
+    rounds.map((r) => `<option value="${esc(r)}">${esc(roundLabel(r))}</option>`).join("");
 }
 
 // ---- standings ----
@@ -211,27 +232,94 @@ export function renderStandings(groupsMap) {
     </div>`).join("");
 }
 
-// ---- bracket ----
-export function renderBracket(matches) {
-  const order = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"];
-  const labels = {
-    "Round of 32": t("br.r32"), "Round of 16": t("br.r16"),
-    "Quarter-final": t("br.qf"), "Semi-final": t("br.sf"), "Final": t("br.final"),
-  };
+// ---- bracket (Apple-Sports-style, live-projected) ----
+// Knockout fixtures store position codes ("1A" = winner Group A, "2B" =
+// runner-up Group B, "3A/B/C/D/F" = best third among those groups, "W73" =
+// winner of match 73). We resolve them against today's standings/results so
+// the bracket shows "how it stands today".
+const groupDone = (rows) => rows && rows.length >= 4 && rows.every((r) => r.P >= 3);
+
+function rankedThirds(standings) {
+  const thirds = [];
+  for (const [g, rows] of standings) {
+    if (rows[2]) thirds.push({ group: g.replace("Group ", ""), ...rows[2] });
+  }
+  thirds.sort((a, b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF || a.name.localeCompare(b.name));
+  return thirds;
+}
+
+// Resolve one slot code → { name, flagTeam, proj, label }.
+function resolveSlot(code, ctx) {
+  const { standings, thirds, usedThirds, winners } = ctx;
+  let m = /^([12])([A-L])$/.exec(code);
+  if (m) {
+    const rows = standings.get("Group " + m[2]);
+    const r = rows && rows[Number(m[1]) - 1];
+    if (r && r.P > 0) return { name: tn(r.name), flagTeam: r.name, proj: !groupDone(rows) };
+    return { name: `${t(m[1] === "1" ? "br.pos1" : "br.pos2")} ${m[2]}`, placeholder: true };
+  }
+  if (/^3/.test(code)) {
+    const groups = code.slice(1).split("/");
+    for (const tr of thirds) {
+      if (groups.includes(tr.group) && !usedThirds.has(tr.name) && tr.P > 0) {
+        usedThirds.add(tr.name);
+        return { name: tn(tr.name), flagTeam: tr.name, proj: true };
+      }
+    }
+    return { name: `${t("br.best3")} ${groups.join("/")}`, placeholder: true };
+  }
+  m = /^W(\d+)$/.exec(code);
+  if (m) {
+    const w = winners[m[1]];
+    if (w) return { name: tn(w), flagTeam: w, proj: true };
+    return { name: `${t("br.winner")} #${m[1]}`, placeholder: true };
+  }
+  return { name: code, placeholder: true };
+}
+
+export function renderBracket(matches, standings = new Map()) {
   const wrap = $("#bracket-wrap");
+  if (!wrap) return;
+  const order = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"];
+
+  // Map finished knockout matches → winner (real team), so later rounds resolve.
+  const isCode = (s) => /^([12][A-L]|3[A-L/]+|W\d+)$/.test(s || "");
+  const winners = {};
+  for (const m of matches) {
+    const hs = m.score?.home, as = m.score?.away;
+    if (hs == null || as == null || m.num == null) continue;
+    const w = hs > as ? m.home.name : as > hs ? m.away.name : null;
+    if (w && !isCode(w)) winners[m.num] = w; // only real, resolved teams
+  }
+  const ctx = { standings, thirds: rankedThirds(standings), usedThirds: new Set(), winners };
+
+  // Inner content of a slot row (flag + name + projection tag).
+  const slotInner = (s) => {
+    const flag = s.flagTeam ? flagImg(s.flagTeam) : `<span class="flag" aria-hidden="true"></span>`;
+    const tag = s.proj ? `<span class="bk-proj">${t("br.proj")}</span>` : "";
+    return `${flag}<span class="nm">${esc(s.name)}</span>${tag}`;
+  };
+
   wrap.innerHTML = order.map((round) => {
-    const games = matches.filter((m) => m.round === round);
+    const games = matches.filter((m) => m.round === round).sort(byKickoff);
     if (!games.length) return "";
-    return `<div class="bracket-col"><h4>${labels[round]}</h4>${
+    return `<div class="bracket-col"><h4>${roundLabel(round)}</h4>${
       games.map((m) => {
-        const hs = m.score?.home, as = m.score?.away;
-        const hasScore = hs != null;
-        const hw = hasScore && hs > as, aw = hasScore && as > hs;
-        const sc = (v) => hasScore ? `<span>${v}</span>` : "";
-        return `<div class="bk">
-          <div class="r ${hw ? "win" : ""}"><span class="nm">${esc(tn(m.home.name))}</span>${sc(hs)}</div>
-          <div class="r ${aw ? "win" : ""}"><span class="nm">${esc(tn(m.away.name))}</span>${sc(as)}</div>
-        </div>`;
+        const home = resolveSlot(m.home.name, ctx);
+        const away = resolveSlot(m.away.name, ctx);
+        const hs = m.score?.home, as = m.score?.away, played = hs != null;
+        const sc = (v) => (played ? `<span class="bk-sc">${v}</span>` : "");
+        const when = kickoffDateTime(m) || fmtDate(m.date);
+        return `<details class="bk">
+          <summary>
+            <div class="r ${played && hs > as ? "win" : ""} ${home.placeholder ? "tbd" : ""}">${slotInner(home)}${sc(hs)}</div>
+            <div class="r ${played && as > hs ? "win" : ""} ${away.placeholder ? "tbd" : ""}">${slotInner(away)}${sc(as)}</div>
+          </summary>
+          <div class="bk-detail">
+            <div class="bk-when">🗓️ ${esc(when)}</div>
+            <div class="bk-venue">📍 ${esc(venueFifa(m.ground))}</div>
+          </div>
+        </details>`;
       }).join("")
     }</div>`;
   }).join("");
@@ -569,6 +657,47 @@ export function renderDiscipline(disc) {
   }
 }
 
+// ---- drill-down modal (tap a chart bar → detail) ----
+export function openModal({ title, subtitle, flagTeam, rows = [], matches = [] }) {
+  closeModal();
+  const ov = document.createElement("div");
+  ov.id = "drill-modal";
+  ov.className = "modal-overlay";
+  ov.setAttribute("role", "dialog");
+  ov.setAttribute("aria-modal", "true");
+  const stat = ([k, v]) => `<div class="modal-stat"><span class="ms-k">${esc(k)}</span><span class="ms-v">${v}</span></div>`;
+  const matchRows = matches.length
+    ? `<div class="modal-matches"><div class="mm-h">${t("drill.matches")}</div>${matches.map(matchMini).join("")}</div>`
+    : "";
+  ov.innerHTML = `
+    <div class="modal-card" role="document">
+      <button class="modal-x" aria-label="${esc(t("drill.close"))}">✕</button>
+      <div class="modal-head">${flagTeam ? flagImg(flagTeam, "flag modal-flag") : ""}
+        <div><h3>${esc(title)}</h3>${subtitle ? `<p class="modal-sub">${esc(subtitle)}</p>` : ""}</div></div>
+      ${rows.length ? `<div class="modal-stats">${rows.map(stat).join("")}</div>` : ""}
+      ${matchRows || (!rows.length ? `<p class="empty">${t("drill.noData")}</p>` : "")}
+    </div>`;
+  document.body.appendChild(ov);
+  const close = () => closeModal();
+  ov.querySelector(".modal-x").addEventListener("click", close);
+  ov.addEventListener("click", (e) => { if (e.target === ov) close(); });
+  document.addEventListener("keydown", escClose);
+  ov.querySelector(".modal-x").focus();
+}
+function escClose(e) { if (e.key === "Escape") closeModal(); }
+export function closeModal() {
+  document.getElementById("drill-modal")?.remove();
+  document.removeEventListener("keydown", escClose);
+}
+function matchMini(m) {
+  const hasScore = m.score && m.score.home != null;
+  const mid = hasScore ? `${m.score.home}–${m.score.away}` : (kickoffLabel(m) || t("tbd"));
+  return `<div class="mm-row">
+    <span class="mm-t">${esc(tn(m.home.name))}</span>
+    <span class="mm-s">${esc(mid)}</span>
+    <span class="mm-t right">${esc(tn(m.away.name))}</span></div>`;
+}
+
 // ---- social: X timeline + optional widget + per-matchday Instagram archive ----
 export function renderSocial() {
   const wrap = document.getElementById("social-wrap");
@@ -608,6 +737,16 @@ export function renderSocial() {
 
   loadScript("https://platform.twitter.com/widgets.js", () => window.twttr?.widgets?.load(wrap));
   loadScript("https://www.instagram.com/embed.js", () => window.instgrm?.Embeds?.process());
+
+  // Fallback: if the X widget didn't inject an iframe (blocked/offline), show a
+  // clear "open in app" note instead of an empty box.
+  setTimeout(() => {
+    const box = wrap.querySelector(".social-card .social-embed");
+    if (box && !box.querySelector("iframe")) {
+      box.insertAdjacentHTML("beforeend",
+        `<p class="social-fallback"><a href="https://x.com/FIFAWorldCup" target="_blank" rel="noopener">${t("social.fail")}</a></p>`);
+    }
+  }, 4000);
 }
 
 // Per-day / per-venue Instagram archive, auto-built from played fixtures.

@@ -20,7 +20,7 @@
       </div>
     </div>
     <div class="header-meta">
-      <span id="updated" class="updated"></span>
+      <span id="updated" class="updated" role="status" aria-live="polite"></span>
       <div class="seg" id="lang-toggle" role="group" aria-label="Language / Idioma">
         <button type="button" data-lang="es">ES</button>
         <button type="button" data-lang="en">EN</button>
@@ -31,21 +31,21 @@
     </div>
   </header>
 
-  <nav class="tabs" id="tabs" aria-label="Secciones">
-    <button class="tab is-active" data-tab="overview" data-i18n="tab.overview">Resumen</button>
-    <button class="tab" data-tab="stats" data-i18n="tab.stats">Estadísticas</button>
-    <button class="tab" data-tab="live" data-i18n="tab.live">En vivo</button>
-    <button class="tab" data-tab="matches" data-i18n="tab.matches">Partidos</button>
-    <button class="tab" data-tab="standings" data-i18n="tab.standings">Grupos</button>
-    <button class="tab" data-tab="bracket" data-i18n="tab.bracket">Eliminatorias</button>
-    <button class="tab" data-tab="scorers" data-i18n="tab.scorers">Goleadores</button>
-    <button class="tab" data-tab="venues" data-i18n="tab.venues">Sedes</button>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Secciones">
+    <button class="tab is-active" role="tab" aria-selected="true" aria-controls="overview" id="tab-overview" data-tab="overview" data-i18n="tab.overview">Resumen</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="stats" id="tab-stats" data-tab="stats" data-i18n="tab.stats">Estadísticas</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="live" id="tab-live" data-tab="live"><span class="tab-label" data-i18n="tab.live">En vivo</span></button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="matches" id="tab-matches" data-tab="matches" data-i18n="tab.matches">Partidos</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="standings" id="tab-standings" data-tab="standings" data-i18n="tab.standings">Grupos</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="bracket" id="tab-bracket" data-tab="bracket" data-i18n="tab.bracket">Eliminatorias</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="scorers" id="tab-scorers" data-tab="scorers" data-i18n="tab.scorers">Goleadores</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="venues" id="tab-venues" data-tab="venues" data-i18n="tab.venues">Sedes</button>
   </nav>
   </div>
 
   <main id="app" aria-busy="true">
     <!-- Overview -->
-    <section id="overview" class="panel is-active">
+    <section id="overview" class="panel is-active" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
       <div class="hero">
         <p class="hero-dates" id="hero-dates"></p>
         <h2 class="hero-title" data-i18n="hero.title">La 23.ª Copa Mundial de la FIFA</h2>
@@ -87,13 +87,14 @@
         <div class="rule"><span class="rule-ic">⏱️</span><div data-i18n-html="rules.r6"><b>Tiempo añadido estricto</b><p>Se compensa con precisión el tiempo perdido; 8 s máximo para que el portero suelte el balón.</p></div></div>
         <div class="rule"><span class="rule-ic">🏟️</span><div data-i18n-html="rules.r7"><b>16 sedes, 3 países</b><p>Canadá, México y EE. UU.; la final será en el MetLife Stadium (Nueva York/Nueva Jersey).</p></div></div>
         <div class="rule"><span class="rule-ic">🗓️</span><div data-i18n-html="rules.r8"><b>39 días de torneo</b><p>Del 11 de junio al 19 de julio de 2026, la Copa del Mundo más larga de la historia.</p></div></div>
+        <div class="rule"><span class="rule-ic">💧</span><div data-i18n-html="rules.r9"><b>Pausas de hidratación</b><p>En sedes con calor extremo (México, Dallas, Houston…) el árbitro detiene el juego ~3 min cerca del minuto 30 y 75 para que los jugadores se hidraten.</p></div></div>
       </div>
     </section>
 
     <!-- Live -->
-    <section id="live" class="panel">
+    <section id="live" class="panel" role="tabpanel" aria-labelledby="tab-live" tabindex="0">
       <div id="live-status" class="live-status"></div>
-      <div id="live-feed" class="live-feed"></div>
+      <div id="live-feed" class="live-feed" aria-live="polite"></div>
       <div class="section-head">
         <p class="kicker" data-i18n="live.socialK">Social</p>
         <h3 class="section-title" data-i18n="live.socialT">Redes en vivo</h3>
@@ -103,7 +104,7 @@
     </section>
 
     <!-- Matches -->
-    <section id="matches" class="panel">
+    <section id="matches" class="panel" role="tabpanel" aria-labelledby="tab-matches" tabindex="0">
       <div class="toolbar">
         <input id="match-search" type="search" data-i18n-ph="matches.search" placeholder="Buscar selección…" aria-label="Buscar / Search" />
         <select id="match-filter" aria-label="Filtrar por fase"></select>
@@ -113,17 +114,22 @@
     </section>
 
     <!-- Standings -->
-    <section id="standings" class="panel">
+    <section id="standings" class="panel" role="tabpanel" aria-labelledby="tab-standings" tabindex="0">
       <div id="groups-grid" class="groups-grid"></div>
     </section>
 
     <!-- Bracket -->
-    <section id="bracket" class="panel">
+    <section id="bracket" class="panel" role="tabpanel" aria-labelledby="tab-bracket" tabindex="0">
+      <div class="section-head lead">
+        <p class="kicker" data-i18n="tab.bracket">Eliminatorias</p>
+        <h2 class="section-title big" data-i18n="br.r32">Dieciseisavos</h2>
+        <p class="section-sub" id="bracket-legend" data-i18n="br.legend">Cuadro proyectado en vivo con la clasificación actual.</p>
+      </div>
       <div id="bracket-wrap" class="bracket"></div>
     </section>
 
     <!-- Scorers -->
-    <section id="scorers" class="panel">
+    <section id="scorers" class="panel" role="tabpanel" aria-labelledby="tab-scorers" tabindex="0">
       <div class="card">
         <h3 data-i18n="tab.scorers">Goleadores</h3>
         <div id="scorers-list" class="scorers-list"></div>
@@ -131,43 +137,53 @@
     </section>
 
     <!-- Venues -->
-    <section id="venues" class="panel">
+    <section id="venues" class="panel" role="tabpanel" aria-labelledby="tab-venues" tabindex="0">
       <div id="venues-grid" class="venues-grid"></div>
     </section>
 
     <!-- Stats -->
-    <section id="stats" class="panel">
+    <section id="stats" class="panel" role="tabpanel" aria-labelledby="tab-stats" tabindex="0">
       <div class="section-head lead">
         <p class="kicker" data-i18n="stats.kicker">Panorama</p>
         <h2 class="section-title big" data-i18n="stats.title">El Mundial 2026, contado con datos</h2>
         <p class="section-sub" data-i18n="stats.sub">Lo más relevante de lo que va de la Copa, de un vistazo.</p>
       </div>
+      <nav class="subnav" id="stats-subnav" aria-label="Secciones de estadísticas">
+        <a href="#sec-kpis" data-i18n="subnav.kpis">Cifras</a>
+        <a href="#sec-facts" data-i18n="subnav.facts">Curiosidades</a>
+        <a href="#sec-agg" data-i18n="subnav.agg">Agregados</a>
+        <a href="#sec-viz" data-i18n="subnav.viz">Gráficas</a>
+        <a href="#sec-disc" data-i18n="subnav.disc">Disciplina</a>
+        <a href="#sec-eff" data-i18n="subnav.eff">Eficacia</a>
+        <a href="#sec-rc" data-i18n="subnav.rc">Rojas y lesiones</a>
+      </nav>
       <div class="insight-strip" id="insight-strip"></div>
 
-      <div class="section-head">
+      <div class="section-head" id="sec-kpis">
         <p class="kicker" data-i18n="kpis.kicker">KPIs</p>
         <h3 class="section-title" data-i18n="kpis.title">El torneo en cifras</h3>
       </div>
       <div class="stat-grid" id="stats-kpis"></div>
 
-      <div class="section-head">
+      <div class="section-head" id="sec-facts">
         <p class="kicker" data-i18n="cur.kicker">Curiosidades</p>
         <h3 class="section-title" data-i18n="cur.title">Datos curiosos del torneo</h3>
         <p class="section-sub" data-i18n="cur.sub">Hallazgos extraídos de los partidos disputados.</p>
       </div>
       <div class="facts-grid" id="facts-grid"></div>
 
-      <div class="section-head">
+      <div class="section-head" id="sec-agg">
         <p class="kicker" data-i18n="agg.kicker">Agregados</p>
         <h3 class="section-title" data-i18n="agg.title">Fueras de lugar, VAR, tarjetas y más</h3>
         <p class="section-sub" data-i18n="agg.sub">Totales del torneo que no se ven en el marcador.</p>
       </div>
       <div class="stat-grid agg-grid" id="agg-grid"></div>
 
-      <div class="section-head">
+      <div class="section-head" id="sec-viz">
         <p class="kicker" data-i18n="viz.kicker">Visualizaciones</p>
         <h3 class="section-title" data-i18n="viz.title">Dónde se deciden los partidos</h3>
         <p class="section-sub" data-i18n="viz.sub">Goleo, ataque y los momentos que marcan el torneo.</p>
+        <p class="drill-hint" data-i18n="drill.hint">Toca una barra para ver el detalle ↗</p>
       </div>
       <div class="charts-grid">
         <div class="card viz">
@@ -190,7 +206,7 @@
         </div>
       </div>
 
-      <div class="section-head">
+      <div class="section-head" id="sec-disc">
         <p class="kicker" data-i18n="disc.kicker">Disciplina y eficacia</p>
         <h3 class="section-title" data-i18n="disc.title">Quién pega, quién falla el arco</h3>
         <p class="section-sub" data-i18n="disc.sub">Faltas por partido, tarjetas y puntería.</p>
@@ -211,7 +227,7 @@
         </div>
       </div>
 
-      <div class="section-head">
+      <div class="section-head" id="sec-eff">
         <p class="kicker" data-i18n="eff.kicker">Eficacia de cara al arco</p>
         <h3 class="section-title" data-i18n="eff.title">Puntería: % de conversión</h3>
         <p class="section-sub" data-i18n-html="eff.sub"><strong>% de conversión = goles ÷ tiros a puerta.</strong> Mayor % = más eficaz.</p>
@@ -247,7 +263,7 @@
         </div>
       </div>
 
-      <div class="section-head">
+      <div class="section-head" id="sec-rc">
         <p class="kicker" data-i18n="rc.kicker">Tarjetas rojas y lesiones</p>
         <h3 class="section-title" data-i18n="rc.title">Lo más duro del torneo</h3>
         <p class="section-sub" data-i18n="rc.sub">Expulsiones por selección y lesiones de gravedad.</p>

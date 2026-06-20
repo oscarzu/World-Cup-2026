@@ -96,6 +96,17 @@ function upsert(id, type, labels, data, label, opts = {}) {
   const bg = Array.isArray(opts.colors) ? opts.colors
     : opts.emphasis ? emphasize(data, opts.color || t2.accent, t2.context, opts.leadFirst)
     : isLine ? (opts.color || t2.accent) + "22" : (opts.color || t2.accent);
+  const options = baseOpts(t2, opts);
+  // Drill-down: tap a bar → emit an event the app turns into a detail modal.
+  const keys = opts.drillKeys;
+  if (Array.isArray(keys) && keys.length) {
+    options.onClick = (_e, els) => {
+      if (!els || !els.length) return;
+      const i = els[0].index;
+      window.dispatchEvent(new CustomEvent("wc:drill", { detail: { chart: id, key: keys[i], index: i } }));
+    };
+    options.onHover = (e, els) => { e.native.target.style.cursor = els.length ? "pointer" : "default"; };
+  }
   charts[id] = new Chart(el, {
     type,
     data: { labels, datasets: [{
@@ -104,7 +115,7 @@ function upsert(id, type, labels, data, label, opts = {}) {
       tension: 0.4, pointRadius: isLine ? 3.5 : 0, pointHoverRadius: 5,
       pointBackgroundColor: opts.color || t2.accent, fill: isLine ? { target: "origin" } : false,
     }] },
-    options: baseOpts(t2, opts),
+    options,
   });
 }
 
@@ -131,7 +142,8 @@ export function renderCharts(stats, facts, disc, effHist) {
     }
     upsert("chart-groups", "bar",
       lastStats.byGroup.map(([k]) => k.replace("Group ", "")),
-      lastStats.byGroup.map(([, v]) => v), t("u.goals"), { emphasis: true, color: tc.accent });
+      lastStats.byGroup.map(([, v]) => v), t("u.goals"),
+      { emphasis: true, color: tc.accent, drillKeys: lastStats.byGroup.map(([k]) => k) });
     if (lastStats.byGroup.length) {
       const g = lastStats.byGroup.reduce((a, b) => (b[1] > a[1] ? b : a));
       setSub("sub-groups", sub(`El grupo ${g[0].replace("Group ", "")} es el más goleador, con ${g[1]} goles.`,
@@ -142,7 +154,7 @@ export function renderCharts(stats, facts, disc, effHist) {
   if (lastFacts) {
     const tt = lastFacts.topTeams || [];
     upsert("chart-teams", "bar", tt.map((x) => tName(x.name)), tt.map((x) => x.goals), t("u.goals"),
-      { horizontal: true, emphasis: true, color: tc.gold });
+      { horizontal: true, emphasis: true, color: tc.gold, drillKeys: tt.map((x) => x.name) });
     if (tt.length) {
       const maxG = tt[0].goals;
       const lead = tt.filter((x) => x.goals === maxG);
@@ -164,7 +176,7 @@ export function renderCharts(stats, facts, disc, effHist) {
     // Fouls per match (normalised).
     const fr = (lastDisc.foulsRanking || []).slice(0, 10);
     upsert("chart-fouls", "bar", fr.map((x) => tName(x.name)), fr.map((x) => round1(x.perMatch)), t("u.fouls"),
-      { horizontal: true, emphasis: true, color: tc.live });
+      { horizontal: true, emphasis: true, color: tc.live, drillKeys: fr.map((x) => x.name) });
     if (fr.length) setSub("sub-fouls", sub(`${tName(fr[0].name)} es la más infractora: ${round1(fr[0].perMatch)} faltas por partido.`,
       `${tName(fr[0].name)} fouls the most: ${round1(fr[0].perMatch)} per match.`));
 
@@ -189,13 +201,13 @@ export function renderCharts(stats, facts, disc, effHist) {
     const worst = eff.slice(-10).reverse();        // lowest pct first
     if (best.length) {
       upsert("chart-eff-best", "bar", best.map((x) => tName(x.name)), best.map((x) => Math.round(x.pct)), "%",
-        { horizontal: true, emphasis: true, leadFirst: true, color: tc.accent, suffix: "%" });
+        { horizontal: true, emphasis: true, leadFirst: true, color: tc.accent, suffix: "%", drillKeys: best.map((x) => x.name) });
       setSub("sub-eff-best", sub(`${tName(best[0].name)} es la más eficaz: ${Math.round(best[0].pct)}% de conversión.`,
         `${tName(best[0].name)} is the most efficient: ${Math.round(best[0].pct)}% conversion.`));
     }
     if (worst.length) {
       upsert("chart-eff-worst", "bar", worst.map((x) => tName(x.name)), worst.map((x) => Math.round(x.pct)), "%",
-        { horizontal: true, emphasis: true, leadFirst: true, color: tc.live, suffix: "%" });
+        { horizontal: true, emphasis: true, leadFirst: true, color: tc.live, suffix: "%", drillKeys: worst.map((x) => x.name) });
       setSub("sub-eff-worst", sub(`${tName(worst[0].name)} es la menos eficaz: ${Math.round(worst[0].pct)}% de conversión.`,
         `${tName(worst[0].name)} is the least efficient: ${Math.round(worst[0].pct)}% conversion.`));
     }

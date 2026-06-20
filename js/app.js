@@ -1,7 +1,7 @@
 // app.js — orchestration: load, render, tabs, theme, search/filter, live polling.
 
 import { CONFIG, teamES } from "./config.js";
-import { getLang, setLang, applyStatic } from "./i18n.js";
+import { getLang, setLang, applyStatic, t } from "./i18n.js";
 import { loadBase, applyLive, loadTeamStats, loadEfficacyHistory, loadSocial } from "./api.js";
 import { computeStandings } from "./standings.js";
 import { computeScorers, goalStats } from "./scorers.js";
@@ -36,17 +36,79 @@ function initTheme() {
   });
 }
 
-// ---- tabs ----
+// ---- tabs (ARIA tablist + keyboard) ----
+function activateTab(btn) {
+  if (!btn) return;
+  document.querySelectorAll(".tab").forEach((tb) => {
+    const on = tb === btn;
+    tb.classList.toggle("is-active", on);
+    tb.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  const id = btn.dataset.tab;
+  document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("is-active", p.id === id));
+  // Keep the active tab visible in the horizontally-scrolling bar (mobile).
+  btn.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  if (id === "stats" || id === "overview") renderCharts();
+  if (id === "live") { UI.renderSocial(); UI.renderSocialArchive(state.matches, state.social); }
+}
+
 function initTabs() {
+  const tabs = [...document.querySelectorAll(".tab")];
   $("#tabs").addEventListener("click", (e) => {
     const btn = e.target.closest(".tab");
-    if (!btn) return;
-    document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t === btn));
-    const id = btn.dataset.tab;
-    document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("is-active", p.id === id));
-    if (id === "stats" || id === "overview") renderCharts();
-    if (id === "live") { UI.renderSocial(); UI.renderSocialArchive(state.matches, state.social); }
+    if (btn) activateTab(btn);
   });
+  // Arrow-key navigation per the WAI-ARIA tabs pattern.
+  $("#tabs").addEventListener("keydown", (e) => {
+    const i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    let n = null;
+    if (e.key === "ArrowRight") n = (i + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") n = (i - 1 + tabs.length) % tabs.length;
+    else if (e.key === "Home") n = 0;
+    else if (e.key === "End") n = tabs.length - 1;
+    if (n == null) return;
+    e.preventDefault();
+    tabs[n].focus();
+    activateTab(tabs[n]);
+  });
+}
+
+// ---- chart drill-down: tap a bar → a detail modal built from state ----
+function initDrill() {
+  window.addEventListener("wc:drill", (e) => {
+    const { chart, key } = e.detail || {};
+    if (chart === "chart-groups") return drillGroup(key);
+    return drillTeam(chart, key); // teams / fouls / efficacy charts key on team name
+  });
+}
+function matchesForTeam(name) {
+  return state.matches.filter((m) =>
+    (m.home.name === name || m.away.name === name) && m.score?.home != null)
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+}
+function drillGroup(group) {
+  const rows = computeStandings(state.matches).get(group) || [];
+  const en = getLang() === "en";
+  UI.openModal({
+    title: `${t("drill.group")} ${group.replace("Group ", "")}`,
+    subtitle: en ? "Current standings" : "Clasificación actual",
+    rows: rows.map((r) => [UI.teamLabel(r.name), `${r.Pts} ${en ? "pts" : "pts"} · ${r.GF}-${r.GA}`]),
+  });
+}
+function drillTeam(chart, name) {
+  const ms = matchesForTeam(name);
+  const disc = state._lastDisc || {};
+  const rows = [];
+  const find = (arr) => (arr || []).find((x) => x.name === name);
+  const goalsFor = ms.reduce((s, m) => s + (m.home.name === name ? m.score.home : m.score.away), 0);
+  rows.push([t("drill.matches"), String(ms.length)]);
+  rows.push([t("drill.goalsFor"), String(goalsFor)]);
+  const ef = find(disc.efficacy);
+  if (ef) { rows.push([t("drill.shotsOn"), String(ef.shots)]); rows.push([t("drill.conv"), `${Math.round(ef.pct)}%`]); }
+  const fr = find(disc.foulsRanking);
+  if (fr) rows.push([t("drill.foulsPm"), fr.perMatch.toFixed(1)]);
+  UI.openModal({ title: UI.teamLabel(name), flagTeam: name, rows, matches: ms });
 }
 
 // ---- matches filtering ----
@@ -88,8 +150,9 @@ function renderAll() {
   UI.renderHeroLead(stats);
   UI.animateCounts($("#overview-stats"));
   UI.renderMatches(state.matches);
-  UI.renderStandings(computeStandings(state.matches));
-  UI.renderBracket(state.matches);
+  const standings = computeStandings(state.matches);
+  UI.renderStandings(standings);
+  UI.renderBracket(state.matches, standings);
   UI.renderScorers(computeScorers(state.matches));
   const liveList = state.liveMatches.length ? state.liveMatches : state.matches;
   UI.renderLive(liveList, state.matches);
@@ -108,6 +171,7 @@ function renderAll() {
     }
   }
   const disc = computeDiscipline(state.teamStats, matchesByTeam);
+  state._lastDisc = disc; // for chart drill-downs
   UI.renderDiscipline(disc);
   UI.renderInsightStrip(stats, facts, disc);
   renderCharts(stats, facts, disc, state.effHistory);
@@ -117,8 +181,15 @@ function renderAll() {
   const en = getLang() === "en";
   const liveCount = (state.liveMatches.length ? state.liveMatches : state.matches)
     .filter((m) => m.status === "live").length;
-  // Colour the "Live" tab only while a match is actually live.
-  document.querySelector('.tab[data-tab="live"]')?.classList.toggle("has-live", liveCount > 0);
+  // Colour the "Live" tab only while a match is actually live, and surface the
+  // count in the label (not colour-only — accessible signal).
+  const liveTab = document.querySelector('.tab[data-tab="live"]');
+  if (liveTab) {
+    liveTab.classList.toggle("has-live", liveCount > 0);
+    const label = liveTab.querySelector(".tab-label");
+    if (label) label.textContent = liveCount > 0 ? `${t("tab.live")} · ${liveCount}` : t("tab.live");
+    liveTab.setAttribute("aria-label", liveCount > 0 ? `${t("tab.live")} (${liveCount})` : t("tab.live"));
+  }
   const time = new Date().toLocaleTimeString(en ? "en-US" : "es-MX",
     { timeZone: CONFIG.TIMEZONE, hour: "2-digit", minute: "2-digit" });
   $("#updated").textContent = `${en ? "Upd." : "Act."} ${time} ${CONFIG.TIMEZONE_LABEL}`;
@@ -202,6 +273,7 @@ function initLang() {
     document.documentElement.lang = getLang();
     applyStatic();
     paint();
+    UI.fillMatchFilter(state.matches); // re-label round options in the new language
     renderAll();
     UI.renderLiveStatus(liveStatusArgs());
   }));
@@ -253,6 +325,7 @@ async function boot() {
   initLang();
   initTabs();
   initMatchControls();
+  initDrill();
   await loadData();
 }
 
