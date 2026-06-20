@@ -50,17 +50,34 @@ function initTabs() {
 }
 
 // ---- matches filtering ----
+// Accent-insensitive so "México"/"Mexico" both match; searches BOTH the raw
+// data name (e.g. "Germany") and the translated label shown on screen
+// (e.g. "Alemania") so the visible name always works.
+const fold = (s) => String(s || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
 function initMatchControls() {
   const apply = () => {
-    const q = $("#match-search").value.trim().toLowerCase();
+    const raw = $("#match-search").value.trim();
+    const q = fold(raw);
     const round = $("#match-filter").value;
-    const filtered = state.matches.filter((m) =>
-      (!round || m.round === round) &&
-      (!q || m.home.name.toLowerCase().includes(q) || m.away.name.toLowerCase().includes(q)));
+    const filtered = state.matches.filter((m) => {
+      if (round && m.round !== round) return false;
+      if (!q) return true;
+      return [m.home.name, m.away.name, UI.teamLabel(m.home.name), UI.teamLabel(m.away.name)]
+        .some((n) => fold(n).includes(q));
+    });
     UI.renderMatches(filtered);
+    UI.renderMatchStatus({ count: filtered.length, query: raw, round });
   };
   $("#match-search").addEventListener("input", apply);
   $("#match-filter").addEventListener("change", apply);
+  // Delegated clear action from the status row.
+  $("#match-status").addEventListener("click", (e) => {
+    if (!e.target.closest("[data-clear]")) return;
+    $("#match-search").value = "";
+    $("#match-filter").value = "";
+    apply();
+  });
 }
 
 // ---- rendering pass ----
@@ -191,12 +208,25 @@ function initLang() {
 }
 
 // ---- boot ----
-async function boot() {
-  initTheme();
-  initLang();
-  initTabs();
-  initMatchControls();
+// Start the live layer exactly once (survives a retry after a failed load).
+let liveStarted = false;
+function startLiveOnce() {
+  if (liveStarted) return;
+  liveStarted = true;
+  // Real-time provider (ESPN via proxy) if configured; else the best-effort
+  // community overlay. Both poll on an interval.
+  if (AF.liveEnabled()) {
+    UI.renderLiveStatus(liveStatusArgs()); // show legend immediately
+    startLiveLoop();
+  } else {
+    poll();
+    setInterval(poll, CONFIG.POLL_INTERVAL);
+  }
+}
 
+// The data-loading pass — re-runnable from the error state's Retry button.
+async function loadData() {
+  UI.showLoading();
   try {
     const [data, teamStats, effHistory, social] = await Promise.all([
       loadBase(), loadTeamStats(), loadEfficacyHistory(), loadSocial(),
@@ -209,22 +239,21 @@ async function boot() {
     state.social = social;
     UI.fillMatchFilter(state.matches);
     renderAll();
+    UI.clearLoading();
+    if (!state.online) UI.showOfflineBanner(); // fell back to bundled snapshot
+    startLiveOnce();
   } catch (err) {
     console.error("No se pudieron cargar los datos:", err);
-    $("#app").insertAdjacentHTML("afterbegin",
-      `<p class="empty">No se pudieron cargar los datos de la Copa Mundial. Revisa tu conexión.</p>`);
-    return;
+    UI.showFatalError(loadData); // blocking state with a working Retry
   }
+}
 
-  // Real-time provider (API-Football via proxy) if configured; else the
-  // best-effort community overlay. Both poll on an interval.
-  if (AF.liveEnabled()) {
-    UI.renderLiveStatus(liveStatusArgs()); // show legend immediately
-    startLiveLoop();
-  } else {
-    poll();
-    setInterval(poll, CONFIG.POLL_INTERVAL);
-  }
+async function boot() {
+  initTheme();
+  initLang();
+  initTabs();
+  initMatchControls();
+  await loadData();
 }
 
 // Chart.js loads with `defer`; wait for window load so it's defined.

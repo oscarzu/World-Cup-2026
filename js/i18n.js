@@ -144,6 +144,19 @@ const STR = {
   "arch.empty": ["Sin publicaciones guardadas para esta jornada — explora por estadio ↑",
                  "No saved posts for this matchday — explore by stadium ↑"],
 
+  // loading / error / offline / search feedback
+  "load.loading": ["Cargando datos del torneo…", "Loading tournament data…"],
+  "err.title": ["No pudimos cargar los datos", "We couldn't load the data"],
+  "err.body": ["Hubo un problema al conectar con la fuente. Revisa tu conexión e inténtalo de nuevo.",
+               "Something went wrong reaching the source. Check your connection and try again."],
+  "err.retry": ["Reintentar", "Retry"],
+  "offline.msg": ["Mostrando datos guardados — sin conexión.", "Showing saved data — you're offline."],
+  "offline.close": ["Cerrar aviso", "Dismiss"],
+  "search.one": ["resultado", "result"],
+  "search.many": ["resultados", "results"],
+  "search.none": ["Sin resultados para", "No results for"],
+  "search.clear": ["Limpiar", "Clear"],
+
   // overview KPIs
   "kpi.teams": ["Selecciones", "Teams"], "kpi.groups": ["Grupos", "Groups"],
   "kpi.matches": ["Partidos", "Matches"], "kpi.venues": ["Sedes", "Venues"],

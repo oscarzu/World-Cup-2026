@@ -15,6 +15,61 @@ export const fmtInt = (n) => {
   return Number.isFinite(v) ? v.toLocaleString("en-US") : String(n ?? "—");
 };
 
+// ---- app-level states: loading / fatal error / offline -------------------
+
+// Skeleton placeholders while the first data load is in flight.
+export function showLoading() {
+  const app = document.getElementById("app");
+  if (app) app.setAttribute("aria-busy", "true");
+  const os = document.getElementById("overview-stats");
+  if (os) os.innerHTML = Array.from({ length: 6 }, () => `<div class="skeleton sk-stat"></div>`).join("");
+  const ol = document.getElementById("overview-live");
+  if (ol) ol.innerHTML = Array.from({ length: 3 }, () => `<div class="skeleton sk-row"></div>`).join("");
+}
+
+export function clearLoading() {
+  document.getElementById("app")?.setAttribute("aria-busy", "false");
+}
+
+// Full-screen blocking error with a working Retry button.
+export function showFatalError(onRetry) {
+  hideFatalError();
+  document.getElementById("app")?.setAttribute("aria-busy", "false");
+  const el = document.createElement("div");
+  el.id = "fatal-overlay";
+  el.className = "fatal-overlay";
+  el.setAttribute("role", "alert");
+  el.innerHTML = `
+    <div class="fatal-card">
+      <div class="fatal-ic" aria-hidden="true">📡</div>
+      <h2>${esc(t("err.title"))}</h2>
+      <p>${esc(t("err.body"))}</p>
+      <button type="button" id="retry-btn" class="btn-primary">${esc(t("err.retry"))}</button>
+    </div>`;
+  document.body.appendChild(el);
+  el.querySelector("#retry-btn").addEventListener("click", () => {
+    hideFatalError();
+    onRetry?.();
+  });
+}
+
+export function hideFatalError() {
+  document.getElementById("fatal-overlay")?.remove();
+}
+
+// Dismissible banner shown when we fall back to the bundled snapshot.
+export function showOfflineBanner() {
+  if (document.getElementById("net-banner")) return;
+  const b = document.createElement("div");
+  b.id = "net-banner";
+  b.className = "net-banner";
+  b.setAttribute("role", "status");
+  b.innerHTML = `<span>📦 ${esc(t("offline.msg"))}</span>
+    <button type="button" class="net-x" aria-label="${esc(t("offline.close"))}">✕</button>`;
+  document.body.insertBefore(b, document.body.firstChild);
+  b.querySelector(".net-x").addEventListener("click", () => b.remove());
+}
+
 // Wikimedia Commons hi-res image via the stable Special:FilePath redirect.
 const venuePhoto = (file) =>
   `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1200`;
@@ -106,6 +161,24 @@ export function renderMatches(matches) {
     html += matchCard(m);
   }
   wrap.innerHTML = html;
+}
+
+// Team name in the active language (used by the search to match what's shown).
+export const teamLabel = (name) => tName(name);
+
+// Result count + active-filter feedback under the matches toolbar.
+export function renderMatchStatus({ count, query, round }) {
+  const el = $("#match-status");
+  if (!el) return;
+  const active = query || round;
+  if (!active) { el.hidden = true; el.innerHTML = ""; return; }
+  el.hidden = false;
+  const noun = count === 1 ? t("search.one") : t("search.many");
+  const lead = count === 0 && query
+    ? `${t("search.none")} “${esc(query)}”`
+    : `${fmtInt(count)} ${noun}`;
+  el.innerHTML = `<span>${lead}</span>
+    <button type="button" class="status-clear" data-clear>${esc(t("search.clear"))} ✕</button>`;
 }
 
 export function fillMatchFilter(matches) {

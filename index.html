@@ -43,7 +43,7 @@
   </nav>
   </div>
 
-  <main id="app">
+  <main id="app" aria-busy="true">
     <!-- Overview -->
     <section id="overview" class="panel is-active">
       <div class="hero">
@@ -108,6 +108,7 @@
         <input id="match-search" type="search" data-i18n-ph="matches.search" placeholder="Buscar selección…" aria-label="Buscar / Search" />
         <select id="match-filter" aria-label="Filtrar por fase"></select>
       </div>
+      <div id="match-status" class="match-status" role="status" aria-live="polite" hidden></div>
       <div id="match-list" class="match-list"></div>
     </section>
 
