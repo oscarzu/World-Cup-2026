@@ -726,6 +726,43 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
   .at-main { border-right: 0; border-bottom: 1px solid var(--border); padding: 0 0 0.8rem; }
 }
 
+/* ---- drill-down accessible disclosure ---- */
+.drill-access { margin-top: 0.6rem; }
+.drill-btn {
+  font-family: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  color: var(--accent); background: none; border: 0; padding: 0.2rem 0;
+}
+.drill-btn:hover { text-decoration: underline; }
+.drill-list { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; gap: 0.25rem;
+  max-height: 230px; overflow-y: auto; }
+.drill-pick { font-size: 0.74rem; color: var(--muted); padding: 0.2rem 0; }
+.drill-item {
+  width: 100%; text-align: left; font-family: inherit; font-size: 0.82rem; cursor: pointer;
+  color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 0.4rem 0.65rem;
+}
+.drill-item:hover { border-color: var(--border-strong); }
+.drill-item b { color: var(--accent); }
+
+/* ---- sub-nav active state (scroll-spy) ---- */
+.subnav a.is-current { color: var(--text); background: var(--accent-soft); border-color: var(--accent); }
+
+/* ---- horizontal scroll hint (bracket) ---- */
+.scroll-hint { display: none; font-size: 0.78rem; color: var(--muted); font-weight: 600; margin: 0 0 0.6rem; }
+@media (max-width: 900px) { .scroll-hint { display: block; } }
+
+/* ---- scorers header ---- */
+.scorers-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; }
+.scorers-tag { font-size: 0.74rem; font-weight: 600; color: var(--muted);
+  background: var(--surface-2); border-radius: 999px; padding: 0.2rem 0.6rem; }
+
+/* ---- gradient-text contrast fallback (S2) ---- */
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .at-big, .insight .big, .num, .stat .num, .fact-value, .live-score .lsc,
+  .rank-table td.val { -webkit-text-fill-color: currentColor; color: var(--text); background: none; }
+}
+[data-theme="light"] .at-big { -webkit-text-fill-color: #0a7d39; }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

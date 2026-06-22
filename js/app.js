@@ -75,11 +75,27 @@ function initTabs() {
 }
 
 // ---- chart drill-down: tap a bar → a detail modal built from state ----
+function dispatchDrill(chart, key) {
+  if (chart === "chart-groups") return drillGroup(key);
+  return drillTeam(chart, key); // teams / fouls / efficacy charts key on team name
+}
 function initDrill() {
   window.addEventListener("wc:drill", (e) => {
     const { chart, key } = e.detail || {};
-    if (chart === "chart-groups") return drillGroup(key);
-    return drillTeam(chart, key); // teams / fouls / efficacy charts key on team name
+    dispatchDrill(chart, key);
+  });
+  // Keyboard/screen-reader path: the "See detail" disclosure + per-item buttons.
+  document.addEventListener("click", (e) => {
+    const toggle = e.target.closest(".drill-btn");
+    if (toggle) {
+      const list = toggle.parentNode.querySelector(".drill-list");
+      const show = list.hidden;
+      list.hidden = !show;
+      toggle.setAttribute("aria-expanded", String(show));
+      return;
+    }
+    const item = e.target.closest(".drill-item");
+    if (item) dispatchDrill(item.dataset.chart, item.dataset.key);
   });
 }
 function matchesForTeam(name) {
@@ -142,6 +158,38 @@ function initMatchControls() {
   });
 }
 
+// ---- scorers search ----
+function applyScorerFilter() {
+  const input = $("#scorer-search");
+  const q = fold(input ? input.value.trim() : "");
+  const list = state._scorers || [];
+  if (!q) { UI.renderScorers(list); return; }
+  const out = list.filter((s) =>
+    fold(s.name).includes(q) || fold(s.country).includes(q) || fold(UI.teamLabel(s.country)).includes(q));
+  UI.renderScorers(out, { filtered: true });
+}
+function initScorerControls() {
+  $("#scorer-search")?.addEventListener("input", applyScorerFilter);
+}
+
+// ---- stats sub-nav scroll-spy ----
+function initSubnav() {
+  const nav = $("#stats-subnav");
+  if (!nav || !("IntersectionObserver" in window)) return;
+  const links = [...nav.querySelectorAll("a")];
+  const byId = new Map(links.map((a) => [a.getAttribute("href").slice(1), a]));
+  const io = new IntersectionObserver((entries) => {
+    for (const en of entries) {
+      if (!en.isIntersecting) continue;
+      const link = byId.get(en.target.id);
+      if (!link) continue;
+      links.forEach((a) => { a.classList.toggle("is-current", a === link); a.removeAttribute("aria-current"); });
+      link.setAttribute("aria-current", "true");
+    }
+  }, { rootMargin: "-140px 0px -70% 0px", threshold: 0 });
+  for (const id of byId.keys()) { const sec = document.getElementById(id); if (sec) io.observe(sec); }
+}
+
 // ---- rendering pass ----
 function renderAll() {
   const stats = goalStats(state.matches);
@@ -153,7 +201,8 @@ function renderAll() {
   const standings = computeStandings(state.matches);
   UI.renderStandings(standings);
   UI.renderBracket(state.matches, standings);
-  UI.renderScorers(computeScorers(state.matches));
+  state._scorers = computeScorers(state.matches);
+  applyScorerFilter();
   const liveList = state.liveMatches.length ? state.liveMatches : state.matches;
   UI.renderLive(liveList, state.matches);
   UI.renderVenues();
@@ -326,6 +375,8 @@ async function boot() {
   initLang();
   initTabs();
   initMatchControls();
+  initScorerControls();
+  initSubnav();
   initDrill();
   await loadData();
 }

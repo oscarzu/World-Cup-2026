@@ -125,13 +125,20 @@
         <h2 class="section-title big" data-i18n="br.r32">Dieciseisavos</h2>
         <p class="section-sub" id="bracket-legend" data-i18n="br.legend">Cuadro proyectado en vivo con la clasificación actual.</p>
       </div>
+      <p class="scroll-hint" data-i18n="br.swipe">Desliza para ver más rondas →</p>
       <div id="bracket-wrap" class="bracket"></div>
     </section>
 
     <!-- Scorers -->
     <section id="scorers" class="panel" role="tabpanel" aria-labelledby="tab-scorers" tabindex="0">
       <div class="card">
-        <h3 data-i18n="tab.scorers">Goleadores</h3>
+        <div class="scorers-head">
+          <h3 data-i18n="tab.scorers">Goleadores</h3>
+          <span class="scorers-tag" data-i18n="sc.top">Top 40 · orden FIFA</span>
+        </div>
+        <div class="toolbar">
+          <input id="scorer-search" type="search" data-i18n-ph="sc.search" placeholder="Buscar jugador o selección…" aria-label="Buscar goleador / Search scorer" />
+        </div>
         <div id="scorers-list" class="scorers-list"></div>
         <p class="card-foot" data-i18n="sc.foot">Orden oficial FIFA: goles, luego asistencias y menos minutos jugados (cuando hay datos). Los penales cuentan como gol.</p>
       </div>

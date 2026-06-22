@@ -117,9 +117,37 @@ function upsert(id, type, labels, data, label, opts = {}) {
     }] },
     options,
   });
+  setChartA11y(id, label, labels, data, opts.suffix || "");
+  if (Array.isArray(keys) && keys.length) attachDrillAccess(id, labels, data, keys, opts.suffix || "");
 }
 
 function setSub(id, text) { const el = document.getElementById(id); if (el) el.textContent = text || ""; }
+
+// Accessibility: describe the canvas as an image with a short data summary.
+function setChartA11y(id, label, labels, data, suffix = "") {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const top = labels.map((l, i) => `${l} ${fmt(data[i])}${suffix}`).slice(0, 4).join(", ");
+  el.setAttribute("role", "img");
+  el.setAttribute("aria-label", `${t("a11y.chart")}: ${label}. ${top}`);
+}
+
+const escH = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Keyboard/screen-reader alternative to clicking bars: a "See detail" disclosure
+// listing each entity as a real button that triggers the same drill-down.
+function attachDrillAccess(id, labels, data, keys, suffix = "") {
+  const el = document.getElementById(id);
+  const box = el && el.closest(".chart-box");
+  if (!box) return;
+  let acc = box.parentNode.querySelector(".drill-access");
+  if (!acc) { acc = document.createElement("div"); acc.className = "drill-access"; box.insertAdjacentElement("afterend", acc); }
+  const items = labels.map((l, i) =>
+    `<li><button type="button" class="drill-item" data-chart="${escH(id)}" data-key="${escH(keys[i])}">${escH(l)} · <b>${fmt(data[i])}${escH(suffix)}</b></button></li>`).join("");
+  acc.innerHTML =
+    `<button type="button" class="drill-btn" aria-expanded="false">${t("drill.detail")} ↗</button>
+     <ul class="drill-list" hidden><li class="drill-pick">${t("drill.pick")}</li>${items}</ul>`;
+}
 const topOf = (arr) => (arr && arr.length ? arr[0] : null);
 
 let lastStats = null, lastFacts = null, lastDisc = null, lastEffHist = null;
@@ -288,6 +316,10 @@ function effSeries(canvasId, history, kind, tc) {
     },
     plugins: [pointLabels],
   });
+  el.setAttribute("role", "img");
+  el.setAttribute("aria-label",
+    `${t("a11y.chart")}: ${t("eff.seriesBest")} ${bestTeams.map((tm, i) => `${tm} ${bestData[i]}%`).join(", ")}. ` +
+    `${t("eff.seriesWorst")} ${worstTeams.map((tm, i) => `${tm} ${worstData[i]}%`).join(", ")}.`);
 }
 
 // Re-draw with current theme colours / language.

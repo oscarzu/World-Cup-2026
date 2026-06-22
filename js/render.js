@@ -296,7 +296,7 @@ export function renderBracket(matches, standings = new Map()) {
   // Inner content of a slot row (flag + name + projection tag).
   const slotInner = (s) => {
     const flag = s.flagTeam ? flagImg(s.flagTeam) : `<span class="flag" aria-hidden="true"></span>`;
-    const tag = s.proj ? `<span class="bk-proj">${t("br.proj")}</span>` : "";
+    const tag = s.proj ? `<span class="bk-proj" title="${esc(t("br.projFull"))}">${t("br.proj")}</span>` : "";
     return `${flag}<span class="nm">${esc(s.name)}</span>${tag}`;
   };
 
@@ -326,9 +326,12 @@ export function renderBracket(matches, standings = new Map()) {
 }
 
 // ---- scorers ----
-export function renderScorers(list) {
+export function renderScorers(list, { filtered = false } = {}) {
   const wrap = $("#scorers-list");
-  if (!list.length) { wrap.innerHTML = `<p class="empty">${t("empty.noGoals")}</p>`; return; }
+  if (!list.length) {
+    wrap.innerHTML = `<p class="empty">${t(filtered ? "sc.none" : "empty.noGoals")}</p>`;
+    return;
+  }
   wrap.innerHTML = list.slice(0, 40).map((s, i) => `
     <div class="scorer">
       <span class="rank">${i + 1}</span>
@@ -691,13 +694,16 @@ export function renderDiscipline(disc) {
 }
 
 // ---- drill-down modal (tap a chart bar → detail) ----
+let modalReturnFocus = null;
 export function openModal({ title, subtitle, flagTeam, rows = [], matches = [] }) {
   closeModal();
+  modalReturnFocus = document.activeElement; // restore on close
   const ov = document.createElement("div");
   ov.id = "drill-modal";
   ov.className = "modal-overlay";
   ov.setAttribute("role", "dialog");
   ov.setAttribute("aria-modal", "true");
+  ov.setAttribute("aria-labelledby", "modal-title");
   const stat = ([k, v]) => `<div class="modal-stat"><span class="ms-k">${esc(k)}</span><span class="ms-v">${v}</span></div>`;
   const matchRows = matches.length
     ? `<div class="modal-matches"><div class="mm-h">${t("drill.matches")}</div>${matches.map(matchMini).join("")}</div>`
@@ -706,21 +712,35 @@ export function openModal({ title, subtitle, flagTeam, rows = [], matches = [] }
     <div class="modal-card" role="document">
       <button class="modal-x" aria-label="${esc(t("drill.close"))}">✕</button>
       <div class="modal-head">${flagTeam ? flagImg(flagTeam, "flag modal-flag") : ""}
-        <div><h3>${esc(title)}</h3>${subtitle ? `<p class="modal-sub">${esc(subtitle)}</p>` : ""}</div></div>
+        <div><h3 id="modal-title">${esc(title)}</h3>${subtitle ? `<p class="modal-sub">${esc(subtitle)}</p>` : ""}</div></div>
       ${rows.length ? `<div class="modal-stats">${rows.map(stat).join("")}</div>` : ""}
       ${matchRows || (!rows.length ? `<p class="empty">${t("drill.noData")}</p>` : "")}
     </div>`;
   document.body.appendChild(ov);
-  const close = () => closeModal();
-  ov.querySelector(".modal-x").addEventListener("click", close);
-  ov.addEventListener("click", (e) => { if (e.target === ov) close(); });
-  document.addEventListener("keydown", escClose);
+  ov.querySelector(".modal-x").addEventListener("click", closeModal);
+  ov.addEventListener("click", (e) => { if (e.target === ov) closeModal(); });
+  document.addEventListener("keydown", modalKeys);
   ov.querySelector(".modal-x").focus();
 }
-function escClose(e) { if (e.key === "Escape") closeModal(); }
+// Esc closes; Tab is trapped within the dialog.
+function modalKeys(e) {
+  if (e.key === "Escape") { closeModal(); return; }
+  if (e.key !== "Tab") return;
+  const card = document.querySelector("#drill-modal .modal-card");
+  if (!card) return;
+  const f = card.querySelectorAll('button, a[href], input, [tabindex]:not([tabindex="-1"])');
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
 export function closeModal() {
-  document.getElementById("drill-modal")?.remove();
-  document.removeEventListener("keydown", escClose);
+  const ov = document.getElementById("drill-modal");
+  if (!ov) return;
+  ov.remove();
+  document.removeEventListener("keydown", modalKeys);
+  if (modalReturnFocus && typeof modalReturnFocus.focus === "function") modalReturnFocus.focus();
+  modalReturnFocus = null;
 }
 function matchMini(m) {
   const hasScore = m.score && m.score.home != null;
