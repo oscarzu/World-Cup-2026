@@ -193,6 +193,9 @@ const STR = {
   "sc.none": ["Sin coincidencias.", "No matches."],
   // chart accessibility
   "a11y.chart": ["Gráfica", "Chart"],
+  "a11y.item": ["Concepto", "Item"],
+  "a11y.table": ["Tabla de datos de la gráfica", "Chart data table"],
+  "a11y.top": ["Volver arriba", "Back to top"],
   // facts
   "f.highest": ["Partido más goleador", "Highest-scoring match"], "f.biggest": ["Mayor goleada", "Biggest win"],
   "f.fastest": ["Gol más madrugador", "Earliest goal"], "f.latest": ["Gol más tardío", "Latest goal"],
