@@ -699,6 +699,33 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
   .modal-stats { grid-template-columns: 1fr; }
 }
 
+/* ---- estimate badge + scorer assists ---- */
+.est-badge { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--muted); background: var(--surface-2); border-radius: 5px; padding: 0.05rem 0.32rem;
+  vertical-align: middle; }
+.scorer .goals .ast { color: var(--accent-2); font-weight: 700; }
+
+/* ---- added (stoppage) time card ---- */
+.addedtime { display: grid; grid-template-columns: auto 1fr; gap: 1rem 1.4rem; align-items: center; }
+.at-main { text-align: center; padding-right: 1.2rem; border-right: 1px solid var(--border); }
+.at-big { font-size: 2.6rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1;
+  background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.at-cap { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+.at-refs { display: flex; gap: 0.6rem; }
+.at-ref { flex: 1; background: var(--surface-2); border-radius: 12px; padding: 0.55rem 0.7rem; text-align: center; }
+.atr-k { display: block; font-size: 0.74rem; color: var(--muted); }
+.atr-v { display: block; font-size: 1.2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.at-phases { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem;
+  border-top: 1px solid var(--border); padding-top: 0.9rem; }
+.at-phase { text-align: center; }
+.atp-k { display: block; font-size: 0.74rem; color: var(--muted); }
+.atp-v { display: block; font-size: 1.15rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.at-phase.total .atp-v { color: var(--accent); }
+@media (max-width: 560px) {
+  .addedtime { grid-template-columns: 1fr; }
+  .at-main { border-right: 0; border-bottom: 1px solid var(--border); padding: 0 0 0.8rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

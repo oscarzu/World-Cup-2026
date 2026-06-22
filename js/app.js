@@ -159,6 +159,7 @@ function renderAll() {
   UI.renderVenues();
   UI.renderStatsKpis(stats, state.matches);
   UI.renderAggregates(facts);
+  UI.renderAddedTime(facts);
   UI.renderFacts(facts);
   UI.animateCounts($("#agg-grid"));
 

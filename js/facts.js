@@ -65,6 +65,15 @@ export function computeFacts(matches) {
     .slice(0, 8)
     .map(([name, goals]) => ({ name, goals }));
 
+  // Attendance: prefer the sum of real per-match figures as events happen;
+  // if no match reports a real attendance yet, fall back to a whole-tournament
+  // estimate (clearly flagged as such in the UI).
+  const withAtt = finished.filter((m) => m.attendance != null);
+  const realAttendance = withAtt.reduce((s, m) => s + m.attendance, 0);
+  const attendanceInfo = withAtt.length
+    ? { total: realAttendance, matches: withAtt.length, isEstimate: false }
+    : { total: CONFIG.TOURNAMENT.aggregates.attendance, matches: 0, isEstimate: true };
+
   return {
     played: finished.length,
     totalGoals,
@@ -72,5 +81,7 @@ export function computeFacts(matches) {
     penaltyGoals, zeroZero, shootouts, blowouts, comebacks, cleanSheets,
     hatTricks, biggest, highest, fastest, latest, topTeams,
     aggregates: CONFIG.TOURNAMENT.aggregates,
+    attendanceInfo,
+    addedTime: CONFIG.TOURNAMENT.addedTime,
   };
 }

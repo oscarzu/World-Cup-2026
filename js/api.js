@@ -108,6 +108,7 @@ function normalizeMatch(raw, idx) {
   return {
     id: `m${idx}`,
     num: raw.num ?? null,
+    attendance: raw.attendance ?? null, // real per-event figure when provided
     round: raw.round || "",
     matchday: mdMatch ? Number(mdMatch[1]) : null,
     stage,

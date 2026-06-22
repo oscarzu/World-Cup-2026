@@ -334,7 +334,7 @@ export function renderScorers(list) {
       <span class="rank">${i + 1}</span>
       ${flagImg(s.country)}
       <span class="who"><div class="nm">${esc(s.name)}</div><div class="ct">${esc(tn(s.country))}</div></span>
-      <span class="goals">${s.goals}${s.penalties ? ` <small>(${s.penalties}p)</small>` : ""}</span>
+      <span class="goals">${s.goals}${s.assists ? ` <small class="ast">+${s.assists}A</small>` : ""}${s.penalties ? ` <small>(${s.penalties}p)</small>` : ""}</span>
     </div>`).join("");
 }
 
@@ -492,6 +492,7 @@ export function renderStatsKpis(stats, matches) {
 // ---- curated tournament aggregates (offsides, cards, VAR, …) ----
 export function renderAggregates(facts) {
   const a = facts.aggregates || {};
+  const att = facts.attendanceInfo || { total: a.attendance, isEstimate: true, matches: 0 };
   const items = [
     ["🚩", t("a.offsides"), a.offsides],
     ["🚫", t("a.disallowed"), a.disallowedGoals],
@@ -503,16 +504,47 @@ export function renderAggregates(facts) {
     ["⚠️", t("a.fouls"), a.fouls],
     ["📐", t("a.corners"), a.corners],
     ["🧤", t("a.saves"), a.saves],
-    ["👥", t("a.attendance"), a.attendance],
+    ["👥", t("a.attendance"), att.total, att.isEstimate ? t("a.estBadge") : ""],
   ];
   const grid = document.getElementById("agg-grid");
   if (!grid) return;
-  grid.innerHTML = items.map(([icon, label, val]) => `
+  grid.innerHTML = items.map(([icon, label, val, badge]) => `
     <div class="stat agg">
       <div class="agg-icon" aria-hidden="true">${icon}</div>
-      <div class="num">${val == null ? "—" : fmtInt(val)}</div>
+      <div class="num">${val == null ? "—" : fmtInt(val)}${badge ? ` <span class="est-badge">${badge}</span>` : ""}</div>
       <div class="label">${label}</div>
     </div>`).join("");
+
+  // Attendance integrity note.
+  const foot = document.getElementById("agg-foot");
+  if (foot) {
+    foot.textContent = att.isEstimate
+      ? t("a.attEstNote")
+      : `${t("a.attRealNote")} (${att.matches} ${t("u.matches")}).`;
+  }
+}
+
+// ---- added (stoppage) time: avg/match + WC references + per-phase totals ----
+export function renderAddedTime(facts) {
+  const at = facts.addedTime;
+  const wrap = document.getElementById("addedtime");
+  if (!wrap || !at) return;
+  const min = (v) => `${Number(v).toFixed(1)}'`;
+  const minInt = (v) => `${fmtInt(v)}'`;
+  wrap.innerHTML = `
+    <div class="at-main">
+      <div class="at-big">${min(at.avgPerMatch)}</div>
+      <div class="at-cap">${t("at.avg")}${at.isEstimate ? ` <span class="est-badge">${t("a.estBadge")}</span>` : ""}</div>
+    </div>
+    <div class="at-refs">
+      <div class="at-ref"><span class="atr-k">🇷🇺 2018</span><span class="atr-v">${min(at.ref.wc2018)}</span></div>
+      <div class="at-ref"><span class="atr-k">🇶🇦 2022</span><span class="atr-v">${min(at.ref.wc2022)}</span></div>
+    </div>
+    <div class="at-phases">
+      <div class="at-phase"><span class="atp-k">${t("at.groups")}</span><span class="atp-v">${minInt(at.byPhase.groups)}</span></div>
+      <div class="at-phase"><span class="atp-k">${t("at.knockouts")}</span><span class="atp-v">${minInt(at.byPhase.knockouts)}</span></div>
+      <div class="at-phase total"><span class="atp-k">${t("at.total")}</span><span class="atp-v">${minInt(at.byPhase.groups + at.byPhase.knockouts)}</span></div>
+    </div>`;
 }
 
 // ---- derived "bizarre" facts cards ----
