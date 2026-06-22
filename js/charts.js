@@ -118,6 +118,8 @@ function upsert(id, type, labels, data, label, opts = {}) {
     options,
   });
   setChartA11y(id, label, labels, data, opts.suffix || "");
+  attachDataTable(id, `${t("a11y.table")}: ${label}`, [t("a11y.item"), label],
+    labels.map((l, i) => [l, `${fmt(data[i])}${opts.suffix || ""}`]));
   if (Array.isArray(keys) && keys.length) attachDrillAccess(id, labels, data, keys, opts.suffix || "");
 }
 
@@ -133,6 +135,27 @@ function setChartA11y(id, label, labels, data, suffix = "") {
 }
 
 const escH = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Full data as a visually-hidden table next to the canvas — the proper
+// accessible representation of a <canvas> chart (screen readers can navigate
+// every value, not just the aria-label summary).
+function attachDataTable(id, caption, headers, rows) {
+  const el = document.getElementById(id);
+  const box = el && el.closest(".chart-box");
+  if (!box) return;
+  let tbl = box.parentNode.querySelector(`table[data-for="${id}"]`);
+  if (!tbl) {
+    tbl = document.createElement("table");
+    tbl.className = "sr-only chart-table";
+    tbl.setAttribute("data-for", id);
+    box.insertAdjacentElement("afterend", tbl);
+  }
+  tbl.innerHTML =
+    `<caption>${escH(caption)}</caption>` +
+    `<thead><tr>${headers.map((h) => `<th scope="col">${escH(h)}</th>`).join("")}</tr></thead>` +
+    `<tbody>${rows.map((r) => `<tr>${r.map((c, ci) =>
+      ci === 0 ? `<th scope="row">${escH(c)}</th>` : `<td>${escH(c)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+}
 
 // Keyboard/screen-reader alternative to clicking bars: a "See detail" disclosure
 // listing each entity as a real button that triggers the same drill-down.
@@ -320,6 +343,9 @@ function effSeries(canvasId, history, kind, tc) {
   el.setAttribute("aria-label",
     `${t("a11y.chart")}: ${t("eff.seriesBest")} ${bestTeams.map((tm, i) => `${tm} ${bestData[i]}%`).join(", ")}. ` +
     `${t("eff.seriesWorst")} ${worstTeams.map((tm, i) => `${tm} ${worstData[i]}%`).join(", ")}.`);
+  attachDataTable(canvasId, `${t("a11y.table")}: ${t("eff.title")}`,
+    [t("br.matchday"), t("eff.seriesBest"), t("eff.seriesWorst")],
+    labels.map((l, i) => [l, `${bestTeams[i]} ${bestData[i]}%`, `${worstTeams[i]} ${worstData[i]}%`]));
 }
 
 // Re-draw with current theme colours / language.

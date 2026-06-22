@@ -763,6 +763,22 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
 }
 [data-theme="light"] .at-big { -webkit-text-fill-color: #0a7d39; }
 
+/* ---- visually-hidden (screen-reader only) ---- */
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---- back-to-top ---- */
+.to-top {
+  position: fixed; right: 1rem; bottom: 1rem; z-index: 120;
+  width: 42px; height: 42px; border-radius: 50%; cursor: pointer; font-size: 1.1rem;
+  border: 1px solid var(--border-strong); background: var(--surface-solid); color: var(--text);
+  box-shadow: var(--shadow-hover); opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity var(--t), transform var(--t);
+}
+.to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

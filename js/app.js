@@ -173,21 +173,47 @@ function initScorerControls() {
 }
 
 // ---- stats sub-nav scroll-spy ----
+// Tracks every visible section and highlights the topmost one (deterministic,
+// no flicker), and keeps the active chip centred in its own scroller.
 function initSubnav() {
   const nav = $("#stats-subnav");
   if (!nav || !("IntersectionObserver" in window)) return;
   const links = [...nav.querySelectorAll("a")];
-  const byId = new Map(links.map((a) => [a.getAttribute("href").slice(1), a]));
+  const ids = links.map((a) => a.getAttribute("href").slice(1));
+  const byId = new Map(links.map((a, i) => [ids[i], a]));
+  const visible = new Set();
+  let current = null;
+  const setCurrent = (id) => {
+    if (id === current) return;
+    current = id;
+    const link = byId.get(id);
+    links.forEach((a) => {
+      const on = a === link;
+      a.classList.toggle("is-current", on);
+      if (on) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
+    });
+    link?.scrollIntoView({ inline: "center", block: "nearest" });
+  };
   const io = new IntersectionObserver((entries) => {
-    for (const en of entries) {
-      if (!en.isIntersecting) continue;
-      const link = byId.get(en.target.id);
-      if (!link) continue;
-      links.forEach((a) => { a.classList.toggle("is-current", a === link); a.removeAttribute("aria-current"); });
-      link.setAttribute("aria-current", "true");
-    }
-  }, { rootMargin: "-140px 0px -70% 0px", threshold: 0 });
-  for (const id of byId.keys()) { const sec = document.getElementById(id); if (sec) io.observe(sec); }
+    for (const en of entries) { if (en.isIntersecting) visible.add(en.target.id); else visible.delete(en.target.id); }
+    const first = ids.find((id) => visible.has(id)); // topmost in document order
+    if (first) setCurrent(first);
+  }, { rootMargin: "-130px 0px -55% 0px", threshold: 0 });
+  for (const id of ids) { const sec = document.getElementById(id); if (sec) io.observe(sec); }
+}
+
+// ---- back-to-top (long Stats page) ----
+function initBackToTop() {
+  const btn = document.createElement("button");
+  btn.className = "to-top";
+  btn.type = "button";
+  btn.setAttribute("aria-label", t("a11y.top"));
+  btn.innerHTML = "↑";
+  btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  document.body.appendChild(btn);
+  const onScroll = () => btn.classList.toggle("show", window.scrollY > 600);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
 }
 
 // ---- rendering pass ----
@@ -377,6 +403,7 @@ async function boot() {
   initMatchControls();
   initScorerControls();
   initSubnav();
+  initBackToTop();
   initDrill();
   await loadData();
 }
