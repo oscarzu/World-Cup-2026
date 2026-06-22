@@ -185,9 +185,14 @@ const STR = {
   "at.groups": ["Fase de grupos", "Group stage"],
   "at.knockouts": ["Eliminatorias", "Knockouts"],
   "at.total": ["Total acumulado", "Cumulative total"],
-  // scorers ordering note
+  // scorers ordering note + search
   "sc.foot": ["Orden oficial FIFA: goles, luego asistencias y menos minutos jugados (cuando hay datos). Los penales cuentan como gol.",
               "Official FIFA order: goals, then assists and fewest minutes played (when available). Penalties count as goals."],
+  "sc.search": ["Buscar jugador o selección…", "Search player or team…"],
+  "sc.top": ["Top 40 · orden FIFA", "Top 40 · FIFA order"],
+  "sc.none": ["Sin coincidencias.", "No matches."],
+  // chart accessibility
+  "a11y.chart": ["Gráfica", "Chart"],
   // facts
   "f.highest": ["Partido más goleador", "Highest-scoring match"], "f.biggest": ["Mayor goleada", "Biggest win"],
   "f.fastest": ["Gol más madrugador", "Earliest goal"], "f.latest": ["Gol más tardío", "Latest goal"],
@@ -217,6 +222,8 @@ const STR = {
   "br.legend": ["Cuadro proyectado en vivo con la clasificación actual. Toca un duelo para ver sede y horario.",
                 "Live projected bracket from current standings. Tap a tie for venue and kickoff."],
   "br.proj": ["proy.", "proj."],
+  "br.projFull": ["Proyección según los resultados de hoy", "Projection based on today's results"],
+  "br.swipe": ["Desliza para ver más rondas →", "Swipe to see more rounds →"],
   "br.qualified": ["clasificado", "qualified"],
   "br.winner": ["Ganador", "Winner"],
   "br.best3": ["Mejor 3.º", "Best 3rd"],
@@ -224,7 +231,9 @@ const STR = {
   "br.tbdNote": ["Por definir según resultados", "To be decided by results"],
 
   // chart drill-down
-  "drill.hint": ["Toca una barra para ver el detalle ↗", "Tap a bar to see details ↗"],
+  "drill.hint": ["Toca una barra (o «Ver detalle») para profundizar ↗", "Tap a bar (or “See detail”) to drill down ↗"],
+  "drill.detail": ["Ver detalle", "See detail"],
+  "drill.pick": ["Elige una para ver su detalle:", "Pick one to see its detail:"],
   "drill.close": ["Cerrar", "Close"],
   "drill.matches": ["Partidos", "Matches"],
   "drill.noData": ["Sin detalle disponible todavía.", "No detail available yet."],
