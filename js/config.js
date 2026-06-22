@@ -74,7 +74,17 @@ export const CONFIG = {
       fouls: 2914,            // faltas cometidas
       corners: 1058,          // tiros de esquina
       saves: 612,             // atajadas de los porteros
-      attendance: 5104000,    // asistencia total a los estadios
+      attendance: 5104000,    // asistencia total estimada (todo el Mundial)
+    },
+
+    // Added (stoppage) time. Illustrative estimate for 2026 with reference
+    // averages from the last two World Cups (Qatar 2022 set records for
+    // strict time-keeping). Per-phase totals are cumulative estimates.
+    addedTime: {
+      avgPerMatch: 9.8,                       // min agregados por partido (prom., 2026 · estimado)
+      ref: { wc2018: 6.6, wc2022: 11.6 },     // promedios de referencia (Rusia 2018, Qatar 2022)
+      byPhase: { groups: 642, knockouts: 198 }, // minutos agregados acumulados (estimado)
+      isEstimate: true,
     },
   },
 };

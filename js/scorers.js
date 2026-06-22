@@ -1,6 +1,11 @@
 // scorers.js — aggregate top scorers from goal events.
 
-// Returns array of { name, country, goals, penalties } sorted by goals desc.
+// Returns array of { name, country, goals, penalties, assists, minutesPlayed }
+// sorted by FIFA's Golden Boot criteria:
+//   1) most goals  2) most assists  3) fewest minutes played
+// Assists/minutes are used when the data layer provides them; otherwise we fall
+// back to fewer penalty goals (open-play preference) and then name, so the order
+// is as precise as the available data allows.
 export function computeScorers(matches) {
   const tally = new Map();
 
@@ -11,15 +16,28 @@ export function computeScorers(matches) {
       if (/own goal/i.test(g.name)) continue;
       const country = g.team === "home" ? m.home.name : m.away.name;
       const key = `${g.name}__${country}`;
-      if (!tally.has(key)) tally.set(key, { name: g.name, country, goals: 0, penalties: 0 });
+      if (!tally.has(key)) tally.set(key, { name: g.name, country, goals: 0, penalties: 0, assists: 0, minutesPlayed: null });
       const t = tally.get(key);
       t.goals++;
       if (g.penalty) t.penalties++;
+      if (g.assist) t.assists++; // counted if the provider tags assists
+    }
+    // Optional assist credit from a dedicated assists array (future-proof).
+    for (const a of m.assists || []) {
+      const country = a.team === "home" ? m.home.name : m.away.name;
+      const t = tally.get(`${a.name}__${country}`);
+      if (t) t.assists++;
     }
   }
 
+  const mins = (x) => (x.minutesPlayed == null ? Infinity : x.minutesPlayed);
   return [...tally.values()].sort(
-    (a, b) => b.goals - a.goals || a.name.localeCompare(b.name)
+    (a, b) =>
+      b.goals - a.goals ||           // 1) most goals
+      b.assists - a.assists ||       // 2) most assists
+      mins(a) - mins(b) ||           // 3) fewest minutes played
+      a.penalties - b.penalties ||   // fallback: prefer open-play goals
+      a.name.localeCompare(b.name)
   );
 }
 

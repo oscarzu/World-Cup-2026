@@ -172,6 +172,22 @@ const STR = {
   "a.yellow": ["Tarjetas amarillas", "Yellow cards"], "a.red": ["Tarjetas rojas", "Red cards"],
   "a.fouls": ["Faltas cometidas", "Fouls committed"], "a.corners": ["Tiros de esquina", "Corners"],
   "a.saves": ["Atajadas", "Saves"], "a.attendance": ["Asistencia total", "Total attendance"],
+  "a.estBadge": ["est.", "est."],
+  "a.attEstNote": ["Asistencia: estimada para todo el Mundial (aún sin dato oficial por partido). Se reemplaza por la suma real conforme se publica cada evento.",
+                   "Attendance: estimated for the whole World Cup (no official per-match figure yet). It's replaced by the real sum as each event is published."],
+  "a.attRealNote": ["Asistencia: suma real de los eventos publicados", "Attendance: real sum of published events"],
+  // added (stoppage) time
+  "at.kicker": ["Tiempo agregado", "Added time"],
+  "at.title": ["Minutos agregados por partido", "Added minutes per match"],
+  "at.sub": ["Promedio del Mundial 2026 con referencias de las dos ediciones anteriores.",
+             "2026 average with references from the last two editions."],
+  "at.avg": ["promedio por partido (2026)", "average per match (2026)"],
+  "at.groups": ["Fase de grupos", "Group stage"],
+  "at.knockouts": ["Eliminatorias", "Knockouts"],
+  "at.total": ["Total acumulado", "Cumulative total"],
+  // scorers ordering note
+  "sc.foot": ["Orden oficial FIFA: goles, luego asistencias y menos minutos jugados (cuando hay datos). Los penales cuentan como gol.",
+              "Official FIFA order: goals, then assists and fewest minutes played (when available). Penalties count as goals."],
   // facts
   "f.highest": ["Partido más goleador", "Highest-scoring match"], "f.biggest": ["Mayor goleada", "Biggest win"],
   "f.fastest": ["Gol más madrugador", "Earliest goal"], "f.latest": ["Gol más tardío", "Latest goal"],
