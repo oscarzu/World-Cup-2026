@@ -779,6 +779,11 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
 }
 .to-top.show { opacity: 1; transform: none; pointer-events: auto; }
 
+/* ---- off-screen rendering skip for long lists (rendering-content-visibility) ---- */
+.match-list .match { content-visibility: auto; contain-intrinsic-size: auto 68px; }
+.venues-grid .venue { content-visibility: auto; contain-intrinsic-size: auto 360px; }
+.scorers-list .scorer { content-visibility: auto; contain-intrinsic-size: auto 56px; }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

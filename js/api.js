@@ -14,8 +14,12 @@ const KNOCKOUT_ROUNDS = new Set([
 
 // ---- low-level cached fetch ------------------------------------------------
 
+// Bump when the cached payload shape changes, so old entries are ignored
+// instead of deserialized into a stale shape (client-localstorage-schema).
+const CACHE_VERSION = "v1";
+
 async function cachedFetch(url, ttl) {
-  const key = `wc26:${url}`;
+  const key = `wc26:${CACHE_VERSION}:${url}`;
   try {
     const hit = JSON.parse(localStorage.getItem(key) || "null");
     if (hit && Date.now() - hit.t < ttl) return hit.d;
