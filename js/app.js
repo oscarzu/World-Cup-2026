@@ -131,7 +131,8 @@ function drillTeam(chart, name) {
 // Accent-insensitive so "México"/"Mexico" both match; searches BOTH the raw
 // data name (e.g. "Germany") and the translated label shown on screen
 // (e.g. "Alemania") so the visible name always works.
-const fold = (s) => String(s || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+const DIACRITICS = /\p{Diacritic}/gu; // hoisted out of the hot filter (js-hoist-regexp)
+const fold = (s) => String(s || "").normalize("NFD").replace(DIACRITICS, "").toLowerCase();
 
 function initMatchControls() {
   const apply = () => {

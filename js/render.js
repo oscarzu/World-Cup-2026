@@ -94,13 +94,20 @@ function fmtDate(d) {
     { weekday: "short", day: "numeric", month: "short" });
 }
 
+// Hoisted regexes (reused across loops — js-hoist-regexp).
+const RE_MATCHDAY = /Matchday (\d+)/;
+const RE_POS = /^([12])([A-L])$/;
+const RE_THIRD = /^3/;
+const RE_WINNER = /^W(\d+)$/;
+const RE_CODE = /^([12][A-L]|3[A-L/]+|W\d+)$/;
+
 // Translate a round/stage name to the active language.
 const KO_KEY = {
   "Round of 32": "br.r32", "Round of 16": "br.r16", "Quarter-final": "br.qf",
   "Semi-final": "br.sf", "Final": "br.final", "Match for third place": "br.third",
 };
 export function roundLabel(round) {
-  const md = /Matchday (\d+)/.exec(round || "");
+  const md = RE_MATCHDAY.exec(round || "");
   if (md) return `${t("br.matchday")} ${md[1]}`;
   return KO_KEY[round] ? t(KO_KEY[round]) : (round || "");
 }
@@ -251,14 +258,14 @@ function rankedThirds(standings) {
 // Resolve one slot code → { name, flagTeam, proj, label }.
 function resolveSlot(code, ctx) {
   const { standings, thirds, usedThirds, winners } = ctx;
-  let m = /^([12])([A-L])$/.exec(code);
+  let m = RE_POS.exec(code);
   if (m) {
     const rows = standings.get("Group " + m[2]);
     const r = rows && rows[Number(m[1]) - 1];
     if (r && r.P > 0) return { name: tn(r.name), flagTeam: r.name, proj: !groupDone(rows) };
     return { name: `${t(m[1] === "1" ? "br.pos1" : "br.pos2")} ${m[2]}`, placeholder: true };
   }
-  if (/^3/.test(code)) {
+  if (RE_THIRD.test(code)) {
     const groups = code.slice(1).split("/");
     for (const tr of thirds) {
       if (groups.includes(tr.group) && !usedThirds.has(tr.name) && tr.P > 0) {
@@ -268,7 +275,7 @@ function resolveSlot(code, ctx) {
     }
     return { name: `${t("br.best3")} ${groups.join("/")}`, placeholder: true };
   }
-  m = /^W(\d+)$/.exec(code);
+  m = RE_WINNER.exec(code);
   if (m) {
     const w = winners[m[1]];
     if (w) return { name: tn(w), flagTeam: w, proj: true };
@@ -283,7 +290,7 @@ export function renderBracket(matches, standings = new Map()) {
   const order = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"];
 
   // Map finished knockout matches → winner (real team), so later rounds resolve.
-  const isCode = (s) => /^([12][A-L]|3[A-L/]+|W\d+)$/.test(s || "");
+  const isCode = (s) => RE_CODE.test(s || "");
   const winners = {};
   for (const m of matches) {
     const hs = m.score?.home, as = m.score?.away;
