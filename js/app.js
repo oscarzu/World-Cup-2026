@@ -12,6 +12,16 @@ import * as AF from "./apifootball.js";
 import * as UI from "./render.js";
 
 const $ = (s) => document.querySelector(s);
+
+// Centre a chip/tab inside its own horizontal scroller WITHOUT moving the page
+// vertically (scrollIntoView would yank the whole page — caused a scroll loop
+// in the Stats sub-nav while scrolling down).
+function centerInScroller(el) {
+  const sc = el && el.parentElement;
+  if (!sc || sc.scrollWidth <= sc.clientWidth) return; // nothing to scroll
+  const left = el.offsetLeft - (sc.clientWidth - el.offsetWidth) / 2;
+  sc.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+}
 const state = {
   matches: [], source: "", online: true,
   teamStats: { teams: {}, yellowCards: [] },
@@ -50,8 +60,9 @@ function activateTab(btn, { updateHash = true } = {}) {
   });
   const id = btn.dataset.tab;
   document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("is-active", p.id === id));
-  // Keep the active tab visible in the horizontally-scrolling bar (mobile).
-  btn.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  // Keep the active tab visible in the horizontally-scrolling bar (mobile)
+  // without scrolling the page vertically.
+  centerInScroller(btn);
   // Reflect state in the URL so tabs are deep-linkable / shareable (WIG).
   if (updateHash && location.hash.slice(1) !== id) history.replaceState(null, "", `#${id}`);
   if (id === "stats" || id === "overview") renderCharts();
@@ -207,7 +218,7 @@ function initSubnav() {
       a.classList.toggle("is-current", on);
       if (on) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
     });
-    link?.scrollIntoView({ inline: "center", block: "nearest" });
+    centerInScroller(link); // horizontal only — never scrolls the page
   };
   const io = new IntersectionObserver((entries) => {
     for (const en of entries) { if (en.isIntersecting) visible.add(en.target.id); else visible.delete(en.target.id); }
