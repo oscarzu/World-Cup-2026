@@ -76,8 +76,10 @@ const venuePhoto = (file) =>
 
 function flagImg(team, cls = "flag") {
   const url = flagUrl(team);
+  // width/height give an intrinsic ratio (prevents layout shift); CSS sets the
+  // actual rendered size per context.
   return url
-    ? `<img class="${cls}" src="${url}" alt="" loading="lazy" />`
+    ? `<img class="${cls}" src="${url}" alt="" width="28" height="19" loading="lazy" />`
     : `<span class="${cls}" aria-hidden="true"></span>`;
 }
 

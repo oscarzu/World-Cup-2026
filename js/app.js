@@ -20,24 +20,28 @@ const state = {
 };
 
 // ---- theme ----
+const THEME_BG = { dark: "#050507", light: "#eef0f4" };
+function paintTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  $(".theme-icon").textContent = theme === "dark" ? "🌙" : "☀️";
+  // Keep the browser UI colour (status bar / address bar) in sync (WIG).
+  document.getElementById("meta-theme")?.setAttribute("content", THEME_BG[theme]);
+}
 function initTheme() {
   const saved = localStorage.getItem("wc26:theme");
   const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
-  const theme = saved || (prefersLight ? "light" : "dark");
-  document.documentElement.dataset.theme = theme;
-  $(".theme-icon").textContent = theme === "dark" ? "🌙" : "☀️";
+  paintTheme(saved || (prefersLight ? "light" : "dark"));
 
   $("#theme-toggle").addEventListener("click", () => {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    $(".theme-icon").textContent = next === "dark" ? "🌙" : "☀️";
+    paintTheme(next);
     localStorage.setItem("wc26:theme", next);
     rethemeCharts();
   });
 }
 
-// ---- tabs (ARIA tablist + keyboard) ----
-function activateTab(btn) {
+// ---- tabs (ARIA tablist + keyboard + URL hash) ----
+function activateTab(btn, { updateHash = true } = {}) {
   if (!btn) return;
   document.querySelectorAll(".tab").forEach((tb) => {
     const on = tb === btn;
@@ -48,6 +52,8 @@ function activateTab(btn) {
   document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("is-active", p.id === id));
   // Keep the active tab visible in the horizontally-scrolling bar (mobile).
   btn.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  // Reflect state in the URL so tabs are deep-linkable / shareable (WIG).
+  if (updateHash && location.hash.slice(1) !== id) history.replaceState(null, "", `#${id}`);
   if (id === "stats" || id === "overview") renderCharts();
   if (id === "live") { UI.renderSocial(); UI.renderSocialArchive(state.matches, state.social); }
 }
@@ -58,6 +64,14 @@ function initTabs() {
     const btn = e.target.closest(".tab");
     if (btn) activateTab(btn);
   });
+  // Open the tab referenced by the URL hash (deep link) + respond to back/forward.
+  const fromHash = () => {
+    const id = location.hash.slice(1);
+    const btn = id && document.querySelector(`.tab[data-tab="${id}"]`);
+    if (btn) activateTab(btn, { updateHash: false });
+  };
+  fromHash();
+  window.addEventListener("hashchange", fromHash);
   // Arrow-key navigation per the WAI-ARIA tabs pattern.
   $("#tabs").addEventListener("keydown", (e) => {
     const i = tabs.indexOf(document.activeElement);
