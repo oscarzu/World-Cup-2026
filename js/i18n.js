@@ -7,7 +7,22 @@
 import { teamES } from "./config.js";
 
 const STORE = "wc26:lang";
-let lang = (localStorage.getItem(STORE) || "es");
+
+// Default language by the viewer's locale/region, per Web Interface Guidelines
+// (detect via navigator.languages / timezone, never IP). Spanish only when the
+// viewer appears to be in Mexico; English everywhere else. A manual choice
+// (saved below) always wins on later visits.
+const MX_TIMEZONES = /America\/(Mexico_City|Cancun|Merida|Monterrey|Matamoros|Chihuahua|Ciudad_Juarez|Ojinaga|Mazatlan|Bahia_Banderas|Hermosillo|Tijuana)/i;
+function detectLang() {
+  try {
+    const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone) || "";
+    if (MX_TIMEZONES.test(tz)) return "es";          // physically in Mexico
+    const langs = (typeof navigator !== "undefined" && (navigator.languages || [navigator.language])) || [];
+    if (langs.some((l) => /-MX\b/i.test(l || ""))) return "es"; // es-MX locale
+    return "en";                                      // outside Mexico → English
+  } catch (_) { return "es"; }
+}
+let lang = (localStorage.getItem(STORE) || detectLang());
 
 export function getLang() { return lang; }
 export function setLang(l) { lang = l === "en" ? "en" : "es"; localStorage.setItem(STORE, lang); }
@@ -193,6 +208,7 @@ const STR = {
   "sc.none": ["Sin coincidencias.", "No matches."],
   // chart accessibility
   "a11y.chart": ["Gráfica", "Chart"],
+  "a11y.skip": ["Saltar al contenido", "Skip to content"],
   "a11y.item": ["Concepto", "Item"],
   "a11y.table": ["Tabla de datos de la gráfica", "Chart data table"],
   "a11y.top": ["Volver arriba", "Back to top"],

@@ -2,17 +2,24 @@
 <html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#050507" id="meta-theme" />
   <title>World Cup 2026 · Dashboard</title>
   <meta name="description" content="Dashboard interactivo de la Copa Mundial de la FIFA 2026 (Canadá · México · USA)." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="preconnect" href="https://flagcdn.com" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" />
   <link rel="stylesheet" href="./css/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#app" data-i18n="a11y.skip">Saltar al contenido</a>
   <div class="topbar">
   <header class="site-header">
-    <div class="brand">
+    <div class="brand" translate="no">
       <span class="logo" aria-hidden="true">⚽</span>
       <div>
         <h1>World Cup <span class="accent">2026</span></h1>
@@ -43,7 +50,7 @@
   </nav>
   </div>
 
-  <main id="app" aria-busy="true">
+  <main id="app" aria-busy="true" tabindex="-1">
     <!-- Overview -->
     <section id="overview" class="panel is-active" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
       <div class="hero">
@@ -79,15 +86,15 @@
         <p class="section-sub" data-i18n="rules.sub">Lo nuevo que debes saber para el Mundial 2026.</p>
       </div>
       <div class="rules-grid">
-        <div class="rule"><span class="rule-ic">🌎</span><div data-i18n-html="rules.r1"><b>48 selecciones</b><p>Formato ampliado: 12 grupos de 4 equipos, 104 partidos en total.</p></div></div>
-        <div class="rule"><span class="rule-ic">🪜</span><div data-i18n-html="rules.r2"><b>Nueva ronda de 32</b><p>Avanzan los 2 primeros de cada grupo + los 8 mejores terceros (32 a eliminatorias).</p></div></div>
-        <div class="rule"><span class="rule-ic">👕</span><div data-i18n-html="rules.r3"><b>Plantillas de 26</b><p>Cada selección puede registrar hasta 26 jugadores (y 26 en convocatoria por partido).</p></div></div>
-        <div class="rule"><span class="rule-ic">🔁</span><div data-i18n-html="rules.r4"><b>5 cambios</b><p>Hasta 5 sustituciones en 3 ventanas, más un cambio extra por conmoción cerebral.</p></div></div>
-        <div class="rule"><span class="rule-ic">🤖</span><div data-i18n-html="rules.r5"><b>VAR y fuera de lugar semiautomático</b><p>Tecnología de offside semiautomática; el árbitro anuncia por altavoz las decisiones del VAR.</p></div></div>
-        <div class="rule"><span class="rule-ic">⏱️</span><div data-i18n-html="rules.r6"><b>Tiempo añadido estricto</b><p>Se compensa con precisión el tiempo perdido; 8 s máximo para que el portero suelte el balón.</p></div></div>
-        <div class="rule"><span class="rule-ic">🏟️</span><div data-i18n-html="rules.r7"><b>16 sedes, 3 países</b><p>Canadá, México y EE. UU.; la final será en el MetLife Stadium (Nueva York/Nueva Jersey).</p></div></div>
-        <div class="rule"><span class="rule-ic">🗓️</span><div data-i18n-html="rules.r8"><b>39 días de torneo</b><p>Del 11 de junio al 19 de julio de 2026, la Copa del Mundo más larga de la historia.</p></div></div>
-        <div class="rule"><span class="rule-ic">💧</span><div data-i18n-html="rules.r9"><b>Pausas de hidratación</b><p>En sedes con calor extremo (México, Dallas, Houston…) el árbitro detiene el juego ~3 min cerca del minuto 30 y 75 para que los jugadores se hidraten.</p></div></div>
+        <div class="rule"><span class="rule-ic" aria-hidden="true">🌎</span><div data-i18n-html="rules.r1"><b>48 selecciones</b><p>Formato ampliado: 12 grupos de 4 equipos, 104 partidos en total.</p></div></div>
+        <div class="rule"><span class="rule-ic" aria-hidden="true">🪜</span><div data-i18n-html="rules.r2"><b>Nueva ronda de 32</b><p>Avanzan los 2 primeros de cada grupo + los 8 mejores terceros (32 a eliminatorias).</p></div></div>
+        <div class="rule"><span class="rule-ic" aria-hidden="true">👕</span><div data-i18n-html="rules.r3"><b>Plantillas de 26</b><p>Cada selección puede registrar hasta 26 jugadores (y 26 en convocatoria por partido).</p></div></div>
+        <div class="rule"><span class="rule-ic" aria-hidden="true">🔁</span><div data-i18n-html="rules.r4"><b>5 cambios</b><p>Hasta 5 sustituciones en 3 ventanas, más un cambio extra por conmoción cerebral.</p></div></div>
+        <div class="rule"><span class="rule-ic" aria-hidden="true">🤖</span><div data-i18n-html="rules.r5"><b>VAR y fuera de lugar semiautomático</b><p>Tecnología de offside semiautomática; el árbitro anuncia por altavoz las decisiones del VAR.</p></div></div>
+        <div class="rule"><span class="rule-ic" aria-hidden="true">⏱️</span><div data-i18n-html="rules.r6"><b>Tiempo añadido estricto</b><p>Se compensa con precisión el tiempo perdido; 8 s máximo para que el portero suelte el balón.</p></div></div>
+        <div class="rule"><span class="rule-ic" aria-hidden="true">🏟️</span><div data-i18n-html="rules.r7"><b>16 sedes, 3 países</b><p>Canadá, México y EE. UU.; la final será en el MetLife Stadium (Nueva York/Nueva Jersey).</p></div></div>
+        <div class="rule"><span class="rule-ic" aria-hidden="true">🗓️</span><div data-i18n-html="rules.r8"><b>39 días de torneo</b><p>Del 11 de junio al 19 de julio de 2026, la Copa del Mundo más larga de la historia.</p></div></div>
+        <div class="rule"><span class="rule-ic" aria-hidden="true">💧</span><div data-i18n-html="rules.r9"><b>Pausas de hidratación</b><p>En sedes con calor extremo (México, Dallas, Houston…) el árbitro detiene el juego ~3 min cerca del minuto 30 y 75 para que los jugadores se hidraten.</p></div></div>
       </div>
     </section>
 
@@ -106,7 +113,7 @@
     <!-- Matches -->
     <section id="matches" class="panel" role="tabpanel" aria-labelledby="tab-matches" tabindex="0">
       <div class="toolbar">
-        <input id="match-search" type="search" data-i18n-ph="matches.search" placeholder="Buscar selección…" aria-label="Buscar / Search" />
+        <input id="match-search" type="search" name="match-search" autocomplete="off" spellcheck="false" data-i18n-ph="matches.search" placeholder="Buscar selección…" aria-label="Buscar / Search" />
         <select id="match-filter" aria-label="Filtrar por fase"></select>
       </div>
       <div id="match-status" class="match-status" role="status" aria-live="polite" hidden></div>
@@ -137,7 +144,7 @@
           <span class="scorers-tag" data-i18n="sc.top">Top 40 · orden FIFA</span>
         </div>
         <div class="toolbar">
-          <input id="scorer-search" type="search" data-i18n-ph="sc.search" placeholder="Buscar jugador o selección…" aria-label="Buscar goleador / Search scorer" />
+          <input id="scorer-search" type="search" name="scorer-search" autocomplete="off" spellcheck="false" data-i18n-ph="sc.search" placeholder="Buscar jugador o selección…" aria-label="Buscar goleador / Search scorer" />
         </div>
         <div id="scorers-list" class="scorers-list"></div>
         <p class="card-foot" data-i18n="sc.foot">Orden oficial FIFA: goles, luego asistencias y menos minutos jugados (cuando hay datos). Los penales cuentan como gol.</p>
