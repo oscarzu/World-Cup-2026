@@ -770,6 +770,27 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
 .scorers-tag { font-size: 0.74rem; font-weight: 600; color: var(--muted);
   background: var(--surface-2); border-radius: 999px; padding: 0.2rem 0.6rem; }
 
+/* ---- Golden Boot podium ---- */
+.scorers-podium { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; margin: 0.9rem 0 1.1rem; }
+.podium-card { position: relative; text-align: center; padding: 1rem 0.6rem 0.8rem;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); }
+.podium-card.lead { border-color: var(--gold); background:
+  linear-gradient(180deg, rgba(255, 210, 63, 0.14), transparent 70%), var(--surface-2); }
+.podium-medal { font-size: 1.5rem; line-height: 1; }
+.podium-flag { width: 34px; height: 23px; border-radius: 4px; object-fit: cover; margin: 0.4rem auto 0.3rem; display: block; }
+.podium-name { font-weight: 700; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.podium-ct { font-size: 0.74rem; color: var(--muted); }
+.podium-goals { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; margin-top: 0.3rem; }
+.podium-goals span { font-family: var(--font); font-size: 0.68rem; font-weight: 600; color: var(--muted); }
+.podium-tag { margin-top: 0.4rem; font-size: 0.66rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: #5a4500; background: var(--gold); border-radius: 999px; padding: 0.15rem 0.5rem; display: inline-block; }
+[data-theme="dark"] .podium-tag { color: #2a2000; }
+@media (max-width: 560px) {
+  .podium-card { padding: 0.8rem 0.4rem 0.6rem; }
+  .podium-name { font-size: 0.82rem; }
+  .podium-goals { font-size: 1.25rem; }
+}
+
 /* ---- gradient-text contrast fallback (S2) ---- */
 @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
   .at-big, .insight .big, .num, .stat .num, .fact-value, .live-score .lsc,
