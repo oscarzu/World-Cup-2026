@@ -204,8 +204,9 @@ const STR = {
   "sc.foot": ["Orden oficial FIFA: goles, luego asistencias y menos minutos jugados (cuando hay datos). Los penales cuentan como gol.",
               "Official FIFA order: goals, then assists and fewest minutes played (when available). Penalties count as goals."],
   "sc.search": ["Buscar jugador o selección…", "Search player or team…"],
-  "sc.top": ["Top 40 · orden FIFA", "Top 40 · FIFA order"],
+  "sc.top": ["Top 50 · orden FIFA", "Top 50 · FIFA order"],
   "sc.none": ["Sin coincidencias.", "No matches."],
+  "sc.boot": ["Botín de Oro", "Golden Boot"],
   // chart accessibility
   "a11y.chart": ["Gráfica", "Chart"],
   "a11y.skip": ["Saltar al contenido", "Skip to content"],

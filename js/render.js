@@ -341,12 +341,30 @@ export function renderScorers(list, { filtered = false } = {}) {
     wrap.innerHTML = `<p class="empty">${t(filtered ? "sc.none" : "empty.noGoals")}</p>`;
     return;
   }
-  wrap.innerHTML = list.slice(0, 40).map((s, i) => `
+  wrap.innerHTML = list.slice(0, 50).map((s, i) => `
     <div class="scorer">
-      <span class="rank">${i + 1}</span>
+      <span class="rank">${s.rank ?? i + 1}</span>
       ${flagImg(s.country)}
       <span class="who"><div class="nm">${esc(s.name)}</div><div class="ct">${esc(tn(s.country))}</div></span>
       <span class="goals">${s.goals}${s.assists ? ` <small class="ast">+${s.assists}A</small>` : ""}${s.penalties ? ` <small>(${s.penalties}p)</small>` : ""}</span>
+    </div>`).join("");
+}
+
+// Golden Boot podium — the top 3 scorers (always the full table, not filtered).
+export function renderScorersPodium(list) {
+  const wrap = $("#scorers-podium");
+  if (!wrap) return;
+  const top = (list || []).filter((s) => s.goals > 0).slice(0, 3);
+  if (!top.length) { wrap.innerHTML = ""; return; }
+  const medal = ["🥇", "🥈", "🥉"];
+  wrap.innerHTML = top.map((s, i) => `
+    <div class="podium-card${i === 0 ? " lead" : ""}">
+      <div class="podium-medal" aria-hidden="true">${medal[i]}</div>
+      ${flagImg(s.country, "flag podium-flag")}
+      <div class="podium-name">${esc(s.name)}</div>
+      <div class="podium-ct">${esc(tn(s.country))}</div>
+      <div class="podium-goals">${s.goals} <span>${t("u.goals")}</span></div>
+      ${i === 0 ? `<div class="podium-tag">🏆 ${t("sc.boot")}</div>` : ""}
     </div>`).join("");
 }
 

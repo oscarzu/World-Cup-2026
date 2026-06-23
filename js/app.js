@@ -218,7 +218,8 @@ function initSubnav() {
       a.classList.toggle("is-current", on);
       if (on) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
     });
-    centerInScroller(link); // horizontal only — never scrolls the page
+    // NOTE: deliberately do NOT scroll here — the scroll-spy only highlights.
+    // Moving the chip during scroll was pulling the whole page back up.
   };
   const io = new IntersectionObserver((entries) => {
     for (const en of entries) { if (en.isIntersecting) visible.add(en.target.id); else visible.delete(en.target.id); }
@@ -253,7 +254,10 @@ function renderAll() {
   const standings = computeStandings(state.matches);
   UI.renderStandings(standings);
   UI.renderBracket(state.matches, standings);
-  state._scorers = computeScorers(state.matches);
+  // Rank is assigned on the full FIFA-ordered table so it's preserved when the
+  // list is filtered by search.
+  state._scorers = computeScorers(state.matches).map((s, i) => ({ ...s, rank: i + 1 }));
+  UI.renderScorersPodium(state._scorers);
   applyScorerFilter();
   const liveList = state.liveMatches.length ? state.liveMatches : state.matches;
   UI.renderLive(liveList, state.matches);
