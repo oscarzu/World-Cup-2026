@@ -102,15 +102,52 @@ function initTabs() {
 // ---- chart drill-down: tap a bar → a detail modal built from state ----
 function dispatchDrill(chart, key) {
   if (chart === "chart-groups") return drillGroup(key);
-  return drillTeam(chart, key); // teams / fouls / efficacy charts key on team name
+  if (chart === "chart-moments") return drillFact(key); // category → which games
+  return drillTeam(chart, key); // teams / fouls / efficacy / red charts key on team name
+}
+
+// Match list behind a derived stat (comebacks, shootouts, biggest, …).
+const FACT_LABEL = {
+  comebacks: "f.comebacks", shootouts: "f.shootouts", blowouts: "f.blowouts",
+  zeroZero: "f.zerozero", cleansheets: "f.cleansheets", pengoals: "f.pengoals",
+  hattricks: "f.hattricks", highest: "f.highest", biggest: "f.biggest",
+  fastest: "f.fastest", latest: "f.latest", topattack: "f.topattack",
+};
+function factMatches(key) {
+  const f = state._facts || {}, L = f.lists || {};
+  switch (key) {
+    case "comebacks": return L.comebacks || [];
+    case "shootouts": return L.shootouts || [];
+    case "blowouts": return L.blowouts || [];
+    case "zeroZero": return L.zeroZero || [];
+    case "cleansheets": return L.cleanSheets || [];
+    case "pengoals": return L.penaltyGoals || [];
+    case "hattricks": return (f.hatTricks || []).map((h) => h.m);
+    case "highest": return f.highest ? [f.highest.m] : [];
+    case "biggest": return f.biggest ? [f.biggest.m] : [];
+    case "fastest": return f.fastest ? [f.fastest.m] : [];
+    case "latest": return f.latest ? [f.latest.m] : [];
+    case "topattack": return f.topTeams && f.topTeams[0] ? matchesForTeam(f.topTeams[0].name) : [];
+    default: return [];
+  }
+}
+function drillFact(key) {
+  const f = state._facts || {};
+  const title = t(FACT_LABEL[key] || key);
+  const matches = factMatches(key);
+  // Hat-tricks: list the players too.
+  const rows = key === "hattricks"
+    ? (f.hatTricks || []).map((h) => [h.name, `${h.n} ${t("u.goals")}`])
+    : [];
+  UI.openModal({ title, rows, matches });
 }
 function initDrill() {
   window.addEventListener("wc:drill", (e) => {
     const { chart, key } = e.detail || {};
     dispatchDrill(chart, key);
   });
-  // Keyboard/screen-reader path: the "See detail" disclosure + per-item buttons.
   document.addEventListener("click", (e) => {
+    // "See detail" disclosure on charts (keyboard/SR path).
     const toggle = e.target.closest(".drill-btn");
     if (toggle) {
       const list = toggle.parentNode.querySelector(".drill-list");
@@ -120,7 +157,16 @@ function initDrill() {
       return;
     }
     const item = e.target.closest(".drill-item");
-    if (item) dispatchDrill(item.dataset.chart, item.dataset.key);
+    if (item) { dispatchDrill(item.dataset.chart, item.dataset.key); return; }
+    // Clickable fact cards → which matches/teams.
+    const card = e.target.closest(".fact[data-fact]");
+    if (card) drillFact(card.dataset.fact);
+  });
+  // Keyboard activation for fact cards (Enter/Space).
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const card = e.target.closest && e.target.closest(".fact[data-fact]");
+    if (card) { e.preventDefault(); drillFact(card.dataset.fact); }
   });
 }
 function matchesForTeam(name) {
@@ -247,6 +293,7 @@ function initBackToTop() {
 function renderAll() {
   const stats = goalStats(state.matches);
   const facts = computeFacts(state.matches);
+  state._facts = facts; // for clickable fact-card drill-downs
   UI.renderOverview(state.matches, stats, CONFIG.TOURNAMENT);
   UI.renderHeroLead(stats);
   UI.animateCounts($("#overview-stats"));

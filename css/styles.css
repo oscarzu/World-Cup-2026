@@ -771,7 +771,9 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
   background: var(--surface-2); border-radius: 999px; padding: 0.2rem 0.6rem; }
 
 /* ---- Golden Boot podium ---- */
-.scorers-podium { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; margin: 0.9rem 0 1.1rem; }
+.scorers-podium { margin: 0.9rem 0 1.1rem; }
+.podium-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; }
+.podium-note { font-size: 0.74rem; color: var(--muted); text-align: center; margin: 0.55rem 0 0; }
 .podium-card { position: relative; text-align: center; padding: 1rem 0.6rem 0.8rem;
   background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); }
 .podium-card.lead { border-color: var(--gold); background:
@@ -833,6 +835,13 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
 .topbar { padding-top: env(safe-area-inset-top); }
 .site-footer { padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
 .to-top { right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); }
+
+/* ---- clickable fact cards (drill into the matches behind a stat) ---- */
+.fact.clickable { position: relative; cursor: pointer; }
+.fact.clickable:hover { transform: translateY(-3px); border-color: var(--border-strong); box-shadow: var(--shadow-hover); }
+.fact-go { position: absolute; top: 0.6rem; right: 0.7rem; color: var(--muted);
+  font-size: 0.8rem; opacity: 0; transition: opacity var(--t); }
+.fact.clickable:hover .fact-go, .fact.clickable:focus-visible .fact-go { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
