@@ -3,6 +3,7 @@
 import { VENUES, CONFIG } from "./config.js";
 import { flagUrl, kickoffLabel, kickoffDateTime, kickoffDate } from "./api.js";
 import { t, tName, getLang } from "./i18n.js";
+import { qualification, teamTop2Status } from "./qualification.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const tn = tName; // selección name in the active language (EN = original)
@@ -239,6 +240,54 @@ export function renderStandings(groupsMap) {
         </tbody>
       </table>
     </div>`).join("");
+}
+
+// ---- road to the Round of 32: qualified teams + best thirds + what-if ----
+export function renderQualification(standings) {
+  const wrap = $("#qualification");
+  if (!wrap) return;
+  if (!standings || !standings.size) { wrap.innerHTML = ""; return; }
+  const q = qualification(standings);
+
+  const chip = (row, done) => row
+    ? `<span class="q-chip ${done ? "done" : "proj"}">${flagImg(row.name)}<span>${esc(tn(row.name))}</span>${done ? " ✓" : ""}</span>`
+    : "";
+  const col = (title, items) =>
+    `<div class="q-col"><h4>${title}</h4><div class="q-chips">${items.map((x) => chip(x.row, x.done)).join("")}</div></div>`;
+
+  const thirds = q.thirds.map((tr) => `
+    <div class="q-third ${tr.qualified ? "in" : "outc"}">
+      <span class="q-rk">${tr.rank}</span>${flagImg(tr.name)}
+      <span class="q-nm">${esc(tn(tr.name))}</span>
+      <span class="q-grp">${t("drill.group")} ${tr.group}</span>
+      <span class="q-pts">${tr.Pts} pts · ${tr.GD > 0 ? "+" : ""}${tr.GD}</span>
+    </div>`).join("");
+  // The cut line sits after the 8th-ranked third.
+  const thirdsHtml = thirds;
+
+  const STAT = { in: ["q.in", "good"], live: ["q.live", "warn"], out: ["q.out", "bad"] };
+  const whatif = q.groups.map(([g, rows]) => `
+    <div class="q-wgroup">
+      <h5>${esc(g)}</h5>
+      ${rows.map((r, i) => {
+        const [k, c] = STAT[teamTop2Status(rows, i)];
+        return `<div class="q-wrow ${c}"><span class="q-wpos">${i + 1}</span>${flagImg(r.name)}<span class="q-wnm">${esc(tn(r.name))}</span><span class="q-wpts">${r.Pts}</span><span class="q-wtag">${t(k)}</span></div>`;
+      }).join("")}
+    </div>`).join("");
+
+  wrap.innerHTML = `
+    <p class="q-explain" data-i18n-html="q.explain">${t("q.explain")}</p>
+    <div class="q-cols">
+      ${col(t("q.firsts"), q.winners)}
+      ${col(t("q.seconds"), q.runners)}
+    </div>
+    <div class="q-sub-head">${t("q.thirdsTitle")} <span class="q-cut">${t("q.cut")}</span></div>
+    <div class="q-thirds">${thirdsHtml}</div>
+    <details class="q-whatif">
+      <summary>${t("q.whatifTitle")}</summary>
+      <div class="q-wgrid">${whatif}</div>
+    </details>
+    <p class="q-note">${q.allDone ? t("q.noteDone") : t("q.noteProj")}</p>`;
 }
 
 // ---- bracket (Apple-Sports-style, live-projected) ----
