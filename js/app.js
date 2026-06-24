@@ -301,6 +301,7 @@ function renderAll() {
   const standings = computeStandings(state.matches);
   UI.renderStandings(standings);
   UI.renderBracket(state.matches, standings);
+  UI.renderQualification(standings);
   // Rank is assigned on the full FIFA-ordered table so it's preserved when the
   // list is filtered by search.
   state._scorers = computeScorers(state.matches).map((s, i) => ({ ...s, rank: i + 1 }));

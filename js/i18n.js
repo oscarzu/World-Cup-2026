@@ -258,6 +258,23 @@ const STR = {
   "d.leastEff": ["Menor eficacia (% de conversión)", "Least efficient (conversion %)"],
   "d.foulsPerMatch": ["faltas/partido", "fouls/match"],
   "d.shotsGoals": ["tiros · {g} goles", "shots · {g} goals"],
+  // road to the Round of 32
+  "q.kicker": ["Camino a la ronda de 32", "Road to the Round of 32"],
+  "q.title": ["Quién está clasificado hoy", "Who's qualified today"],
+  "q.explain": ["<strong>32 equipos</strong> avanzan: los <strong>2 primeros</strong> de cada uno de los 12 grupos (24) más los <strong>8 mejores terceros</strong>. Los 12 terceros se ordenan por: <strong>1)</strong> puntos, <strong>2)</strong> diferencia de goles, <strong>3)</strong> goles a favor y, si siguen empatados, fair-play y sorteo. Los 8 primeros de esa lista pasan.",
+                "<strong>32 teams</strong> advance: the <strong>top 2</strong> of each of the 12 groups (24) plus the <strong>8 best third-placed teams</strong>. The 12 thirds are ranked by: <strong>1)</strong> points, <strong>2)</strong> goal difference, <strong>3)</strong> goals scored and, if still level, fair-play and drawing of lots. The top 8 of that list go through."],
+  "q.firsts": ["1.º de grupo", "Group winners"],
+  "q.seconds": ["2.º de grupo", "Runners-up"],
+  "q.thirdsTitle": ["Mejores terceros", "Best third-placed teams"],
+  "q.cut": ["línea de corte: top 8", "cut line: top 8"],
+  "q.whatifTitle": ["Última jornada: ¿quién pasa? (proyección)", "Final matchday: who advances? (projection)"],
+  "q.in": ["Top 2 asegurado", "Top 2 secured"],
+  "q.live": ["En disputa", "In contention"],
+  "q.out": ["Sin opción de top 2", "No top-2 path"],
+  "q.noteProj": ["Proyección con los resultados de hoy; cambia con cada partido. «Sin opción de top 2» no significa eliminado: un tercero aún puede clasificar entre los 8 mejores.",
+                 "Projection from today's results; it changes every match. “No top-2 path” isn't elimination — a third-placed team can still qualify among the best 8."],
+  "q.noteDone": ["Fase de grupos completa: clasificados definitivos.", "Group stage complete: final qualifiers."],
+
   // bracket
   "br.r32": ["Dieciseisavos", "Round of 32"], "br.r16": ["Octavos", "Round of 16"],
   "br.qf": ["Cuartos", "Quarter-finals"], "br.sf": ["Semifinal", "Semi-finals"], "br.final": ["Final", "Final"],
