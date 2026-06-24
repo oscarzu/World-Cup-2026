@@ -116,6 +116,29 @@ const STR = {
   "momentsChart.title": ["Momentos del torneo", "Tournament moments"],
   "momentsChart.foot": ["Conteo de partidos memorables", "Memorable match counts"],
 
+  // card kickers (short eyebrows on chart cards)
+  "kick.scoring": ["Goleo", "Scoring"],
+  "kick.attack": ["Ataque", "Attack"],
+  "kick.drama": ["Drama", "Drama"],
+  "kick.cards": ["Tarjetas", "Cards"],
+
+  // venue facts
+  "venue.built": ["Inaugurado", "Opened"],
+  "venue.capacity": ["Capacidad", "Capacity"],
+  "venue.cost": ["Costo aprox.", "Approx. cost"],
+
+  // live stats + social block
+  "live.shots": ["Tiros a arco", "Shots on goal"],
+  "live.fouls": ["Faltas", "Fouls"],
+  "social.igFeed": ["📸 Feed en vivo · Instagram", "📸 Live feed · Instagram"],
+  "social.openIg": ["Abrir en Instagram ↗", "Open in Instagram ↗"],
+  "social.xPosts": ["Publicaciones de @FIFAWorldCup", "Posts from @FIFAWorldCup"],
+  "social.openX": ["Abrir en X ↗", "Open on X ↗"],
+  "social.archiveK": ["Archivo social", "Social archive"],
+  "social.archiveT": ["Instagram por jornada y sede", "Instagram by matchday & venue"],
+  "social.archiveS": ["Cada día se arma solo con las sedes de esos partidos. Explora por estadio o mira las publicaciones guardadas; las jornadas pasadas quedan como histórico.",
+                      "Each day is built automatically from that day's venues. Explore by stadium or browse saved posts; past matchdays remain as history."],
+
   // live
   "live.socialK": ["Social", "Social"],
   "live.socialT": ["Redes en vivo", "Live on social"],

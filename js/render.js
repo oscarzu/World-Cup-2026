@@ -389,9 +389,9 @@ export function renderVenues() {
         <div class="vn">${esc(v.stadium)}</div>
         <div class="vc">${esc(v.city)}, ${esc(tn(v.country))}</div>
         <div class="venue-stats">
-          <div><span class="vk">Inaugurado</span><span class="vv">${v.built}</span></div>
-          <div><span class="vk">Capacidad</span><span class="vv">${fmtInt(v.capacity)}</span></div>
-          <div><span class="vk">Costo aprox.</span><span class="vv">${esc(v.cost)}</span></div>
+          <div><span class="vk">${t("venue.built")}</span><span class="vv">${v.built}</span></div>
+          <div><span class="vk">${t("venue.capacity")}</span><span class="vv">${fmtInt(v.capacity)}</span></div>
+          <div><span class="vk">${t("venue.cost")}</span><span class="vv">${esc(v.cost)}</span></div>
         </div>
       </div>
     </article>`;
@@ -458,7 +458,7 @@ function goalTimeline(m, side) {
 
 function liveCard(m) {
   const h = m.score?.home ?? 0, a = m.score?.away ?? 0;
-  const clock = m.clock || (m.elapsed != null ? `${m.elapsed}'` : "En vivo");
+  const clock = m.clock || (m.elapsed != null ? `${m.elapsed}'` : t("badge.live"));
 
   // Optional live statistics row (only when the provider supplies them).
   let statsRow = "";
@@ -467,8 +467,8 @@ function liveCard(m) {
     const stat = (label, hv, av) => `
       <div class="ls-row"><span class="ls-h">${hv ?? "–"}</span><span class="ls-k">${label}</span><span class="ls-a">${av ?? "–"}</span></div>`;
     statsRow = `<div class="live-stats">
-      ${stat("Tiros a arco", sh.shots, sa.shots)}
-      ${stat("Faltas", sh.fouls, sa.fouls)}
+      ${stat(t("live.shots"), sh.shots, sa.shots)}
+      ${stat(t("live.fouls"), sh.fouls, sa.fouls)}
     </div>`;
   }
 
@@ -499,7 +499,7 @@ function upcomingCard(m) {
     <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(tn(m.home.name))}</span></div>
     <div class="center">
       <span class="badge up">${t("badge.up")}</span>
-      <div class="meta">${esc(kickoffDateTime(m) || kickoffLabel(m) || "Por definir")}</div>
+      <div class="meta">${esc(kickoffDateTime(m) || kickoffLabel(m) || t("tbd"))}</div>
     </div>
     <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(tn(m.away.name))}</span></div>
   </div>`;
@@ -795,30 +795,31 @@ export function renderSocial() {
   const widgetUrl = (CONFIG.SOCIAL_WIDGET_URL || "").trim();
   const widget = widgetUrl
     ? `<div class="card social-card wide">
-         <h3>📸 Feed en vivo · Instagram</h3>
+         <h3 data-i18n="social.igFeed">${t("social.igFeed")}</h3>
          <div class="social-embed"><iframe class="lw-iframe" src="${esc(widgetUrl)}" title="Instagram feed"
             loading="lazy" allowtransparency="true" frameborder="0" scrolling="no"></iframe></div>
-         <a class="social-link" href="https://www.instagram.com/fifaworldcup/" target="_blank" rel="noopener">Abrir en Instagram ↗</a>
+         <a class="social-link" href="https://www.instagram.com/fifaworldcup/" target="_blank" rel="noopener" data-i18n="social.openIg">${t("social.openIg")}</a>
        </div>`
     : "";
 
+  // data-i18n on the static labels so applyStatic() retranslates them on toggle
+  // (this block is injected once and not re-rendered).
   wrap.innerHTML = `
     <div class="social-grid">
       <div class="card social-card">
-        <h3>𝕏 · @FIFAWorldCup</h3>
+        <h3 translate="no">𝕏 · @FIFAWorldCup</h3>
         <div class="social-embed">
           <a class="twitter-timeline" data-theme="dark" data-height="520" data-chrome="noheader nofooter transparent"
-             href="https://twitter.com/FIFAWorldCup?ref_src=twsrc%5Etfw">Publicaciones de @FIFAWorldCup</a>
+             href="https://twitter.com/FIFAWorldCup?ref_src=twsrc%5Etfw" data-i18n="social.xPosts">${t("social.xPosts")}</a>
         </div>
-        <a class="social-link" href="https://x.com/FIFAWorldCup" target="_blank" rel="noopener">Abrir en X ↗</a>
+        <a class="social-link" href="https://x.com/FIFAWorldCup" target="_blank" rel="noopener" data-i18n="social.openX">${t("social.openX")}</a>
       </div>
       ${widget}
     </div>
     <div class="section-head" style="margin-top:1.6rem">
-      <p class="kicker">Archivo social</p>
-      <h3 class="section-title">Instagram por jornada y sede</h3>
-      <p class="section-sub">Cada día se arma solo con las sedes de esos partidos. Explora por estadio o mira las
-        publicaciones guardadas; las jornadas pasadas quedan como histórico.</p>
+      <p class="kicker" data-i18n="social.archiveK">${t("social.archiveK")}</p>
+      <h3 class="section-title" data-i18n="social.archiveT">${t("social.archiveT")}</h3>
+      <p class="section-sub" data-i18n="social.archiveS">${t("social.archiveS")}</p>
     </div>
     <div id="social-archive" class="social-archive"></div>`;
 
