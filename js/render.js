@@ -357,7 +357,7 @@ export function renderScorersPodium(list) {
   const top = (list || []).filter((s) => s.goals > 0).slice(0, 3);
   if (!top.length) { wrap.innerHTML = ""; return; }
   const medal = ["🥇", "🥈", "🥉"];
-  wrap.innerHTML = top.map((s, i) => `
+  const podium = top.map((s, i) => `
     <div class="podium-card${i === 0 ? " lead" : ""}">
       <div class="podium-medal" aria-hidden="true">${medal[i]}</div>
       ${flagImg(s.country, "flag podium-flag")}
@@ -366,6 +366,8 @@ export function renderScorersPodium(list) {
       <div class="podium-goals">${s.goals} <span>${t("u.goals")}</span></div>
       ${i === 0 ? `<div class="podium-tag">🏆 ${t("sc.boot")}</div>` : ""}
     </div>`).join("");
+  wrap.innerHTML = `<div class="podium-row">${podium}</div>
+    <p class="podium-note">🗓️ ${t("sc.podiumNote")}</p>`;
 }
 
 // ---- venues ----
@@ -587,42 +589,47 @@ export function renderFacts(facts) {
 
   if (facts.highest)
     cards.push(fact("🔥", t("f.highest"),
-      `${facts.highest.total} ${t("u.goals")}`, `${pair(facts.highest.m)} (${facts.highest.score})`));
+      `${facts.highest.total} ${t("u.goals")}`, `${pair(facts.highest.m)} (${facts.highest.score})`, "highest"));
   if (facts.biggest)
     cards.push(fact("💥", t("f.biggest"),
-      `${facts.biggest.margin} ${t("f.diff")}`, `${pair(facts.biggest.m)} (${facts.biggest.score})`));
+      `${facts.biggest.margin} ${t("f.diff")}`, `${pair(facts.biggest.m)} (${facts.biggest.score})`, "biggest"));
   if (facts.fastest)
     cards.push(fact("⚡", t("f.fastest"),
-      `${t("f.min")} ${facts.fastest.min}'`, esc(facts.fastest.name || "—")));
+      `${t("f.min")} ${facts.fastest.min}'`, esc(facts.fastest.name || "—"), "fastest"));
   if (facts.latest)
     cards.push(fact("⏱️", t("f.latest"),
-      `${t("f.min")} ${facts.latest.min}'`, esc(facts.latest.name || "—")));
+      `${t("f.min")} ${facts.latest.min}'`, esc(facts.latest.name || "—"), "latest"));
 
   cards.push(fact("🎩", t("f.hattricks"),
     String(facts.hatTricks.length),
-    facts.hatTricks.length ? esc(facts.hatTricks[0].name) + (facts.hatTricks.length > 1 ? t("f.andMore") : "") : t("f.none")));
-  cards.push(fact("🔄", t("f.comebacks"), String(facts.comebacks), t("f.dmComeback")));
-  cards.push(fact("🥅", t("f.shootouts"), String(facts.shootouts), t("f.dmShootout")));
-  cards.push(fact("🧱", t("f.cleansheets"), String(facts.cleanSheets), t("f.dmClean")));
-  cards.push(fact("🥱", t("f.zerozero"), String(facts.zeroZero), t("f.dmZero")));
-  cards.push(fact("🏟️", t("f.blowouts"), String(facts.blowouts), t("f.dmBlow")));
-  cards.push(fact("🎯", t("f.pengoals"), String(facts.penaltyGoals), t("f.dmPen")));
+    facts.hatTricks.length ? esc(facts.hatTricks[0].name) + (facts.hatTricks.length > 1 ? t("f.andMore") : "") : t("f.none"),
+    facts.hatTricks.length ? "hattricks" : null));
+  cards.push(fact("🔄", t("f.comebacks"), String(facts.comebacks), t("f.dmComeback"), facts.comebacks ? "comebacks" : null));
+  cards.push(fact("🥅", t("f.shootouts"), String(facts.shootouts), t("f.dmShootout"), facts.shootouts ? "shootouts" : null));
+  cards.push(fact("🧱", t("f.cleansheets"), String(facts.cleanSheets), t("f.dmClean"), facts.cleanSheets ? "cleansheets" : null));
+  cards.push(fact("🥱", t("f.zerozero"), String(facts.zeroZero), t("f.dmZero"), facts.zeroZero ? "zeroZero" : null));
+  cards.push(fact("🏟️", t("f.blowouts"), String(facts.blowouts), t("f.dmBlow"), facts.blowouts ? "blowouts" : null));
+  cards.push(fact("🎯", t("f.pengoals"), String(facts.penaltyGoals), t("f.dmPen"), facts.penaltyGoals ? "pengoals" : null));
   if (facts.topTeams[0])
     cards.push(fact("👑", t("f.topattack"),
-      `${facts.topTeams[0].goals} ${t("u.goals")}`, esc(tn(facts.topTeams[0].name))));
+      `${facts.topTeams[0].goals} ${t("u.goals")}`, esc(tn(facts.topTeams[0].name)), "topattack"));
 
   wrap.innerHTML = cards.join("");
 }
 
-function fact(icon, label, value, detail) {
+function fact(icon, label, value, detail, key = null) {
+  const interactive = key
+    ? ` data-fact="${key}" role="button" tabindex="0" aria-label="${esc(label)} — ${esc(t("drill.detail"))}"`
+    : "";
   return `
-  <div class="fact">
+  <div class="fact${key ? " clickable" : ""}"${interactive}>
     <div class="fact-icon" aria-hidden="true">${icon}</div>
     <div class="fact-body">
       <div class="fact-value">${value}</div>
       <div class="fact-label">${label}</div>
       <div class="fact-detail">${detail}</div>
     </div>
+    ${key ? `<span class="fact-go" aria-hidden="true">↗</span>` : ""}
   </div>`;
 }
 

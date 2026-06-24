@@ -118,8 +118,6 @@ function upsert(id, type, labels, data, label, opts = {}) {
     options,
   });
   setChartA11y(id, label, labels, data, opts.suffix || "");
-  attachDataTable(id, `${t("a11y.table")}: ${label}`, [t("a11y.item"), label],
-    labels.map((l, i) => [l, `${fmt(data[i])}${opts.suffix || ""}`]));
   if (Array.isArray(keys) && keys.length) attachDrillAccess(id, labels, data, keys, opts.suffix || "");
 }
 
@@ -135,27 +133,6 @@ function setChartA11y(id, label, labels, data, suffix = "") {
 }
 
 const escH = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-
-// Full data as a visually-hidden table next to the canvas — the proper
-// accessible representation of a <canvas> chart (screen readers can navigate
-// every value, not just the aria-label summary).
-function attachDataTable(id, caption, headers, rows) {
-  const el = document.getElementById(id);
-  const box = el && el.closest(".chart-box");
-  if (!box) return;
-  let tbl = box.parentNode.querySelector(`table[data-for="${id}"]`);
-  if (!tbl) {
-    tbl = document.createElement("table");
-    tbl.className = "sr-only chart-table";
-    tbl.setAttribute("data-for", id);
-    box.insertAdjacentElement("afterend", tbl);
-  }
-  tbl.innerHTML =
-    `<caption>${escH(caption)}</caption>` +
-    `<thead><tr>${headers.map((h) => `<th scope="col">${escH(h)}</th>`).join("")}</tr></thead>` +
-    `<tbody>${rows.map((r) => `<tr>${r.map((c, ci) =>
-      ci === 0 ? `<th scope="row">${escH(c)}</th>` : `<td>${escH(c)}</td>`).join("")}</tr>`).join("")}</tbody>`;
-}
 
 // Keyboard/screen-reader alternative to clicking bars: a "See detail" disclosure
 // listing each entity as a real button that triggers the same drill-down.
@@ -218,7 +195,8 @@ export function renderCharts(stats, facts, disc, effHist) {
     upsert("chart-moments", "bar",
       [t("f.comebacks"), t("f.shootouts"), t("f.blowouts"), t("f.zerozero"), t("f.hattricks")],
       [lastFacts.comebacks, lastFacts.shootouts, lastFacts.blowouts, lastFacts.zeroZero, lastFacts.hatTricks.length],
-      t("u.matches"), { colors: [tc.accent, tc.live, tc.gold, tc.context, tc.accent2] });
+      t("u.matches"), { colors: [tc.accent, tc.live, tc.gold, tc.context, tc.accent2],
+        drillKeys: ["comebacks", "shootouts", "blowouts", "zeroZero", "hattricks"] });
     setSub("sub-moments", sub(`${lastFacts.comebacks} remontadas y ${lastFacts.shootouts} tandas de penales hasta ahora.`,
       `${lastFacts.comebacks} comebacks and ${lastFacts.shootouts} shootouts so far.`));
   }
@@ -241,7 +219,7 @@ export function renderCharts(stats, facts, disc, effHist) {
     const rb = (lastDisc.redByTeam || []).slice(0, 8);
     if (rb.length) {
       upsert("chart-red", "bar", rb.map((x) => tName(x.name)), rb.map((x) => x.red), t("a.red"),
-        { horizontal: true, emphasis: true, leadFirst: true, color: tc.live });
+        { horizontal: true, emphasis: true, leadFirst: true, color: tc.live, drillKeys: rb.map((x) => x.name) });
       setSub("sub-red", sub(`${rb.length} selecciones con expulsión · ${lastDisc.redTotal} rojas en total.`,
         `${rb.length} teams sent off · ${lastDisc.redTotal} red cards in total.`));
     }
@@ -343,9 +321,6 @@ function effSeries(canvasId, history, kind, tc) {
   el.setAttribute("aria-label",
     `${t("a11y.chart")}: ${t("eff.seriesBest")} ${bestTeams.map((tm, i) => `${tm} ${bestData[i]}%`).join(", ")}. ` +
     `${t("eff.seriesWorst")} ${worstTeams.map((tm, i) => `${tm} ${worstData[i]}%`).join(", ")}.`);
-  attachDataTable(canvasId, `${t("a11y.table")}: ${t("eff.title")}`,
-    [t("br.matchday"), t("eff.seriesBest"), t("eff.seriesWorst")],
-    labels.map((l, i) => [l, `${bestTeams[i]} ${bestData[i]}%`, `${worstTeams[i]} ${worstData[i]}%`]));
 }
 
 // Re-draw with current theme colours / language.

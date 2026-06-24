@@ -19,18 +19,20 @@ export function computeFacts(matches) {
   let biggest = null, highest = null, fastest = null, latest = null;
   const hatTricks = [];
   const teamGoals = new Map();
+  // Match lists behind each stat, so a card/bar can drill into "which games".
+  const lists = { comebacks: [], shootouts: [], cleanSheets: [], blowouts: [], zeroZero: [], penaltyGoals: [] };
 
   for (const m of finished) {
     const h = m.score.home, a = m.score.away;
     const total = h + a;
     totalGoals += total;
 
-    if (total === 0) zeroZero++;
-    if (m.score.penHome != null) shootouts++;
-    if (h === 0 || a === 0) cleanSheets++;
+    if (total === 0) { zeroZero++; lists.zeroZero.push(m); }
+    if (m.score.penHome != null) { shootouts++; lists.shootouts.push(m); }
+    if (h === 0 || a === 0) { cleanSheets++; lists.cleanSheets.push(m); }
 
     const margin = Math.abs(h - a);
-    if (margin >= 3) blowouts++;
+    if (margin >= 3) { blowouts++; lists.blowouts.push(m); }
     if (!biggest || margin > biggest.margin)
       biggest = { m, margin, score: `${h}–${a}` };
     if (!highest || total > highest.total)
@@ -42,13 +44,14 @@ export function computeFacts(matches) {
     // Half-time comeback: a side losing at the break ends up winning.
     const hh = m.score.htHome, ha = m.score.htAway;
     if (hh != null && ha != null) {
-      if ((hh < ha && h > a) || (ha < hh && a > h)) comebacks++;
+      if ((hh < ha && h > a) || (ha < hh && a > h)) { comebacks++; lists.comebacks.push(m); }
     }
 
     // Per-match goal tally for hat-tricks + earliest/latest goal of the cup.
     const tally = new Map();
+    let matchHasPen = false;
     for (const g of m.goals || []) {
-      if (g.penalty) penaltyGoals++;
+      if (g.penalty) { penaltyGoals++; matchHasPen = true; }
       const min = num(g.minute);
       if (min != null) {
         if (!fastest || min < fastest.min) fastest = { min, name: g.name, m };
@@ -57,6 +60,7 @@ export function computeFacts(matches) {
       if (g.name && !/own goal/i.test(g.name))
         tally.set(g.name, (tally.get(g.name) || 0) + 1);
     }
+    if (matchHasPen) lists.penaltyGoals.push(m);
     for (const [name, n] of tally) if (n >= 3) hatTricks.push({ name, n, m });
   }
 
@@ -80,6 +84,7 @@ export function computeFacts(matches) {
     avg: finished.length ? totalGoals / finished.length : 0,
     penaltyGoals, zeroZero, shootouts, blowouts, comebacks, cleanSheets,
     hatTricks, biggest, highest, fastest, latest, topTeams,
+    lists,
     aggregates: CONFIG.TOURNAMENT.aggregates,
     attendanceInfo,
     addedTime: CONFIG.TOURNAMENT.addedTime,

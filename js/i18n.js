@@ -207,6 +207,7 @@ const STR = {
   "sc.top": ["Top 50 · orden FIFA", "Top 50 · FIFA order"],
   "sc.none": ["Sin coincidencias.", "No matches."],
   "sc.boot": ["Botín de Oro", "Golden Boot"],
+  "sc.podiumNote": ["Con resultados al día — el torneo aún no termina.", "Standings so far — the tournament isn't over yet."],
   // chart accessibility
   "a11y.chart": ["Gráfica", "Chart"],
   "a11y.skip": ["Saltar al contenido", "Skip to content"],
