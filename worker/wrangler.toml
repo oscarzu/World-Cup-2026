@@ -3,10 +3,10 @@ main = "worker.js"
 compatibility_date = "2024-11-01"
 workers_dev = true
 
-# Cron: collect from API-Football every 5 minutes (the ONLY API consumer).
-# A daily budget counter in the Worker caps usage so you never exceed 100/day.
+# Cron: collect from ESPN every 2 minutes (ESPN is free / key-less, so we can
+# poll often → live goals appear within ~2 min instead of up to 5).
 [triggers]
-crons = ["*/5 * * * *"]
+crons = ["*/2 * * * *"]
 
 # KV store that holds the shared snapshot + accumulated dataset.
 # Create it once and paste the returned id below:
@@ -17,7 +17,8 @@ id = "8fb63d9aa3634b199b3d5f5872997fe3"
 
 [vars]
 MAX_DAILY = "2000"   # safety cap on ESPN fetches per day (ESPN is free/key-less)
-ENRICH_LIMIT = "6"   # how many live matches to enrich with fouls/shots/cards per run
+ENRICH_LIMIT = "12"  # enrich up to 12 live matches with goals/fouls/shots per run
+                     # (covers every simultaneous game so live goals are captured)
 # ALLOW_ORIGIN = "https://oscarzu.github.io"   # optional: lock CORS to your site
 
 # Source: ESPN's free public API (https://site.api.espn.com/.../soccer/fifa.world).
