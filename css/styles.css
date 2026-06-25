@@ -890,6 +890,14 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
   .q-cols, .q-thirds { grid-template-columns: 1fr; }
 }
 
+/* ---- add-to-calendar button ---- */
+.btn-cal {
+  margin-top: 0.8rem; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  color: var(--text); background: var(--surface-2); border: 1px solid var(--border-strong);
+  padding: 0.5rem 0.95rem; border-radius: 999px; transition: border-color var(--t), transform var(--t);
+}
+.btn-cal:hover { border-color: var(--accent); transform: translateY(-1px); }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

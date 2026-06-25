@@ -282,6 +282,7 @@ const STR = {
   "br.matchday": ["Jornada", "Matchday"],
   "br.legend": ["Cuadro proyectado en vivo con la clasificación actual. Toca un duelo para ver sede y horario.",
                 "Live projected bracket from current standings. Tap a tie for venue and kickoff."],
+  "cal.add": ["📅 Añadir al calendario", "📅 Add to calendar"],
   "br.proj": ["proy.", "proj."],
   "br.projFull": ["Proyección según los resultados de hoy", "Projection based on today's results"],
   "br.swipe": ["Desliza para ver más rondas →", "Swipe to see more rounds →"],

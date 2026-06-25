@@ -78,9 +78,10 @@ const venuePhoto = (file) =>
 function flagImg(team, cls = "flag") {
   const url = flagUrl(team);
   // width/height give an intrinsic ratio (prevents layout shift); CSS sets the
-  // actual rendered size per context.
+  // actual rendered size. onerror hides a flag that fails to load (no broken
+  // icon); referrerpolicy keeps flagcdn happy.
   return url
-    ? `<img class="${cls}" src="${url}" alt="" width="28" height="19" loading="lazy" />`
+    ? `<img class="${cls}" src="${url}" alt="" width="28" height="19" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'" />`
     : `<span class="${cls}" aria-hidden="true"></span>`;
 }
 

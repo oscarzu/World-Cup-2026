@@ -8,6 +8,7 @@ import { computeScorers, goalStats } from "./scorers.js";
 import { computeFacts } from "./facts.js";
 import { computeDiscipline } from "./discipline.js";
 import { renderCharts, rethemeCharts } from "./charts.js";
+import { buildKnockoutICS, downloadICS } from "./calendar.js";
 import * as AF from "./apifootball.js";
 import * as UI from "./render.js";
 
@@ -275,6 +276,14 @@ function initSubnav() {
   for (const id of ids) { const sec = document.getElementById(id); if (sec) io.observe(sec); }
 }
 
+// ---- add knockout fixtures to calendar (.ics download) ----
+function initCalendar() {
+  $("#add-calendar")?.addEventListener("click", () => {
+    const ics = buildKnockoutICS(state.matches, computeStandings(state.matches));
+    downloadICS(ics);
+  });
+}
+
 // ---- back-to-top (long Stats page) ----
 function initBackToTop() {
   const btn = document.createElement("button");
@@ -482,6 +491,7 @@ async function boot() {
   initScorerControls();
   initSubnav();
   initBackToTop();
+  initCalendar();
   initDrill();
   await loadData();
 }
