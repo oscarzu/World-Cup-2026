@@ -276,12 +276,24 @@ function initSubnav() {
   for (const id of ids) { const sec = document.getElementById(id); if (sec) io.observe(sec); }
 }
 
-// ---- add knockout fixtures to calendar (.ics download) ----
+// ---- add knockout fixtures to calendar ----
 function initCalendar() {
+  // Download a static .ics (snapshot of today's projected teams).
   $("#add-calendar")?.addEventListener("click", () => {
     const ics = buildKnockoutICS(state.matches, computeStandings(state.matches));
     downloadICS(ics);
   });
+  // Subscribe to the Worker feed (webcal) — auto-updates teams as the bracket
+  // advances. Hidden if no live proxy is configured.
+  const sub = $("#sub-calendar");
+  if (sub) {
+    const base = (CONFIG.LIVE_PROXY_URL || "").trim();
+    if (!base) { sub.hidden = true; }
+    else {
+      const webcal = base.replace(/^https?:/, "webcal:").replace(/\/+$/, "") + "/calendar.ics";
+      sub.addEventListener("click", () => { window.location.href = webcal; });
+    }
+  }
 }
 
 // ---- back-to-top (long Stats page) ----
