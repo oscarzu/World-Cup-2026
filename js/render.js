@@ -75,13 +75,15 @@ export function showOfflineBanner() {
 const venuePhoto = (file) =>
   `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1200`;
 
-function flagImg(team, cls = "flag") {
+function flagImg(team, cls = "flag", { eager = false } = {}) {
   const url = flagUrl(team);
   // width/height give an intrinsic ratio (prevents layout shift); CSS sets the
   // actual rendered size. onerror hides a flag that fails to load (no broken
-  // icon); referrerpolicy keeps flagcdn happy.
+  // icon); referrerpolicy keeps flagcdn happy. `eager` is used where lazy is
+  // unreliable (the bracket lives in a hidden, horizontally-scrolling tab).
+  const loading = eager ? "eager" : "lazy";
   return url
-    ? `<img class="${cls}" src="${url}" alt="" width="28" height="19" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'" />`
+    ? `<img class="${cls}" src="${url}" alt="" width="28" height="19" loading="${loading}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'" />`
     : `<span class="${cls}" aria-hidden="true"></span>`;
 }
 
@@ -354,7 +356,7 @@ export function renderBracket(matches, standings = new Map()) {
 
   // Inner content of a slot row (flag + name + projection tag).
   const slotInner = (s) => {
-    const flag = s.flagTeam ? flagImg(s.flagTeam) : `<span class="flag" aria-hidden="true"></span>`;
+    const flag = s.flagTeam ? flagImg(s.flagTeam, "flag", { eager: true }) : `<span class="flag" aria-hidden="true"></span>`;
     const tag = s.proj ? `<span class="bk-proj" title="${esc(t("br.projFull"))}">${t("br.proj")}</span>` : "";
     return `${flag}<span class="nm">${esc(s.name)}</span>${tag}`;
   };

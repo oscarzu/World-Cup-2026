@@ -897,6 +897,9 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
   padding: 0.5rem 0.95rem; border-radius: 999px; transition: border-color var(--t), transform var(--t);
 }
 .btn-cal:hover { border-color: var(--accent); transform: translateY(-1px); }
+.cal-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+.cal-actions .btn-cal { margin-top: 0; }
+.btn-cal.alt { background: var(--accent-soft); border-color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

@@ -137,7 +137,10 @@
         <p class="kicker" data-i18n="tab.bracket">Eliminatorias</p>
         <h2 class="section-title big" data-i18n="br.r32">Dieciseisavos</h2>
         <p class="section-sub" id="bracket-legend" data-i18n="br.legend">Cuadro proyectado en vivo con la clasificación actual.</p>
-        <button id="add-calendar" class="btn-cal" type="button" data-i18n="cal.add">📅 Añadir al calendario</button>
+        <div class="cal-actions">
+          <button id="add-calendar" class="btn-cal" type="button" data-i18n="cal.download">📅 Descargar (.ics)</button>
+          <button id="sub-calendar" class="btn-cal alt" type="button" data-i18n="cal.subscribe">🔄 Suscribirse (se actualiza solo)</button>
+        </div>
       </div>
       <p class="scroll-hint" data-i18n="br.swipe">Desliza para ver más rondas →</p>
       <div id="bracket-wrap" class="bracket"></div>

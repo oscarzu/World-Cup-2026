@@ -42,6 +42,14 @@ export default {
         capturedMatches: Object.keys(agg.fixtures || {}).length,
         snapshotUpdatedAt: snap.updatedAt || null, lastResult }, 200, cors);
     }
+    if (path === "/calendar.ics") {
+      let ics = await env.WC26.get("calendar");
+      if (!ics) { await collect(env); ics = await env.WC26.get("calendar"); } // build on first hit
+      return new Response(ics || "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR", {
+        status: 200,
+        headers: { ...cors, "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "public, max-age=300" },
+      });
+    }
     if (path === "/refresh") { const r = await collect(env); return json(r, 200, cors); }
     // Audit/rebuild: backfill every played match (chunked). ?reset=1 starts fresh.
     if (path === "/rebuild") {
@@ -50,7 +58,7 @@ export default {
       return json(r, 200, cors);
     }
 
-    return json({ error: "not found", routes: ["/snapshot", "/teamstats", "/health", "/refresh", "/rebuild"] }, 404, cors);
+    return json({ error: "not found", routes: ["/snapshot", "/teamstats", "/health", "/calendar.ics", "/refresh", "/rebuild"] }, 404, cors);
   },
 
   // ---- Cron: the only consumer of the upstream API ----
@@ -116,6 +124,9 @@ async function collect(env, { reset = false, backfillLimit } = {}) {
 
     await env.WC26.put("snapshot", JSON.stringify({ updatedAt: Date.now(), live, yellowCards }));
     await env.WC26.put("agg", JSON.stringify(agg));
+    // Auto-updating knockout calendar: rebuilt every run from ESPN, so the real
+    // teams fill in as the bracket advances. Subscribers see updates for free.
+    await env.WC26.put("calendar", buildICS(events, env.WC_KO_START || "2026-06-28"));
     result.ok = true;
   } catch (e) {
     result.error = String(e && e.message ? e.message : e);
@@ -260,6 +271,52 @@ function aggregateCards(agg) {
     }
   }
   return Object.values(c).sort((a, b) => b.cards - a.cards).slice(0, 10);
+}
+
+// ---- auto-updating knockout calendar (.ics) ----
+// Built from the live ESPN scoreboard, so real teams replace "TBD" as the
+// bracket advances. Anything on/after WC_KO_START (R32) is treated as knockout.
+function icsZ(d) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T${p(d.getUTCHours())}${p(d.getUTCMinutes())}00Z`;
+}
+function icsEsc(s) { return String(s ?? "").replace(/[\\;,]/g, (m) => "\\" + m).replace(/\n/g, "\\n"); }
+
+function buildICS(events, koStart) {
+  const stamp = icsZ(new Date());
+  const out = [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//World Cup 2026//Worker//EN",
+    "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:World Cup 2026 — Knockouts",
+    "REFRESH-INTERVAL;VALUE=DURATION:PT3H", "X-PUBLISHED-TTL:PT3H",
+  ];
+  for (const ev of events || []) {
+    const date = (ev.date || "");
+    if (date.slice(0, 10) < koStart) continue; // group stage → skip
+    const start = new Date(ev.date);
+    if (isNaN(start)) continue;
+    const comp = ev.competitions?.[0] || {};
+    const cs = comp.competitors || [];
+    const home = cs.find((c) => c.homeAway === "home") || cs[0] || {};
+    const away = cs.find((c) => c.homeAway === "away") || cs[1] || {};
+    const hn = home.team?.displayName || "TBD";
+    const an = away.team?.displayName || "TBD";
+    const round = comp.notes?.[0]?.headline || ev.season?.slug || "Knockout stage";
+    const venue = comp.venue?.fullName || "";
+    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+    out.push(
+      "BEGIN:VEVENT",
+      `UID:wc2026-espn-${ev.id}@wc26-football-proxy`,
+      `DTSTAMP:${stamp}`,
+      `DTSTART:${icsZ(start)}`,
+      `DTEND:${icsZ(end)}`,
+      `SUMMARY:${icsEsc(`WC 2026 · ${round}: ${hn} vs ${an}`)}`,
+      `LOCATION:${icsEsc(venue)}`,
+      `DESCRIPTION:${icsEsc("Copa Mundial de la FIFA 2026 — se actualiza automáticamente conforme avanza el cuadro.")}`,
+      "END:VEVENT",
+    );
+  }
+  out.push("END:VCALENDAR");
+  return out.join("\r\n");
 }
 
 function json(obj, status, cors) {
