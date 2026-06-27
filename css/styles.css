@@ -935,6 +935,40 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
 .pred-note { color: var(--muted); font-size: 0.76rem; margin: 1.2rem 0 0; max-width: 80ch; line-height: 1.5; }
 @media (max-width: 560px) { .pred-grid { grid-template-columns: 1fr; } }
 
+/* ---- clickable VAR aggregate cards + incident modal ---- */
+.stat.agg.clickable { position: relative; cursor: pointer; }
+.stat.agg.clickable:hover { transform: translateY(-3px); border-color: var(--border-strong); box-shadow: var(--shadow-hover); }
+.var-list { display: grid; gap: 0.6rem; }
+.var-row { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.75rem; }
+.var-top { display: flex; justify-content: space-between; gap: 0.6rem; font-size: 0.9rem; }
+.var-min { color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+.var-reason { color: var(--muted); font-size: 0.82rem; margin-top: 0.2rem; }
+
+/* ---- qualification tables ---- */
+.q-scroll { overflow-x: auto; }
+.q-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; margin: 0.2rem 0 0.4rem; }
+.q-table th, .q-table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.q-table thead th { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.q-table .q-g, .q-thirds-t td:nth-child(4), .q-thirds-t td:nth-child(5), .q-thirds-t td:nth-child(6),
+.q-thirds-t th:nth-child(4), .q-thirds-t th:nth-child(5), .q-thirds-t th:nth-child(6) { text-align: center; font-variant-numeric: tabular-nums; }
+.q-team { display: inline-flex; align-items: center; gap: 0.4rem; }
+.q-team .flag { width: 22px; height: 15px; border-radius: 3px; object-fit: cover; flex: 0 0 auto; }
+.q-tn { font-weight: 600; }
+.q-ok { color: var(--accent); font-weight: 800; }
+.q-pp { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--muted);
+  background: var(--surface-2); border-radius: 5px; padding: 0.05rem 0.3rem; }
+.q-thirds-t .q-rk { text-align: center; font-weight: 800; color: var(--muted); }
+.q-thirds-t .q-in .q-rk { color: var(--accent); }
+.q-thirds-t .q-out { opacity: 0.55; }
+.q-thirds-t .q-cutrow td { border-bottom: 2px dashed var(--accent); }
+.q-st { font-size: 0.64rem; font-weight: 700; text-transform: uppercase; padding: 0.1rem 0.4rem; border-radius: 6px; }
+.q-st.good { color: #06210f; background: var(--accent); }
+.q-st.bad { color: var(--muted); background: var(--surface-2); border: 1px solid var(--border); }
+
+/* ---- knockout prediction extras ---- */
+.pred-ko { color: var(--live); font-weight: 700; }
+.pred-pen { color: var(--muted); font-weight: 600; }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

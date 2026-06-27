@@ -282,24 +282,35 @@ export function renderPredictions(ups, bt) {
     wrap.innerHTML = conf + `<p class="empty">${t("pred.none")}</p><p class="pred-note">${t("pred.note")}</p>`;
     return;
   }
+  const bars = (p) => p.knockout && p.advance
+    ? `<div class="pred-bar" role="img" aria-label="${pct(p.advance.home)}% vs ${pct(p.advance.away)}%">
+         <span class="pb home" style="width:${pct(p.advance.home)}%"></span>
+         <span class="pb away" style="width:${pct(p.advance.away)}%"></span>
+       </div>
+       <div class="pred-legend">
+         <span><b>${pct(p.advance.home)}%</b> ${t("pred.advance")}</span>
+         <span class="pred-pen" title="${t("pred.penNote")}">🥅 ${pct(p.penaltyProb)}% ${t("pred.pens")}</span>
+         <span><b>${pct(p.advance.away)}%</b> ${t("pred.advance")}</span>
+       </div>`
+    : `<div class="pred-bar" role="img" aria-label="${pct(p.probs.home)}% ${esc(tn(p.home))}, ${pct(p.probs.draw)}% ${t("pred.draw")}, ${pct(p.probs.away)}% ${esc(tn(p.away))}">
+         <span class="pb home" style="width:${pct(p.probs.home)}%"></span>
+         <span class="pb draw" style="width:${pct(p.probs.draw)}%"></span>
+         <span class="pb away" style="width:${pct(p.probs.away)}%"></span>
+       </div>
+       <div class="pred-legend">
+         <span><b>${pct(p.probs.home)}%</b> ${esc(tn(p.home))}</span>
+         <span><b>${pct(p.probs.draw)}%</b> ${t("pred.draw")}</span>
+         <span><b>${pct(p.probs.away)}%</b> ${esc(tn(p.away))}</span>
+       </div>`;
   const cards = ups.map(({ match: m, prediction: p }) => `
     <div class="pred-card">
-      <div class="pred-when">${esc(kickoffDateTime(m) || fmtDate(m.date))}</div>
+      <div class="pred-when">${esc(kickoffDateTime(m) || fmtDate(m.date))}${p.knockout ? ` · <span class="pred-ko">${t("pred.ko")}</span>` : ""}</div>
       <div class="pred-teams">
         <span class="pt">${flagImg(m.home.name)}<span class="ptn">${esc(tn(m.home.name))}</span></span>
         <span class="pred-score" title="${t("pred.xg")}: ${p.expHome} – ${p.expAway}">${p.scoreline}</span>
         <span class="pt right"><span class="ptn">${esc(tn(m.away.name))}</span>${flagImg(m.away.name)}</span>
       </div>
-      <div class="pred-bar" role="img" aria-label="${pct(p.probs.home)}% ${esc(tn(m.home.name))}, ${pct(p.probs.draw)}% ${t("pred.draw")}, ${pct(p.probs.away)}% ${esc(tn(m.away.name))}">
-        <span class="pb home" style="width:${pct(p.probs.home)}%"></span>
-        <span class="pb draw" style="width:${pct(p.probs.draw)}%"></span>
-        <span class="pb away" style="width:${pct(p.probs.away)}%"></span>
-      </div>
-      <div class="pred-legend">
-        <span><b>${pct(p.probs.home)}%</b> ${esc(tn(m.home.name))}</span>
-        <span><b>${pct(p.probs.draw)}%</b> ${t("pred.draw")}</span>
-        <span><b>${pct(p.probs.away)}%</b> ${esc(tn(m.away.name))}</span>
-      </div>
+      ${bars(p)}
     </div>`).join("");
   wrap.innerHTML = conf + `<div class="pred-grid">${cards}</div><p class="pred-note">${t("pred.note")}</p>`;
 }
@@ -311,21 +322,31 @@ export function renderQualification(standings) {
   if (!standings || !standings.size) { wrap.innerHTML = ""; return; }
   const q = qualification(standings);
 
-  const chip = (row, done) => row
-    ? `<span class="q-chip ${done ? "done" : "proj"}">${flagImg(row.name)}<span>${esc(tn(row.name))}</span>${done ? " ✓" : ""}</span>`
-    : "";
-  const col = (title, items) =>
-    `<div class="q-col"><h4>${title}</h4><div class="q-chips">${items.map((x) => chip(x.row, x.done)).join("")}</div></div>`;
-
-  const thirds = q.thirds.map((tr) => `
-    <div class="q-third ${tr.qualified ? "in" : "outc"}">
-      <span class="q-rk">${tr.rank}</span>${flagImg(tr.name)}
-      <span class="q-nm">${esc(tn(tr.name))}</span>
-      <span class="q-grp">${t("drill.group")} ${tr.group}</span>
-      <span class="q-pts">${tr.Pts} pts · ${tr.GD > 0 ? "+" : ""}${tr.GD}</span>
-    </div>`).join("");
-  // The cut line sits after the 8th-ranked third.
-  const thirdsHtml = thirds;
+  // Team cell: flag + translated name + ✓ (confirmed) / proy (projected).
+  const cell = (row, done) => row
+    ? `<span class="q-team">${flagImg(row.name)}<span class="q-tn">${esc(tn(row.name))}</span>${done ? `<span class="q-ok">✓</span>` : `<span class="q-pp">${t("br.proj")}</span>`}</span>`
+    : "—";
+  // Qualified table: one row per group (winner + runner-up).
+  const qualTable = `
+    <table class="q-table">
+      <thead><tr><th>${t("drill.group")}</th><th>${t("q.firsts")}</th><th>${t("q.seconds")}</th></tr></thead>
+      <tbody>${q.winners.map((w, i) => `
+        <tr><td class="q-g">${esc(w.group)}</td><td>${cell(w.row, w.done)}</td><td>${cell(q.runners[i].row, q.runners[i].done)}</td></tr>`).join("")}
+      </tbody>
+    </table>`;
+  // Best-thirds table with the cut line after the 8th.
+  const thirdsTable = `
+    <table class="q-table q-thirds-t">
+      <thead><tr><th>#</th><th>${t("st.team")}</th><th>${t("drill.group")}</th><th>PJ</th><th>Pts</th><th>DG</th><th>${t("q.thStatus")}</th></tr></thead>
+      <tbody>${q.thirds.map((tr) => `
+        <tr class="${tr.qualified ? "q-in" : "q-out"}${tr.rank === 8 ? " q-cutrow" : ""}">
+          <td class="q-rk">${tr.rank}</td>
+          <td><span class="q-team">${flagImg(tr.name)}<span class="q-tn">${esc(tn(tr.name))}</span></span></td>
+          <td>${esc(tr.group)}</td><td>${tr.P}</td><td>${tr.Pts}</td><td>${tr.GD > 0 ? "+" : ""}${tr.GD}</td>
+          <td><span class="q-st ${tr.qualified ? "good" : "bad"}">${tr.qualified ? t("q.thIn") : t("q.thOut")}</span></td>
+        </tr>`).join("")}
+      </tbody>
+    </table>`;
 
   const STAT = { in: ["q.in", "good"], live: ["q.live", "warn"], out: ["q.out", "bad"] };
   const whatif = q.groups.map(([g, rows]) => `
@@ -339,12 +360,10 @@ export function renderQualification(standings) {
 
   wrap.innerHTML = `
     <p class="q-explain" data-i18n-html="q.explain">${t("q.explain")}</p>
-    <div class="q-cols">
-      ${col(t("q.firsts"), q.winners)}
-      ${col(t("q.seconds"), q.runners)}
-    </div>
+    <div class="q-sub-head">${t("q.qualifiedTitle")}</div>
+    <div class="q-scroll">${qualTable}</div>
     <div class="q-sub-head">${t("q.thirdsTitle")} <span class="q-cut">${t("q.cut")}</span></div>
-    <div class="q-thirds">${thirdsHtml}</div>
+    <div class="q-scroll">${thirdsTable}</div>
     <details class="q-whatif">
       <summary>${t("q.whatifTitle")}</summary>
       <div class="q-wgrid">${whatif}</div>
@@ -639,10 +658,11 @@ export function renderStatsKpis(stats, matches) {
 export function renderAggregates(facts) {
   const a = facts.aggregates || {};
   const att = facts.attendanceInfo || { total: a.attendance, isEstimate: true, matches: 0 };
+  // [icon, label, value, badge, varKey] — varKey makes the card clickable.
   const items = [
     ["🚩", t("a.offsides"), a.offsides],
-    ["🚫", t("a.disallowed"), a.disallowedGoals],
-    ["✅", t("a.restored"), a.varRestoredGoals],
+    ["🚫", t("a.disallowed"), a.disallowedGoals, "", "disallowed"],
+    ["✅", t("a.restored"), a.varRestoredGoals, "", "restored"],
     ["📺", t("a.var"), a.varReviews],
     ["🎯", t("a.pens"), a.penaltiesAwarded],
     ["🟨", t("a.yellow"), a.yellowCards],
@@ -654,11 +674,12 @@ export function renderAggregates(facts) {
   ];
   const grid = document.getElementById("agg-grid");
   if (!grid) return;
-  grid.innerHTML = items.map(([icon, label, val, badge]) => `
-    <div class="stat agg">
+  grid.innerHTML = items.map(([icon, label, val, badge, varKey]) => `
+    <div class="stat agg${varKey ? " clickable" : ""}"${varKey ? ` data-var="${varKey}" role="button" tabindex="0" aria-label="${esc(label)} — ${esc(t("drill.detail"))}"` : ""}>
       <div class="agg-icon" aria-hidden="true">${icon}</div>
       <div class="num">${val == null ? "—" : fmtInt(val)}${badge ? ` <span class="est-badge">${badge}</span>` : ""}</div>
       <div class="label">${label}</div>
+      ${varKey ? `<span class="fact-go" aria-hidden="true">↗</span>` : ""}
     </div>`).join("");
 
   // Attendance integrity note.

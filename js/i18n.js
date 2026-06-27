@@ -57,8 +57,21 @@ const STR = {
   "pred.tested": ["Partidos validados", "Matches tested"],
   "pred.cf.low": ["baja", "low"], "pred.cf.lowmod": ["baja-moderada", "low-moderate"],
   "pred.cf.mod": ["moderada", "moderate"], "pred.cf.modhigh": ["moderada-alta", "moderate-high"],
-  "pred.note": ["Parámetros fijos (no ajustados al pasado, para evitar overfitting). Validación walk-forward: cada partido se predice usando solo datos previos. Con pocos partidos la confianza es baja y mejora conforme avanza el torneo. No es consejo de apuestas.",
-                "Fixed parameters (not tuned to the past, to avoid overfitting). Walk-forward validation: each match is predicted using only prior data. With few games confidence is low and improves as the tournament progresses. Not betting advice."],
+  "pred.advance": ["avanza", "advances"],
+  "pred.pens": ["penales", "shootout"],
+  "pred.ko": ["Eliminatoria · sin empate", "Knockout · no draws"],
+  "pred.penNote": ["Probabilidad de que el partido se defina en penales. La fuerza desde el manchón es a nivel selección (último año + histórico de tandas).",
+                   "Chance the tie goes to a shootout. Spot-kick strength is team-level (last year + historical shootout record)."],
+  "pred.note": ["Parámetros fijos (no ajustados al pasado, para evitar overfitting). Validación walk-forward: cada partido se predice usando solo datos previos. En eliminatorias no hay empate: la probabilidad se reparte entre prórroga y penales (fuerza desde el manchón por selección). Con pocos partidos la confianza es baja y mejora conforme avanza el torneo. No es consejo de apuestas.",
+                "Fixed parameters (not tuned to the past, to avoid overfitting). Walk-forward validation: each match is predicted using only prior data. In knockouts there are no draws — the probability is split between extra time and penalties (team-level spot-kick strength). With few games confidence is low and improves as the tournament progresses. Not betting advice."],
+  // VAR incident detail
+  "a.varNote": ["Incidencias destacadas (ilustrativas; no hay un feed público con el desglose por jugada).",
+                "Notable incidents (illustrative; there's no public feed with the play-by-play breakdown)."],
+  // qualification tables
+  "q.qualifiedTitle": ["Clasificados por grupo (proyección hoy)", "Qualified by group (today's projection)"],
+  "q.thStatus": ["Estado", "Status"],
+  "q.thIn": ["Clasifica", "Qualifies"],
+  "q.thOut": ["Fuera", "Out"],
 
   // hero
   "hero.title": ["La 23.ª Copa Mundial de la FIFA", "The 23rd FIFA World Cup"],

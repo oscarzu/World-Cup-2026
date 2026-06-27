@@ -25,6 +25,24 @@ export const ELO = {
 const DEFAULT_ELO = 1600;
 const HOSTS = new Set(["Mexico", "USA", "Canada"]); // mild home edge in group stage
 
+// Penalty-shootout strength (0–1). Team-level rating informed by the last ~year
+// of penalty conversion plus historical shootout record (per-player taker data
+// isn't available in our pipeline, so this is a squad-level proxy — see
+// model.html). Higher = better from the spot.
+export const PEN = {
+  Argentina: 0.74, Croatia: 0.78, Germany: 0.72, Brazil: 0.60, France: 0.66,
+  Netherlands: 0.66, Spain: 0.50, England: 0.62, Portugal: 0.64, Uruguay: 0.66,
+  Colombia: 0.58, Morocco: 0.70, Switzerland: 0.56, USA: 0.56, Mexico: 0.52,
+  Japan: 0.50, Senegal: 0.62, Ecuador: 0.56, "South Korea": 0.55, Iran: 0.58,
+  Austria: 0.58, Sweden: 0.62, Norway: 0.60, Egypt: 0.66, Australia: 0.62,
+  Canada: 0.54, Scotland: 0.55, Tunisia: 0.55, Algeria: 0.58, Qatar: 0.55,
+  "Saudi Arabia": 0.54, Paraguay: 0.60, Panama: 0.55, Ghana: 0.46, "Ivory Coast": 0.60,
+  "South Africa": 0.55, "Cape Verde": 0.55, Jordan: 0.52, Iraq: 0.54, Uzbekistan: 0.55,
+  "DR Congo": 0.58, "New Zealand": 0.52, Haiti: 0.50, "Curaçao": 0.52,
+  "Bosnia & Herzegovina": 0.58, "Czech Republic": 0.60, Turkey: 0.58,
+};
+const DEFAULT_PEN = 0.55;
+
 const K_SHRINK = 5;      // pseudo-games of prior (regularization strength)
 const HOME_ADV = 1.12;   // host home-field multiplier on expected goals
 const DC_RHO = -0.06;    // Dixon–Coles low-score dependency (lifts draws / 1-0 / 0-1)
@@ -85,10 +103,13 @@ export function buildModel(matches, { priorOnly = false } = {}) {
 }
 
 // Predict one fixture → probabilities, most-likely scoreline, expected goals.
-export function predict(home, away, model) {
+// In knockout ties there are no draws: the 90' draw mass resolves in extra time
+// (proportional to attacking strength) and penalties (team shootout rating), so
+// we also return who ADVANCES and the chance it goes to a shootout.
+export function predict(home, away, model, { knockout = false } = {}) {
   const rh = model.ratings.get(home), ra = model.ratings.get(away);
   if (!rh || !ra) return null;
-  const homeAdv = HOSTS.has(home) ? HOME_ADV : 1;
+  const homeAdv = !knockout && HOSTS.has(home) ? HOME_ADV : 1;
   const lh = clamp(rh.att * (ra.def / model.MU) * homeAdv, 0.15, 5.5);
   const la = clamp(ra.att * (rh.def / model.MU), 0.15, 5.5);
 
@@ -101,13 +122,30 @@ export function predict(home, away, model) {
     }
   }
   const Z = pH + pD + pA;
-  return {
+  const out = {
     home, away,
     expHome: round2(lh), expAway: round2(la),
     probs: { home: pH / Z, draw: pD / Z, away: pA / Z },
     scoreline: `${best.i}–${best.j}`,
     confidence: Math.max(pH, pD, pA) / Z,
+    knockout,
   };
+  if (!knockout) return out;
+
+  // No draws: split the draw mass between extra time (by attacking edge) and
+  // penalties (by shootout rating). ~55% of level games are decided in ET.
+  const drawP = pD / Z;
+  const etShare = 0.55, penShare = 0.45;
+  const etHome = lh / (lh + la);                       // ET: stronger attack tends to score
+  const penH = PEN[home] ?? DEFAULT_PEN, penA = PEN[away] ?? DEFAULT_PEN;
+  const shootHome = penH / (penH + penA);              // P(home wins a shootout)
+  const advHome = pH / Z + drawP * (etShare * etHome + penShare * shootHome);
+  const advAway = pA / Z + drawP * (etShare * (1 - etHome) + penShare * (1 - shootHome));
+  const s = advHome + advAway || 1;
+  out.advance = { home: advHome / s, away: advAway / s };
+  out.penaltyProb = drawP * penShare;                  // chance it reaches a shootout
+  out.shootout = { home: round2(shootHome), away: round2(1 - shootHome) };
+  return out;
 }
 
 // A fixture is "confirmed" for prediction when both sides are real teams
@@ -117,7 +155,7 @@ export function upcomingPredictions(matches, model, limit = 16) {
     .filter((m) => m.status === "scheduled" && model.ratings.has(m.home?.name) && model.ratings.has(m.away?.name))
     .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
     .slice(0, limit)
-    .map((m) => ({ match: m, prediction: predict(m.home.name, m.away.name, model) }))
+    .map((m) => ({ match: m, prediction: predict(m.home.name, m.away.name, model, { knockout: m.stage === "knockout" }) }))
     .filter((x) => x.prediction);
 }
 
