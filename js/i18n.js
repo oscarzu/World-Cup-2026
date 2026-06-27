@@ -295,7 +295,14 @@ const STR = {
   "br.tbdNote": ["Por definir según resultados", "To be decided by results"],
 
   // chart drill-down
-  "drill.hint": ["Toca una barra (o «Ver detalle») para profundizar ↗", "Tap a bar (or “See detail”) to drill down ↗"],
+  "drill.hint": ["Toca una barra para ver el detalle ↗", "Tap a bar to see the detail ↗"],
+  "cal.subTitle": ["Suscríbete al calendario", "Subscribe to the calendar"],
+  "cal.subBody": ["Se actualiza solo conforme avanzan las eliminatorias. Copia esta URL en tu app de calendario (Suscribirse por URL) o usa los botones:",
+                  "Auto-updates as the knockouts advance. Copy this URL into your calendar app (Subscribe by URL) or use the buttons:"],
+  "cal.copy": ["Copiar URL", "Copy URL"],
+  "cal.copied": ["¡Copiada!", "Copied!"],
+  "cal.gcal": ["Google Calendar", "Google Calendar"],
+  "cal.apple": ["Apple / Outlook (webcal)", "Apple / Outlook (webcal)"],
   "drill.detail": ["Ver detalle", "See detail"],
   "drill.pick": ["Elige una para ver su detalle:", "Pick one to see its detail:"],
   "drill.close": ["Cerrar", "Close"],

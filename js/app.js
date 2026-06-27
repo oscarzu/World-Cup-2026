@@ -68,6 +68,7 @@ function activateTab(btn, { updateHash = true } = {}) {
   if (updateHash && location.hash.slice(1) !== id) history.replaceState(null, "", `#${id}`);
   if (id === "stats" || id === "overview") renderCharts();
   if (id === "live") { UI.renderSocial(); UI.renderSocialArchive(state.matches, state.social); }
+  if (id === "matches") setTimeout(() => UI.scrollMatchesToToday(), 60); // jump to today's fixtures
 }
 
 function initTabs() {
@@ -283,15 +284,32 @@ function initCalendar() {
     const ics = buildKnockoutICS(state.matches, computeStandings(state.matches));
     downloadICS(ics);
   });
-  // Subscribe to the Worker feed (webcal) — auto-updates teams as the bracket
-  // advances. Hidden if no live proxy is configured.
+  // Subscribe to the Worker feed — auto-updates teams as the bracket advances.
+  // A modal with copy + platform links is more reliable than navigating to a
+  // webcal:// URL (which errors in browsers without a handler).
   const sub = $("#sub-calendar");
   if (sub) {
     const base = (CONFIG.LIVE_PROXY_URL || "").trim();
     if (!base) { sub.hidden = true; }
     else {
-      const webcal = base.replace(/^https?:/, "webcal:").replace(/\/+$/, "") + "/calendar.ics";
-      sub.addEventListener("click", () => { window.location.href = webcal; });
+      const httpsUrl = base.replace(/\/+$/, "") + "/calendar.ics";
+      const webcal = httpsUrl.replace(/^https?:/, "webcal:");
+      const gcal = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(webcal);
+      sub.addEventListener("click", () => {
+        UI.openInfoModal({
+          title: t("cal.subTitle"),
+          html: `<p class="modal-sub">${t("cal.subBody")}</p>
+            <input class="cal-url" type="text" readonly value="${httpsUrl}" onclick="this.select()" />
+            <div class="cal-links">
+              <button type="button" id="cal-copy" class="btn-cal">${t("cal.copy")}</button>
+              <a class="btn-cal" href="${gcal}" target="_blank" rel="noopener">${t("cal.gcal")}</a>
+              <a class="btn-cal" href="${webcal}">${t("cal.apple")}</a>
+            </div>`,
+        });
+        document.getElementById("cal-copy")?.addEventListener("click", async (e) => {
+          try { await navigator.clipboard.writeText(httpsUrl); e.target.textContent = t("cal.copied"); } catch (_) {}
+        });
+      });
     }
   }
 }

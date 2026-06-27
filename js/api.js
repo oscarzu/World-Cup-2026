@@ -38,7 +38,9 @@ async function cachedFetch(url, ttl) {
 
 export function flagUrl(team) {
   const code = FLAGS[team];
-  return code ? `https://flagcdn.com/${code}.svg` : null;
+  // Raster PNG (w80) instead of SVG: more reliable across mobile browsers,
+  // some of which fail to render flagcdn SVGs.
+  return code ? `https://flagcdn.com/w80/${code}.png` : null;
 }
 
 // Parse "13:00 UTC-6" + "2026-06-11" into an absolute Date (UTC) for kickoff.
