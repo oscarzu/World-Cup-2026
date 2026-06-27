@@ -394,6 +394,9 @@ function resolveSlot(code, ctx) {
     if (w) return { name: tn(w), flagTeam: w, proj: true };
     return { name: `${t("br.winner")} #${m[1]}`, placeholder: true };
   }
+  // The slot is already a real team (the base data fills teams in as the bracket
+  // is drawn): show it translated + with its flag, as a confirmed qualifier.
+  if (flagUrl(code)) return { name: tn(code), flagTeam: code };
   return { name: code, placeholder: true };
 }
 
