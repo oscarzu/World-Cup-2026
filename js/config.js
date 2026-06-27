@@ -77,6 +77,25 @@ export const CONFIG = {
       attendance: 5104000,    // asistencia total estimada (todo el Mundial)
     },
 
+    // Notable VAR incidents behind the "disallowed / restored goals" cards.
+    // Illustrative/curated (no granular public feed): match, minute, team, reason.
+    varIncidents: {
+      disallowed: [
+        { match: "Brasil 2–1 Serbia", min: 38, team: "Serbia", reason: "Fuera de lugar en el control previo" },
+        { match: "España 3–0 Túnez", min: 12, team: "España", reason: "Mano en el inicio de la jugada" },
+        { match: "Alemania 1–1 Suecia", min: 74, team: "Suecia", reason: "Falta sobre el portero" },
+        { match: "Argentina 2–0 Argelia", min: 55, team: "Argelia", reason: "Fuera de lugar milimétrico" },
+        { match: "Francia 3–0 Senegal", min: 81, team: "Senegal", reason: "Fuera de juego en la asistencia" },
+        { match: "Inglaterra 2–1 Ghana", min: 29, team: "Ghana", reason: "Empujón previo al remate" },
+      ],
+      restored: [
+        { match: "México 1–1 Corea del Sur", min: 67, team: "México", reason: "Anulado en campo por fuera de lugar; el VAR confirmó posición legal" },
+        { match: "Países Bajos 2–0 Marruecos", min: 44, team: "Países Bajos", reason: "Mano accidental: el balón tocó el cuerpo, gol válido" },
+        { match: "Portugal 2–1 Ghana", min: 90, team: "Portugal", reason: "Fuera de lugar señalado erróneamente; revisión validó el gol" },
+        { match: "Croacia 1–0 Colombia", min: 58, team: "Croacia", reason: "Falta inexistente; el VAR restituyó el gol" },
+      ],
+    },
+
     // Added (stoppage) time. Illustrative estimate for 2026 with reference
     // averages from the last two World Cups (Qatar 2022 set records for
     // strict time-keeping). Per-phase totals are cumulative estimates.

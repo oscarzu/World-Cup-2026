@@ -163,13 +163,29 @@ function initDrill() {
     if (item) { dispatchDrill(item.dataset.chart, item.dataset.key); return; }
     // Clickable fact cards → which matches/teams.
     const card = e.target.closest(".fact[data-fact]");
-    if (card) drillFact(card.dataset.fact);
+    if (card) { drillFact(card.dataset.fact); return; }
+    // VAR aggregate cards → the incidents behind the number.
+    const varCard = e.target.closest(".stat.agg[data-var]");
+    if (varCard) drillVar(varCard.dataset.var);
   });
-  // Keyboard activation for fact cards (Enter/Space).
+  // Keyboard activation (Enter/Space) for fact + VAR cards.
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" && e.key !== " ") return;
-    const card = e.target.closest && e.target.closest(".fact[data-fact]");
-    if (card) { e.preventDefault(); drillFact(card.dataset.fact); }
+    const fc = e.target.closest && e.target.closest(".fact[data-fact]");
+    if (fc) { e.preventDefault(); drillFact(fc.dataset.fact); return; }
+    const vc = e.target.closest && e.target.closest(".stat.agg[data-var]");
+    if (vc) { e.preventDefault(); drillVar(vc.dataset.var); }
+  });
+}
+function drillVar(kind) {
+  const inc = (CONFIG.TOURNAMENT.varIncidents || {})[kind] || [];
+  const title = t(kind === "restored" ? "a.restored" : "a.disallowed");
+  const rows = inc.map((x) =>
+    `<div class="var-row"><div class="var-top"><b>${x.match}</b><span class="var-min">${x.min}'</span></div>
+       <div class="var-reason">🎯 ${x.team} · ${x.reason}</div></div>`).join("");
+  UI.openInfoModal({
+    title,
+    html: `<p class="modal-sub">${t("a.varNote")}</p><div class="var-list">${rows || `<p class="empty">${t("drill.noData")}</p>`}</div>`,
   });
 }
 function matchesForTeam(name) {

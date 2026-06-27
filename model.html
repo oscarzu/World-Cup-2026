@@ -45,6 +45,13 @@
         (anti-overfitting). Parámetros fijos, sin ajuste por partido: ventaja local de anfitrión
         <code>×1.12</code>, <code>ρ = −0.06</code>, k = 5. Marcador más probable = argmax de la matriz de
         marcadores; probabilidades = suma de la matriz por resultado.</p>
+      <p><strong>Eliminatorias (sin empate):</strong> en fase final no hay empate, así que la masa de
+        probabilidad del empate a 90' se reparte entre <em>prórroga</em> (≈55%, por ventaja ofensiva) y
+        <em>penales</em> (≈45%, por fuerza desde el manchón). De ahí salen las probabilidades de “avanza” y
+        la probabilidad de que el partido llegue a tanda. La <strong>fuerza en penales es a nivel selección</strong>
+        (rating <code>PEN</code> informado por la conversión del último año más el histórico de tandas):
+        <strong>no</strong> usamos datos por jugador porque no hay un feed público de cobradores en nuestro
+        pipeline; sería inventar cifras. Es la aproximación honesta posible.</p>
     </div>
 
     <h2>2. Validación walk-forward (sin fuga de datos)</h2>
