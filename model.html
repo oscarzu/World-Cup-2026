@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>WC 2026 · Modelo de predicción — datos</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+  <style>
+    main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.2rem 5rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.4rem; }
+    h2 { font-size: 1.05rem; margin: 2rem 0 0.6rem; }
+    p.lead, .doc p { color: var(--muted); line-height: 1.6; max-width: 80ch; }
+    table.m { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-top: 0.5rem; }
+    table.m th, table.m td { text-align: right; padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    table.m th:first-child, table.m td:first-child { text-align: left; }
+    table.m thead th { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .kpis { display: flex; flex-wrap: wrap; gap: 1.4rem; margin: 0.6rem 0 0.2rem; }
+    .kpis div span { display: block; }
+    .kpis .k { font-size: 0.72rem; color: var(--muted); }
+    .kpis .v { font-size: 1.3rem; font-weight: 800; }
+    code { background: var(--surface-2); padding: 0.1rem 0.35rem; border-radius: 5px; }
+    .scroll { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <main class="doc">
+    <h1>World Cup 2026 — Modelo de predicción · página de datos</h1>
+    <p class="lead">Página interna de referencia (no enlazada desde el sitio, <code>noindex</code>). Contiene
+      toda la salida del modelo para auditarlo: metodología, prior Elo, ratings calculados, validación
+      histórica y todas las predicciones. <strong>No es consejo de apuestas.</strong></p>
+
+    <h2>1. Metodología</h2>
+    <div class="doc">
+      <p>Goles modelados como dos <strong>Poisson</strong> independientes con corrección
+        <strong>Dixon–Coles</strong> para marcadores bajos (sube empates y 1-0 / 0-1, que el Poisson puro
+        subestima). Cada selección tiene un rating de <em>ataque</em> y de <em>defensa</em> que mezcla:</p>
+      <ul class="doc">
+        <li><strong>Prior pre-torneo</strong> derivado de Elo aproximado (“datos pasados”): evita que con
+          1-2 partidos el modelo se vuelva loco.</li>
+        <li><strong>Forma actual</strong>: goles a favor/en contra en el torneo.</li>
+      </ul>
+      <p>La mezcla usa <strong>shrinkage</strong> (un pseudo-conteo de <code>k=5</code> “partidos” de prior),
+        así que con pocos juegos reales domina el prior y el modelo <strong>no puede sobreajustarse al ruido</strong>
+        (anti-overfitting). Parámetros fijos, sin ajuste por partido: ventaja local de anfitrión
+        <code>×1.12</code>, <code>ρ = −0.06</code>, k = 5. Marcador más probable = argmax de la matriz de
+        marcadores; probabilidades = suma de la matriz por resultado.</p>
+    </div>
+
+    <h2>2. Validación walk-forward (sin fuga de datos)</h2>
+    <div class="doc">
+      <p>Cada partido jugado se predice usando <strong>solo los partidos anteriores</strong> a él
+        (orden cronológico). Es lo que realmente se podía saber al inicio de cada juego — la forma honesta de
+        medir, que evita el autoengaño de medir “en muestra”. Métricas propias: <em>RPS</em> (ranked
+        probability score, menor = mejor), <em>Brier</em>, <em>log-loss</em>, y aciertos de resultado, todo
+        comparado contra líneas base ingenuas (azar 1/3 y “gana local”).</p>
+      <div id="bt"></div>
+    </div>
+
+    <h2>3. Predicciones de los próximos partidos confirmados</h2>
+    <div class="scroll"><div id="preds"></div></div>
+
+    <h2>4. Ratings calculados (ataque / defensa)</h2>
+    <div class="scroll"><div id="ratings"></div></div>
+
+    <h2>5. Prior Elo (pre-torneo, aproximado)</h2>
+    <div class="scroll"><div id="elo"></div></div>
+  </main>
+
+  <script type="module">
+    import { loadBase } from "./js/api.js";
+    import { buildModel, upcomingPredictions, backtest, ELO } from "./js/predictions.js";
+
+    const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const pct = (x) => Math.round(x * 100);
+    const table = (headers, rows) =>
+      `<table class="m"><thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>` +
+      `<tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+
+    try {
+      const { matches } = await loadBase();
+      const model = buildModel(matches);
+      const bt = backtest(matches);
+      const preds = upcomingPredictions(matches, model, 500);
+
+      document.getElementById("bt").innerHTML = `
+        <div class="kpis">
+          <div><span class="k">Confianza</span><span class="v">${bt.confidence}</span></div>
+          <div><span class="k">Partidos validados</span><span class="v">${bt.n}</span></div>
+          <div><span class="k">Aciertos</span><span class="v">${pct(bt.accuracy)}%</span></div>
+          <div><span class="k">RPS (modelo)</span><span class="v">${bt.rps}</span></div>
+          <div><span class="k">RPS (azar)</span><span class="v">${bt.baselineRps}</span></div>
+          <div><span class="k">Skill vs azar</span><span class="v">${pct(bt.skillVsUniform)}%</span></div>
+        </div>
+        <p style="color:var(--muted);font-size:.84rem;margin-top:.6rem">
+          Marcador exacto acertado: ${pct(bt.exactScore)}% · Brier: ${bt.brier} · log-loss: ${bt.logloss} ·
+          baseline “gana local”: ${pct(bt.baselineAccuracy)}% aciertos.
+          ${bt.skillVsUniform <= 0 ? "El skill ≤ 0 indica que, con esta muestra, el modelo aún no supera al azar — esperado con pocos partidos y alta varianza inicial; mejora al acumular juegos." : ""}
+        </p>`;
+
+      document.getElementById("preds").innerHTML = table(
+        ["Fecha", "Local", "Marcador", "Visitante", "P(L)", "P(E)", "P(V)", "xG L", "xG V"],
+        preds.map(({ match: m, prediction: p }) => [
+          esc(m.date), esc(m.home.name), `<b>${p.scoreline}</b>`, esc(m.away.name),
+          pct(p.probs.home) + "%", pct(p.probs.draw) + "%", pct(p.probs.away) + "%", p.expHome, p.expAway,
+        ])
+      ) || "<p>Sin partidos próximos.</p>";
+
+      const ratings = [...model.ratings.values()].sort((a, b) => b.att - b.def - (a.att - a.def));
+      document.getElementById("ratings").innerHTML = table(
+        ["Selección", "Elo", "Partidos", "Ataque (λ a favor)", "Defensa (λ en contra)"],
+        ratings.map((r) => [esc(r.name), r.elo, r.games, r.att, r.def])
+      ) + `<p style="color:var(--muted);font-size:.8rem">MU (media de goles/equipo): ${model.MU} · Elo medio del campo: ${model.avgElo}</p>`;
+
+      document.getElementById("elo").innerHTML = table(
+        ["Selección", "Elo prior"],
+        Object.entries(ELO).sort((a, b) => b[1] - a[1]).map(([k, v]) => [esc(k), v])
+      );
+    } catch (e) {
+      document.getElementById("bt").textContent = "Error cargando datos: " + e.message;
+    }
+  </script>
+</body>
+</html>

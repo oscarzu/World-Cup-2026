@@ -9,6 +9,7 @@ import { computeFacts } from "./facts.js";
 import { computeDiscipline } from "./discipline.js";
 import { renderCharts, rethemeCharts } from "./charts.js";
 import { buildKnockoutICS, downloadICS } from "./calendar.js";
+import { buildModel, upcomingPredictions, backtest } from "./predictions.js";
 import * as AF from "./apifootball.js";
 import * as UI from "./render.js";
 
@@ -341,6 +342,8 @@ function renderAll() {
   UI.renderStandings(standings);
   UI.renderBracket(state.matches, standings);
   UI.renderQualification(standings);
+  const model = buildModel(state.matches);
+  UI.renderPredictions(upcomingPredictions(state.matches, model, 16), backtest(state.matches));
   // Rank is assigned on the full FIFA-ordered table so it's preserved when the
   // list is filtered by search.
   state._scorers = computeScorers(state.matches).map((s, i) => ({ ...s, rank: i + 1 }));

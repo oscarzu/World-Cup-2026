@@ -39,7 +39,26 @@ const STR = {
   "tab.standings": ["Grupos", "Groups"],
   "tab.bracket": ["Eliminatorias", "Knockouts"],
   "tab.scorers": ["Goleadores", "Scorers"],
+  "tab.predict": ["Predicciones", "Predictions"],
   "tab.venues": ["Sedes", "Venues"],
+
+  // predictions
+  "pred.kicker": ["Modelo predictivo", "Predictive model"],
+  "pred.title": ["Probabilidades de los próximos partidos", "Odds for the upcoming matches"],
+  "pred.sub": ["Modelo Poisson con prior Elo y forma actual: marcador más probable y probabilidad de cada resultado.",
+               "Poisson model with an Elo prior and current form: most-likely score and outcome probabilities."],
+  "pred.draw": ["Empate", "Draw"],
+  "pred.xg": ["Goles esperados", "Expected goals"],
+  "pred.none": ["Aún no hay partidos confirmados próximos para predecir.", "No confirmed upcoming matches to predict yet."],
+  "pred.confTitle": ["Confianza del modelo", "Model confidence"],
+  "pred.acc": ["Aciertos de resultado", "Outcome accuracy"],
+  "pred.rps": ["RPS (menor = mejor)", "RPS (lower = better)"],
+  "pred.vs": ["azar", "random"],
+  "pred.tested": ["Partidos validados", "Matches tested"],
+  "pred.cf.low": ["baja", "low"], "pred.cf.lowmod": ["baja-moderada", "low-moderate"],
+  "pred.cf.mod": ["moderada", "moderate"], "pred.cf.modhigh": ["moderada-alta", "moderate-high"],
+  "pred.note": ["Parámetros fijos (no ajustados al pasado, para evitar overfitting). Validación walk-forward: cada partido se predice usando solo datos previos. Con pocos partidos la confianza es baja y mejora conforme avanza el torneo. No es consejo de apuestas.",
+                "Fixed parameters (not tuned to the past, to avoid overfitting). Walk-forward validation: each match is predicted using only prior data. With few games confidence is low and improves as the tournament progresses. Not betting advice."],
 
   // hero
   "hero.title": ["La 23.ª Copa Mundial de la FIFA", "The 23rd FIFA World Cup"],
