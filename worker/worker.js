@@ -40,7 +40,9 @@ export default {
       const lastResult = JSON.parse((await env.WC26.get("lastResult")) || "null");
       return json({ ok: true, source: "espn",
         capturedMatches: Object.keys(agg.fixtures || {}).length,
-        snapshotUpdatedAt: snap.updatedAt || null, lastResult }, 200, cors);
+        liveNow: (snap.live || []).length,
+        snapshotUpdatedAt: snap.updatedAt || null,
+        hasCalendar: !!(await env.WC26.get("calendar")), lastResult }, 200, cors);
     }
     if (path === "/calendar.ics") {
       let ics = await env.WC26.get("calendar");
@@ -90,6 +92,7 @@ async function collect(env, { reset = false, backfillLimit } = {}) {
     result.totalPlayed = events.filter((e) => ["in", "post"].includes(e.status?.type?.state)).length;
 
     const agg = reset ? { fixtures: {} } : JSON.parse((await env.WC26.get("agg")) || '{"fixtures":{}}');
+    const aggBefore = JSON.stringify(agg.fixtures); // for change-detection (KV put budget)
     const live = [];
 
     // 1) Live matches: enrich up to ENRICH, always list them.
@@ -117,22 +120,45 @@ async function collect(env, { reset = false, backfillLimit } = {}) {
       result.backfilled++;
     }
 
-    agg.updatedAt = Date.now();
     result.captured = Object.keys(agg.fixtures).length;
     const yellowCards = aggregateCards(agg);
     result.yellowCards = yellowCards.length;
 
-    await env.WC26.put("snapshot", JSON.stringify({ updatedAt: Date.now(), live, yellowCards }));
-    await env.WC26.put("agg", JSON.stringify(agg));
-    // Auto-updating knockout calendar: rebuilt every run from ESPN, so the real
-    // teams fill in as the bracket advances. Subscribers see updates for free.
-    await env.WC26.put("calendar", buildICS(events, env.WC_KO_START || "2026-06-28"));
+    // ---- write to KV ONLY when content changed (free tier = 1000 puts/day) ----
+    // Compare meaningful content (ignore timestamps). When no match is live and
+    // nothing was captured, this writes nothing, so idle hours cost 0 puts.
+    let wrote = 0;
+    const prevSnap = JSON.parse((await env.WC26.get("snapshot")) || "null");
+    // Key the write on the ESSENTIALS only (score, goals, status) — not the
+    // clock or live stat ticks — so a goal triggers a write but routine ticking
+    // doesn't. Keeps idle/quiet periods at 0 puts (free tier = 1000/day).
+    const essence = (arr) => (arr || []).map((m) => ({ id: m.id, s: m.score, g: m.goals, st: m.status }));
+    const snapContent = JSON.stringify({ live: essence(live), yc: yellowCards.length });
+    const prevContent = prevSnap ? JSON.stringify({ live: essence(prevSnap.live), yc: (prevSnap.yellowCards || []).length }) : "";
+    if (snapContent !== prevContent) {
+      await env.WC26.put("snapshot", JSON.stringify({ updatedAt: Date.now(), live, yellowCards }));
+      wrote++;
+    }
+    if (JSON.stringify(agg.fixtures) !== aggBefore) {
+      agg.updatedAt = Date.now();
+      await env.WC26.put("agg", JSON.stringify(agg));
+      wrote++;
+    }
+    // Knockout calendar: rebuild from ESPN, store only when it actually changed
+    // (real teams replacing TBD as the bracket advances).
+    const ics = buildICS(events, env.WC_KO_START || "2026-06-28");
+    if (ics !== (await env.WC26.get("calendar"))) { await env.WC26.put("calendar", ics); wrote++; }
+    result.wrote = wrote;
     result.ok = true;
   } catch (e) {
     result.error = String(e && e.message ? e.message : e);
   } finally {
     result.calls = calls;
-    await env.WC26.put("lastResult", JSON.stringify({ ...result, at: Date.now() }));
+    // Record lastResult only when a write happened or on error — never on quiet
+    // idle runs (keeps KV puts minimal).
+    if (result.wrote > 0 || result.error) {
+      await env.WC26.put("lastResult", JSON.stringify({ ...result, at: Date.now() }));
+    }
   }
   return result;
 }
