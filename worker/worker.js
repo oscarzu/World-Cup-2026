@@ -309,7 +309,10 @@ function icsZ(d) {
 function icsEsc(s) { return String(s ?? "").replace(/[\\;,]/g, (m) => "\\" + m).replace(/\n/g, "\\n"); }
 
 function buildICS(events, koStart) {
-  const stamp = icsZ(new Date());
+  // Fixed stamp so the .ics only changes when the FIXTURES change (teams, dates,
+  // venues) — not every run. Keeps KV writes near zero (a per-run DTSTAMP would
+  // make the calendar look "changed" every cron and burn the put budget).
+  const stamp = "20260101T000000Z";
   const out = [
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//World Cup 2026//Worker//EN",
     "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:World Cup 2026 — Knockouts",
