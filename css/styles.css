@@ -264,7 +264,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
 .match-list { display: grid; gap: 0.65rem; }
 .match-list.compact .match { padding: 0.75rem 0.95rem; }
 .day-sep { color: var(--muted); font-size: 0.76rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.06em; margin: 1rem 0 0.3rem; }
+  text-transform: uppercase; letter-spacing: 0.06em; margin: 1rem 0 0.3rem; scroll-margin-top: 130px; }
 
 .match {
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.6rem;
@@ -900,6 +900,10 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
 .cal-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
 .cal-actions .btn-cal { margin-top: 0; }
 .btn-cal.alt { background: var(--accent-soft); border-color: var(--accent); }
+.modal-body .cal-url { width: 100%; margin: 0.4rem 0 0.9rem; padding: 0.6rem 0.7rem; font-size: 0.82rem;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); color: var(--text); }
+.cal-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.cal-links .btn-cal { text-decoration: none; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

@@ -191,10 +191,20 @@ export function renderMatches(matches) {
   const ordered = [...matches].sort(byKickoff); // chronological
   let html = "", lastDay = "";
   for (const m of ordered) {
-    if (m.date !== lastDay) { html += `<div class="day-sep">${fmtDate(m.date)} — ${esc(roundLabel(m.round))}</div>`; lastDay = m.date; }
+    if (m.date !== lastDay) { html += `<div class="day-sep" data-date="${esc(m.date)}">${fmtDate(m.date)} — ${esc(roundLabel(m.round))}</div>`; lastDay = m.date; }
     html += matchCard(m);
   }
   wrap.innerHTML = html;
+}
+
+// Position the matches list at today's date (or the next upcoming day).
+export function scrollMatchesToToday() {
+  const wrap = $("#match-list");
+  if (!wrap) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const seps = [...wrap.querySelectorAll(".day-sep")];
+  const target = seps.find((s) => (s.dataset.date || "") >= today) || seps[seps.length - 1];
+  target?.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
 // Team name in the active language (used by the search to match what's shown).
@@ -215,9 +225,15 @@ export function renderMatchStatus({ count, query, round }) {
     <button type="button" class="status-clear" data-clear>${esc(t("search.clear"))} ✕</button>`;
 }
 
+const KO_ORDER = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Match for third place", "Final"];
 export function fillMatchFilter(matches) {
   const sel = $("#match-filter");
-  const rounds = [...new Set(matches.map((m) => m.round))];
+  const rounds = [...new Set(matches.map((m) => m.round))].sort((a, b) => {
+    const ma = RE_MATCHDAY.exec(a), mb = RE_MATCHDAY.exec(b);
+    if (ma && mb) return Number(ma[1]) - Number(mb[1]); // matchdays in numeric order
+    if (ma) return -1; if (mb) return 1;                // group stage before knockouts
+    return KO_ORDER.indexOf(a) - KO_ORDER.indexOf(b);   // knockouts in bracket order
+  });
   sel.innerHTML = `<option value="">${t("matches.allRounds")}</option>` +
     rounds.map((r) => `<option value="${esc(r)}">${esc(roundLabel(r))}</option>`).join("");
 }
@@ -777,6 +793,30 @@ export function renderDiscipline(disc) {
         </div>`).join("")
       : `<p class="archive-empty">${t("empty.noResults")}</p>`;
   }
+}
+
+// ---- generic info modal (custom HTML body) ----
+export function openInfoModal({ title, html }) {
+  closeModal();
+  modalReturnFocus = document.activeElement;
+  const ov = document.createElement("div");
+  ov.id = "drill-modal";
+  ov.className = "modal-overlay";
+  ov.setAttribute("role", "dialog");
+  ov.setAttribute("aria-modal", "true");
+  ov.setAttribute("aria-labelledby", "modal-title");
+  ov.innerHTML = `
+    <div class="modal-card" role="document">
+      <button class="modal-x" aria-label="${esc(t("drill.close"))}">✕</button>
+      <div class="modal-head"><div><h3 id="modal-title">${esc(title)}</h3></div></div>
+      <div class="modal-body">${html}</div>
+    </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector(".modal-x").addEventListener("click", closeModal);
+  ov.addEventListener("click", (e) => { if (e.target === ov) closeModal(); });
+  document.addEventListener("keydown", modalKeys);
+  ov.querySelector(".modal-x").focus();
+  return ov;
 }
 
 // ---- drill-down modal (tap a chart bar → detail) ----
