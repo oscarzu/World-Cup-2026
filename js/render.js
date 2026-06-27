@@ -261,6 +261,49 @@ export function renderStandings(groupsMap) {
     </div>`).join("");
 }
 
+// ---- match predictions (Poisson + Elo prior) ----
+export function renderPredictions(ups, bt) {
+  const wrap = $("#predictions");
+  if (!wrap) return;
+  const pct = (x) => Math.round(x * 100);
+  const CF = { low: "pred.cf.low", lowmod: "pred.cf.lowmod", mod: "pred.cf.mod", modhigh: "pred.cf.modhigh" };
+
+  const conf = bt ? `
+    <div class="pred-conf">
+      <div class="pc-head">${t("pred.confTitle")}: <b class="pc-level cf-${bt.confidence}">${t(CF[bt.confidence] || "pred.cf.low")}</b></div>
+      <div class="pc-stats">
+        <div><span class="pc-k">${t("pred.acc")}</span><span class="pc-v">${pct(bt.accuracy)}%</span></div>
+        <div><span class="pc-k">${t("pred.rps")}</span><span class="pc-v">${bt.rps} <small>(${t("pred.vs")} ${bt.baselineRps})</small></span></div>
+        <div><span class="pc-k">${t("pred.tested")}</span><span class="pc-v">${bt.n}</span></div>
+      </div>
+    </div>` : "";
+
+  if (!ups || !ups.length) {
+    wrap.innerHTML = conf + `<p class="empty">${t("pred.none")}</p><p class="pred-note">${t("pred.note")}</p>`;
+    return;
+  }
+  const cards = ups.map(({ match: m, prediction: p }) => `
+    <div class="pred-card">
+      <div class="pred-when">${esc(kickoffDateTime(m) || fmtDate(m.date))}</div>
+      <div class="pred-teams">
+        <span class="pt">${flagImg(m.home.name)}<span class="ptn">${esc(tn(m.home.name))}</span></span>
+        <span class="pred-score" title="${t("pred.xg")}: ${p.expHome} – ${p.expAway}">${p.scoreline}</span>
+        <span class="pt right"><span class="ptn">${esc(tn(m.away.name))}</span>${flagImg(m.away.name)}</span>
+      </div>
+      <div class="pred-bar" role="img" aria-label="${pct(p.probs.home)}% ${esc(tn(m.home.name))}, ${pct(p.probs.draw)}% ${t("pred.draw")}, ${pct(p.probs.away)}% ${esc(tn(m.away.name))}">
+        <span class="pb home" style="width:${pct(p.probs.home)}%"></span>
+        <span class="pb draw" style="width:${pct(p.probs.draw)}%"></span>
+        <span class="pb away" style="width:${pct(p.probs.away)}%"></span>
+      </div>
+      <div class="pred-legend">
+        <span><b>${pct(p.probs.home)}%</b> ${esc(tn(m.home.name))}</span>
+        <span><b>${pct(p.probs.draw)}%</b> ${t("pred.draw")}</span>
+        <span><b>${pct(p.probs.away)}%</b> ${esc(tn(m.away.name))}</span>
+      </div>
+    </div>`).join("");
+  wrap.innerHTML = conf + `<div class="pred-grid">${cards}</div><p class="pred-note">${t("pred.note")}</p>`;
+}
+
 // ---- road to the Round of 32: qualified teams + best thirds + what-if ----
 export function renderQualification(standings) {
   const wrap = $("#qualification");
