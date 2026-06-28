@@ -154,7 +154,7 @@ export function renderCharts(stats, facts, disc, effHist) {
     const phaseLabel = (e) => (e.stage === "group" ? t("ph.group") : (KO_SHORT[e.key] ? t(KO_SHORT[e.key]) : e.key));
     const phColors = ph.map((e) => (e.stage === "group" ? tc.accent : tc.gold));
     upsert("chart-overview", "bar", ph.map(phaseLabel), ph.map((e) => e.goals), t("u.goals"),
-      { colors: phColors, valueLabels: true, valueColor: tc.textStrong });
+      { colors: phColors, valueLabels: true, valueColor: tc.textStrong, drillKeys: ph.map((e) => e.key) });
     if (ph.length) {
       const groupG = ph.filter((e) => e.stage === "group").reduce((s, e) => s + e.goals, 0);
       const koG = ph.filter((e) => e.stage === "knockout").reduce((s, e) => s + e.goals, 0);
@@ -334,6 +334,15 @@ function effSeries(canvasId, history, kind, tc) {
   el.setAttribute("aria-label",
     `${t("a11y.chart")}: ${t("eff.seriesBest")} ${bestTeams.map((tm, i) => `${tm} ${bestData[i]}%`).join(", ")}. ` +
     `${t("eff.seriesWorst")} ${worstTeams.map((tm, i) => `${tm} ${worstData[i]}%`).join(", ")}.`);
+}
+
+// Goals-by-matchday "zoom" chart for the group-stage drill-down (rendered into
+// a modal canvas). Falls back gracefully if Chart.js isn't ready.
+export function drawGoalsByMatchday(canvasId, byMatchday) {
+  const tc = theme();
+  const md = byMatchday || [];
+  upsert(canvasId, "line", md.map(([k]) => `J${k}`), md.map(([, v]) => v), t("u.goals"),
+    { color: tc.accent, lineY: true, valueLabels: true, valueColor: tc.text });
 }
 
 // Re-draw with current theme colours / language.

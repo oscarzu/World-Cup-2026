@@ -312,6 +312,8 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
 .gl-min { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
 /* even number alignment in stat/fact cards */
 .fact-value, .stat .num, .num { font-variant-numeric: tabular-nums; }
+/* zoom chart inside a drill-down modal */
+.modal-chart { height: 260px; margin-top: 0.6rem; }
 .day-sep { color: var(--muted); font-size: 0.76rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.06em; margin: 1rem 0 0.3rem; scroll-margin-top: 130px; }
 
