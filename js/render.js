@@ -75,7 +75,7 @@ export function showOfflineBanner() {
 const venuePhoto = (file) =>
   `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600`;
 
-function flagImg(team, cls = "flag", { eager = false } = {}) {
+export function flagImg(team, cls = "flag", { eager = false } = {}) {
   const url = flagUrl(team);
   // width/height give an intrinsic ratio (prevents layout shift); CSS sets the
   // actual rendered size. onerror hides a flag that fails to load (no broken
@@ -146,8 +146,12 @@ export function matchCard(m, { showGoals = true } = {}) {
   }
 
   const venue = m.ground ? `<div class="match-venue">📍 ${esc(venueFifa(m.ground))}</div>` : "";
+  // Always show the exact date (+ kickoff time) so grouped/ranged lists are legible.
+  const when = m.date ? (kickoffDateTime(m) || fmtDate(m.date)) : "";
+  const dateLine = when ? `<div class="match-when">🗓️ ${esc(when)}</div>` : "";
   return `
   <div class="match ${m.status === "live" ? "is-live" : ""}">
+    ${dateLine}
     <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(tn(m.home.name))}</span></div>
     <div class="center">
       <span class="badge ${st.cls}">${t(st.key)}</span>
@@ -180,9 +184,10 @@ export function renderOverview(matches, stats, tournament) {
   const upcoming = matches.filter((m) => m.status === "scheduled")
     .sort((a, b) => (kickoffDate(a)?.getTime() ?? Infinity) - (kickoffDate(b)?.getTime() ?? Infinity))
     .slice(0, 6 - live.length);
+  const seeMore = `<button type="button" class="see-more" data-goto="matches">${t("ov.seeAll")} →</button>`;
   $("#overview-live").innerHTML = (live.length || upcoming.length)
-    ? [...live.map((m) => matchCard(m, { showGoals: false })), ...upcoming.map(upcomingCard)].join("")
-    : `<p class="empty">${t("empty.noUpcoming")}</p>`;
+    ? [...live.map((m) => matchCard(m, { showGoals: false })), ...upcoming.map(upcomingCard)].join("") + seeMore
+    : `<p class="empty">${t("empty.noUpcoming")}</p>` + seeMore;
 }
 
 // ---- matches tab ----
@@ -347,6 +352,38 @@ export function renderPredictions(ups, bt) {
   wrap.innerHTML = conf + `<div class="pred-grid">${cards}</div><p class="pred-note">${t("pred.note")}</p>`;
 }
 
+// ---- model report card: predicted vs actual on already-played matches ----
+export function renderPredReport(bt) {
+  const wrap = $("#pred-report");
+  if (!wrap) return;
+  const samples = (bt && bt.samples) || [];
+  if (!samples.length) { wrap.innerHTML = `<p class="empty">${t("pred.repNone")}</p>`; return; }
+  const pct = (x) => Math.round(x * 100);
+  // Most recent first; show a manageable window.
+  const recent = samples.slice(-12).reverse();
+  const outName = (m, who) => who === "draw" ? t("pred.draw") : tn(who === "home" ? m.home.name : m.away.name);
+  const summary = `
+    <div class="pr-summary">
+      <div><span class="pr-k">${t("pred.repAcc")}</span><span class="pr-v">${pct(bt.accuracy)}%</span><small>${samples.filter((s) => s.correct).length}/${samples.length}</small></div>
+      <div><span class="pr-k">${t("pred.repExact")}</span><span class="pr-v">${pct(bt.exactScore)}%</span><small>${samples.filter((s) => s.exact).length}/${samples.length}</small></div>
+    </div>`;
+  const rows = recent.map((s) => {
+    const m = s.match;
+    return `<div class="pr-card ${s.correct ? "hit" : "miss"}">
+      <div class="pr-match">
+        <span class="pr-t">${flagImg(m.home.name)}<span class="pr-tn">${esc(tn(m.home.name))}</span></span>
+        <span class="pr-sc">${esc(s.actScore)}</span>
+        <span class="pr-t right"><span class="pr-tn">${esc(tn(m.away.name))}</span>${flagImg(m.away.name)}</span>
+      </div>
+      <div class="pr-lines">
+        <span class="pr-line"><b>${t("pred.repPick")}:</b> ${esc(outName(m, s.predOutcome))} <small>(${esc(s.predScore)})</small></span>
+        <span class="pr-verdict ${s.correct ? "ok" : "no"}">${s.correct ? "✓ " + t("pred.repHit") : "✗ " + t("pred.repMiss")}</span>
+      </div>
+    </div>`;
+  }).join("");
+  wrap.innerHTML = summary + `<div class="pr-grid">${rows}</div><p class="pred-note">${t("pred.repNote")}</p>`;
+}
+
 // ---- road to the Round of 32: qualified teams + best thirds + what-if ----
 export function renderQualification(standings) {
   const wrap = $("#qualification");
@@ -380,13 +417,22 @@ export function renderQualification(standings) {
       </tbody>
     </table>`;
 
-  const STAT = { in: ["q.in", "good"], live: ["q.live", "warn"], out: ["q.out", "bad"] };
+  // Definitive advancement: 1st & 2nd advance; a 3rd advances only if it ranks
+  // among the best 8 thirds; everyone else is eliminated.
+  const qualThirds = new Set((q.thirds || []).filter((tr) => tr.qualified).map((tr) => tr.name));
+  const advStatus = (rows, i) => {
+    if (i < 2) return { key: "q.advTop", cls: "good" };
+    if (i === 2) return qualThirds.has(rows[i].name)
+      ? { key: "q.advThird", cls: "good" }
+      : { key: "q.elim", cls: "bad" };
+    return { key: "q.elim", cls: "bad" };
+  };
   const whatif = q.groups.map(([g, rows]) => `
     <div class="q-wgroup">
       <h5>${esc(g)}</h5>
       ${rows.map((r, i) => {
-        const [k, c] = STAT[teamTop2Status(rows, i)];
-        return `<div class="q-wrow ${c}"><span class="q-wpos">${i + 1}</span>${flagImg(r.name)}<span class="q-wnm">${esc(tn(r.name))}</span><span class="q-wpts">${r.Pts}</span><span class="q-wtag">${t(k)}</span></div>`;
+        const { key, cls } = advStatus(rows, i);
+        return `<div class="q-wrow ${cls}"><span class="q-wpos">${i + 1}</span>${flagImg(r.name)}<span class="q-wnm">${esc(tn(r.name))}</span><span class="q-wpts">${r.Pts}</span><span class="q-wtag">${t(key)}</span></div>`;
       }).join("")}
     </div>`).join("");
 
@@ -554,11 +600,12 @@ export function renderScorers(list, { filtered = false } = {}) {
     return;
   }
   wrap.innerHTML = list.slice(0, 50).map((s, i) => `
-    <div class="scorer">
+    <div class="scorer clickable" role="button" tabindex="0" data-scorer-name="${esc(s.name)}" data-scorer-country="${esc(s.country)}" aria-label="${esc(s.name)} — ${esc(t("drill.detail"))}">
       <span class="rank">${s.rank ?? i + 1}</span>
       ${flagImg(s.country)}
       <span class="who"><div class="nm">${esc(s.name)}</div><div class="ct">${esc(tn(s.country))}</div></span>
       <span class="goals">${s.goals}${s.assists ? ` <small class="ast">+${s.assists}A</small>` : ""}${s.penalties ? ` <small>(${s.penalties}p)</small>` : ""}</span>
+      <span class="scorer-go" aria-hidden="true">↗</span>
     </div>`).join("");
 }
 
@@ -842,9 +889,13 @@ export function renderFacts(facts) {
   cards.push(fact("🥱", t("f.zerozero"), String(facts.zeroZero), t("f.dmZero"), facts.zeroZero ? "zeroZero" : null));
   cards.push(fact("🏟️", t("f.blowouts"), String(facts.blowouts), t("f.dmBlow"), facts.blowouts ? "blowouts" : null));
   cards.push(fact("🎯", t("f.pengoals"), String(facts.penaltyGoals), t("f.dmPen"), facts.penaltyGoals ? "pengoals" : null));
-  if (facts.topTeams[0])
-    cards.push(fact("👑", t("f.topattack"),
-      `${facts.topTeams[0].goals} ${t("u.goals")}`, esc(tn(facts.topTeams[0].name)), "topattack"));
+  if (facts.topTeams[0]) {
+    // Most goals scored — include every selección tied at the top.
+    const maxG = facts.topTeams[0].goals;
+    const leaders = facts.topTeams.filter((x) => x.goals === maxG);
+    const names = leaders.map((x) => esc(tn(x.name))).join(" · ");
+    cards.push(fact("👑", t("f.topattack"), `${maxG} ${t("u.goals")}`, names, "topattack"));
+  }
 
   wrap.innerHTML = cards.join("");
 }

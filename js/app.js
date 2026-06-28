@@ -4,8 +4,8 @@ import { CONFIG, teamES } from "./config.js";
 import { getLang, setLang, applyStatic, t } from "./i18n.js";
 import { loadBase, applyLive, loadTeamStats, loadEfficacyHistory, loadSocial } from "./api.js";
 import { computeStandings } from "./standings.js";
-import { resolveKnockouts } from "./qualification.js";
-import { computeScorers, goalStats } from "./scorers.js";
+import { resolveKnockouts, rankThirds } from "./qualification.js";
+import { computeScorers, goalStats, goalsByScorer } from "./scorers.js";
 import { computeFacts } from "./facts.js";
 import { computeDiscipline } from "./discipline.js";
 import { renderCharts, rethemeCharts } from "./charts.js";
@@ -139,9 +139,17 @@ function drillFact(key) {
   const title = t(FACT_LABEL[key] || key);
   const matches = factMatches(key);
   // Hat-tricks: list the players too.
-  const rows = key === "hattricks"
+  let rows = key === "hattricks"
     ? (f.hatTricks || []).map((h) => [h.name, `${h.n} ${t("u.goals")}`])
     : [];
+  // Earliest/latest goal: surface the exact minute + scorer, not just the score.
+  if ((key === "fastest" || key === "latest") && f[key]) {
+    const g = f[key];
+    rows = [
+      [t("drill.minute"), `${g.min}'`],
+      [t("drill.scorer"), g.name || "—"],
+    ];
+  }
   UI.openModal({ title, rows, matches });
 }
 function initDrill() {
@@ -164,19 +172,47 @@ function initDrill() {
     // Clickable fact cards → which matches/teams.
     const card = e.target.closest(".fact[data-fact]");
     if (card) { drillFact(card.dataset.fact); return; }
+    // Scorer rows → which teams they scored against.
+    const sc = e.target.closest(".scorer[data-scorer-name]");
+    if (sc) { drillScorer(sc.dataset.scorerName, sc.dataset.scorerCountry); return; }
+    // "See all" → jump to the Matches tab.
+    const goto = e.target.closest("[data-goto]");
+    if (goto) { const tab = document.querySelector(`.tab[data-tab="${goto.dataset.goto}"]`); if (tab) activateTab(tab); return; }
     // VAR aggregate cards → the incidents behind the number.
     const varCard = e.target.closest(".stat.agg[data-var]");
     if (varCard) drillVar(varCard.dataset.var);
   });
-  // Keyboard activation (Enter/Space) for fact + VAR cards.
+  // Keyboard activation (Enter/Space) for fact + VAR + scorer cards.
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter" && e.key !== " ") return;
     const fc = e.target.closest && e.target.closest(".fact[data-fact]");
     if (fc) { e.preventDefault(); drillFact(fc.dataset.fact); return; }
+    const sc = e.target.closest && e.target.closest(".scorer[data-scorer-name]");
+    if (sc) { e.preventDefault(); drillScorer(sc.dataset.scorerName, sc.dataset.scorerCountry); return; }
     const vc = e.target.closest && e.target.closest(".stat.agg[data-var]");
     if (vc) { e.preventDefault(); drillVar(vc.dataset.var); }
   });
 }
+
+// A scorer's goal log: every goal, against whom, minute and penalty flag.
+function drillScorer(name, country) {
+  const log = (state._goalsByScorer && state._goalsByScorer.get(`${name}__${country}`)) || [];
+  const en = getLang() === "en";
+  const html = log.length
+    ? `<div class="goal-log">${log.map((g, i) => `
+        <div class="gl-row">
+          <span class="gl-n">${i + 1}</span>
+          ${UI.flagImg(g.opponent)}
+          <span class="gl-vs">${en ? "vs" : "vs"} <b>${esc(UI.teamLabel(g.opponent))}</b></span>
+          <span class="gl-min">${g.minute != null ? g.minute + "'" : ""}${g.penalty ? ` <small>(${en ? "pen" : "pen"})</small>` : ""}</span>
+        </div>`).join("")}</div>`
+    : `<p class="empty">${t("drill.noData")}</p>`;
+  UI.openInfoModal({
+    title: `${name} · ${UI.teamLabel(country)}`,
+    html: `<p class="modal-sub">${log.length} ${log.length === 1 ? t("u.goal") : t("u.goals")} · ${t("drill.scorerSub")}</p>${html}`,
+  });
+}
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 function drillVar(kind) {
   const inc = (CONFIG.TOURNAMENT.varIncidents || {})[kind] || [];
   const title = t(kind === "restored" ? "a.restored" : "a.disallowed");
@@ -195,11 +231,20 @@ function matchesForTeam(name) {
 }
 function drillGroup(group) {
   const rows = computeStandings(state.matches).get(group) || [];
-  const en = getLang() === "en";
+  // Which teams advanced as best thirds (for a definitive ✓/✗ per row).
+  const qThirds = new Set(rankThirds(computeStandings(state.matches))
+    .filter((tr) => tr.qualified).map((tr) => tr.name));
+  const totalGoals = rows.reduce((s, r) => s + (r.GF || 0), 0);
+  const advanced = (r, i) => i < 2 || (i === 2 && qThirds.has(r.name));
+  // Each row explains the numbers and states the outcome with certainty.
+  const statRows = rows.map((r, i) => [
+    `${i + 1}. ${UI.teamLabel(r.name)} ${advanced(r, i) ? "✅" : "❌"}`,
+    `${r.Pts} ${t("drill.pts")} · ${r.GF}-${r.GA} ${t("drill.gfga")}`,
+  ]);
   UI.openModal({
     title: `${t("drill.group")} ${group.replace("Group ", "")}`,
-    subtitle: en ? "Current standings" : "Clasificación actual",
-    rows: rows.map((r) => [UI.teamLabel(r.name), `${r.Pts} ${en ? "pts" : "pts"} · ${r.GF}-${r.GA}`]),
+    subtitle: `${t("drill.groupGoals")}: ${totalGoals} · ${t("drill.groupLegend")}`,
+    rows: statRows,
   });
 }
 function drillTeam(chart, name) {
@@ -386,10 +431,13 @@ function renderAll() {
   UI.renderBracket(state.matches, standings);
   UI.renderQualification(standings);
   const model = buildModel(resolved);
-  UI.renderPredictions(upcomingPredictions(resolved, model, 16), backtest(resolved));
+  const bt = backtest(resolved);
+  UI.renderPredictions(upcomingPredictions(resolved, model, 16), bt);
+  UI.renderPredReport(bt); // predicted vs actual on played matches
   // Rank is assigned on the full FIFA-ordered table so it's preserved when the
   // list is filtered by search.
   state._scorers = computeScorers(state.matches).map((s, i) => ({ ...s, rank: i + 1 }));
+  state._goalsByScorer = goalsByScorer(state.matches); // per-player goal log (drill-down)
   UI.renderScorersPodium(state._scorers);
   applyScorerFilter();
   const liveList = state.liveMatches.length ? state.liveMatches : state.matches;

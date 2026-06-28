@@ -1,15 +1,98 @@
 {
   "metric": "conversion",
-  "note": "Eficacia = % de conversión (goles ÷ tiros a puerta). Limitado a fase de grupos (J1–J3), cuando todas las selecciones llevan el mismo número de partidos. Ilustrativo.",
-  "history": [
-    { "matchday": 1,
-      "perJornada":  { "best": { "team": "Germany", "pct": 55 }, "worst": { "team": "Ivory Coast", "pct": 6 } },
-      "accumulated": { "best": { "team": "Germany", "pct": 55 }, "worst": { "team": "Ivory Coast", "pct": 6 } } },
-    { "matchday": 2,
-      "perJornada":  { "best": { "team": "Brazil", "pct": 50 }, "worst": { "team": "Saudi Arabia", "pct": 9 } },
-      "accumulated": { "best": { "team": "Germany", "pct": 52 }, "worst": { "team": "Ivory Coast", "pct": 7 } } },
-    { "matchday": 3,
-      "perJornada":  { "best": { "team": "Netherlands", "pct": 48 }, "worst": { "team": "Spain", "pct": 8 } },
-      "accumulated": { "best": { "team": "Germany", "pct": 53 }, "worst": { "team": "Spain", "pct": 9 } } }
+  "note": "Eficacia = % de conversión (goles ÷ tiros a puerta). Vista por fase; ilustrativo.",
+  "byPhase": [
+    {
+      "phase": "group",
+      "perPhase": {
+        "best": {
+          "team": "Germany",
+          "pct": 53
+        },
+        "worst": {
+          "team": "Ivory Coast",
+          "pct": 7
+        }
+      },
+      "accumulated": {
+        "best": {
+          "team": "Germany",
+          "pct": 53
+        },
+        "worst": {
+          "team": "Ivory Coast",
+          "pct": 7
+        }
+      }
+    },
+    {
+      "phase": "Round of 32",
+      "perPhase": {
+        "best": {
+          "team": "Spain",
+          "pct": 44
+        },
+        "worst": {
+          "team": "Norway",
+          "pct": 10
+        }
+      },
+      "accumulated": {
+        "best": {
+          "team": "Germany",
+          "pct": 50
+        },
+        "worst": {
+          "team": "Ivory Coast",
+          "pct": 9
+        }
+      }
+    },
+    {
+      "phase": "Round of 16",
+      "perPhase": {
+        "best": {
+          "team": "France",
+          "pct": 42
+        },
+        "worst": {
+          "team": "Switzerland",
+          "pct": 12
+        }
+      },
+      "accumulated": {
+        "best": {
+          "team": "Germany",
+          "pct": 48
+        },
+        "worst": {
+          "team": "Saudi Arabia",
+          "pct": 10
+        }
+      }
+    },
+    {
+      "phase": "Quarter-final",
+      "perPhase": {
+        "best": {
+          "team": "Argentina",
+          "pct": 40
+        },
+        "worst": {
+          "team": "Croatia",
+          "pct": 14
+        }
+      },
+      "accumulated": {
+        "best": {
+          "team": "Germany",
+          "pct": 46
+        },
+        "worst": {
+          "team": "Saudi Arabia",
+          "pct": 11
+        }
+      }
+    }
   ]
 }

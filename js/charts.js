@@ -7,6 +7,11 @@
 import { tName, t, getLang } from "./i18n.js";
 
 const charts = {};
+// Short knockout-round labels (i18n keys) for the goals-by-phase chart.
+const KO_SHORT = {
+  "Round of 32": "br.r32", "Round of 16": "br.r16", "Quarter-final": "br.qf",
+  "Semi-final": "br.sf", "Match for third place": "br.third", "Final": "br.final",
+};
 const FONT = (getComputedStyle(document.documentElement).getPropertyValue("--font") || "system-ui").trim()
   || "system-ui, sans-serif";
 const fmt = (n) => (typeof n === "number" ? n.toLocaleString("en-US") : n);
@@ -143,13 +148,21 @@ export function renderCharts(stats, facts, disc, effHist) {
   const tc = theme();
 
   if (lastStats) {
-    const md = lastStats.byMatchday;
-    upsert("chart-overview", "line", md.map(([k]) => `J${k}`), md.map(([, v]) => v), t("u.goals"),
-      { color: tc.accent, lineY: true, valueLabels: true, valueColor: tc.text });
-    if (md.length) {
-      const peak = md.reduce((a, b) => (b[1] > a[1] ? b : a));
-      setSub("sub-overview", sub(`Pico de ${peak[1]} goles en la jornada ${peak[0]}.`,
-        `Peak of ${peak[1]} goals on matchday ${peak[0]}.`));
+    // Goals by phase: whole group stage as one bar, then each knockout round
+    // (R32 → Final) summarized. Group = accent, knockouts = gold.
+    const ph = lastStats.byPhase || [];
+    const phaseLabel = (e) => (e.stage === "group" ? t("ph.group") : (KO_SHORT[e.key] ? t(KO_SHORT[e.key]) : e.key));
+    const phColors = ph.map((e) => (e.stage === "group" ? tc.accent : tc.gold));
+    upsert("chart-overview", "bar", ph.map(phaseLabel), ph.map((e) => e.goals), t("u.goals"),
+      { colors: phColors, valueLabels: true, valueColor: tc.textStrong });
+    if (ph.length) {
+      const groupG = ph.filter((e) => e.stage === "group").reduce((s, e) => s + e.goals, 0);
+      const koG = ph.filter((e) => e.stage === "knockout").reduce((s, e) => s + e.goals, 0);
+      setSub("sub-overview", koG
+        ? sub(`Fase de grupos: ${groupG} goles · eliminatorias: ${koG} goles.`,
+              `Group stage: ${groupG} goals · knockouts: ${koG} goals.`)
+        : sub(`Fase de grupos: ${groupG} goles. Las eliminatorias se sumarán por ronda.`,
+              `Group stage: ${groupG} goals. Knockouts will be summed by round.`));
     }
     upsert("chart-groups", "bar",
       lastStats.byGroup.map(([k]) => k.replace("Group ", "")),
@@ -175,13 +188,21 @@ export function renderCharts(stats, facts, disc, effHist) {
         `${names} lead${many ? "" : "s"} the attack with ${maxG} goals.`));
     }
 
-    upsert("chart-moments", "bar",
-      [t("f.comebacks"), t("f.shootouts"), t("f.blowouts"), t("f.zerozero"), t("f.hattricks")],
-      [lastFacts.comebacks, lastFacts.shootouts, lastFacts.blowouts, lastFacts.zeroZero, lastFacts.hatTricks.length],
-      t("u.matches"), { colors: [tc.accent, tc.live, tc.gold, tc.context, tc.accent2],
-        drillKeys: ["comebacks", "shootouts", "blowouts", "zeroZero", "hattricks"] });
-    setSub("sub-moments", sub(`${lastFacts.comebacks} remontadas y ${lastFacts.shootouts} tandas de penales hasta ahora.`,
-      `${lastFacts.comebacks} comebacks and ${lastFacts.shootouts} shootouts so far.`));
+    // Moments: sorted high → low, with zero-value categories hidden.
+    const moments = [
+      { label: t("f.comebacks"), v: lastFacts.comebacks, key: "comebacks", c: tc.accent },
+      { label: t("f.shootouts"), v: lastFacts.shootouts, key: "shootouts", c: tc.live },
+      { label: t("f.blowouts"), v: lastFacts.blowouts, key: "blowouts", c: tc.gold },
+      { label: t("f.zerozero"), v: lastFacts.zeroZero, key: "zeroZero", c: tc.context },
+      { label: t("f.hattricks"), v: lastFacts.hatTricks.length, key: "hattricks", c: tc.accent2 },
+    ].filter((x) => x.v > 0).sort((a, b) => b.v - a.v);
+    if (moments.length) {
+      upsert("chart-moments", "bar", moments.map((x) => x.label), moments.map((x) => x.v),
+        t("u.matches"), { colors: moments.map((x) => x.c), drillKeys: moments.map((x) => x.key) });
+      const top = moments[0];
+      setSub("sub-moments", sub(`${top.v} ${top.label.toLowerCase()} encabeza${top.v === 1 ? "" : "n"} los momentos del torneo.`,
+        `${top.v} ${top.label.toLowerCase()} lead${top.v === 1 ? "s" : ""} the tournament's moments.`));
+    }
   }
 
   if (lastDisc) {
@@ -226,12 +247,22 @@ export function renderCharts(stats, facts, disc, effHist) {
   }
 
   if (lastEffHist && lastEffHist.length) {
-    effSeries("chart-eff-jornada", lastEffHist, "perJornada", tc);
+    // New shape uses perPhase; fall back to the legacy perJornada key.
+    const perKey = lastEffHist[0] && lastEffHist[0].perPhase ? "perPhase" : "perJornada";
+    effSeries("chart-eff-jornada", lastEffHist, perKey, tc);
     effSeries("chart-eff-cumulative", lastEffHist, "accumulated", tc);
     const note = sub("Etiquetas sobre cada punto: selección y su % de conversión.",
       "Labels on each point: team and its conversion %.");
     setSub("sub-eff-jornada", note); setSub("sub-eff-cumulative", note);
   }
+}
+
+// Phase label for the efficacy history x-axis (group → R32 … Final).
+function phaseAxisLabel(h) {
+  if (h.phase === "group") return t("ph.group");
+  if (h.phase && KO_SHORT[h.phase]) return t(KO_SHORT[h.phase]);
+  if (h.matchday != null) return `${getLang() === "en" ? "MD" : "J"}${h.matchday}`; // legacy
+  return h.phase || "";
 }
 
 // Two-line efficacy chart (best vs worst) with the team labelled at every point.
@@ -242,8 +273,7 @@ function effSeries(canvasId, history, kind, tc) {
   ensurePlugin();
   if (charts[canvasId]) { charts[canvasId].destroy(); delete charts[canvasId]; }
 
-  const mdPre = getLang() === "en" ? "MD" : "J";
-  const labels = history.map((h) => `${mdPre}${h.matchday}`);
+  const labels = history.map(phaseAxisLabel);
   const bestTeams = history.map((h) => tName(h[kind].best.team));
   const worstTeams = history.map((h) => tName(h[kind].worst.team));
   const bestData = history.map((h) => h[kind].best.pct);
