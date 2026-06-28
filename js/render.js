@@ -145,6 +145,7 @@ export function matchCard(m, { showGoals = true } = {}) {
     goals = `<div class="goal-line">⚽ ${h || "—"} &nbsp;·&nbsp; ${a || "—"}</div>`;
   }
 
+  const venue = m.ground ? `<div class="match-venue">📍 ${esc(venueFifa(m.ground))}</div>` : "";
   return `
   <div class="match ${m.status === "live" ? "is-live" : ""}">
     <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(tn(m.home.name))}</span></div>
@@ -153,7 +154,7 @@ export function matchCard(m, { showGoals = true } = {}) {
       ${center}${pen}
     </div>
     <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(tn(m.away.name))}</span></div>
-    ${goals}
+    ${goals}${venue}
   </div>`;
 }
 
@@ -453,7 +454,6 @@ function resolveSlot(code, ctx) {
 export function renderBracket(matches, standings = new Map()) {
   const wrap = $("#bracket-wrap");
   if (!wrap) return;
-  const order = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"];
 
   // Map finished knockout matches → winner (real team), so later rounds resolve.
   const isCode = (s) => RE_CODE.test(s || "");
@@ -462,40 +462,85 @@ export function renderBracket(matches, standings = new Map()) {
     const hs = m.score?.home, as = m.score?.away;
     if (hs == null || as == null || m.num == null) continue;
     const w = hs > as ? m.home.name : as > hs ? m.away.name : null;
-    if (w && !isCode(w)) winners[m.num] = w; // only real, resolved teams
+    if (w && !isCode(w)) winners[m.num] = w;
   }
   const ctx = { standings, thirds: rankedThirds(standings), usedThirds: new Set(), winners };
 
-  // Inner content of a slot row (flag + name + projection tag).
+  // Pre-resolve every knockout slot in match-number order so the greedy
+  // best-third assignment is deterministic.
+  const ko = matches.filter((m) => m.stage === "knockout");
+  const byNum = new Map(matches.filter((m) => m.num != null).map((m) => [m.num, m]));
+  const slot = new Map();
+  for (const m of [...ko].sort((a, b) => (a.num ?? 0) - (b.num ?? 0))) {
+    slot.set(m.id, { home: resolveSlot(m.home.name, ctx), away: resolveSlot(m.away.name, ctx) });
+  }
+
+  // Build the two bracket halves by following the W## links down from the final.
+  const childNums = (m) => [m.home.name, m.away.name]
+    .map((c) => { const w = /^W(\d+)$/.exec(c || ""); return w ? Number(w[1]) : null; })
+    .filter((x) => x != null);
+  const final = matches.find((m) => m.round === "Final");
+  const third = matches.find((m) => m.round === "Match for third place");
+  const collect = (rootNum) => {
+    const out = { "Round of 32": [], "Round of 16": [], "Quarter-final": [], "Semi-final": [] };
+    const stack = [rootNum];
+    while (stack.length) {
+      const m = byNum.get(stack.pop());
+      if (!m) continue;
+      if (out[m.round]) out[m.round].push(m);
+      for (const c of childNums(m)) stack.push(c);
+    }
+    for (const k in out) out[k].sort((a, b) => a.num - b.num);
+    return out;
+  };
+  const [lRoot, rRoot] = final ? childNums(final) : [];
+  const left = collect(lRoot), right = collect(rRoot);
+
   const slotInner = (s) => {
     const flag = s.flagTeam ? flagImg(s.flagTeam, "flag", { eager: true }) : `<span class="flag" aria-hidden="true"></span>`;
     const tag = s.proj ? `<span class="bk-proj" title="${esc(t("br.projFull"))}">${t("br.proj")}</span>` : "";
     return `${flag}<span class="nm">${esc(s.name)}</span>${tag}`;
   };
+  // Compact card with the venue/time always visible (no click needed).
+  const card = (m, big = false) => {
+    if (!m) return "";
+    const s = slot.get(m.id) || { home: resolveSlot(m.home.name, ctx), away: resolveSlot(m.away.name, ctx) };
+    const hs = m.score?.home, as = m.score?.away, played = hs != null;
+    const sc = (v) => (played ? `<span class="bk-sc">${v}</span>` : "");
+    const v = VENUES[m.ground];
+    const where = v ? v.city : (m.ground || "");
+    const when = played ? "" : (kickoffDate(m) ? kickoffDateTime(m) : fmtDate(m.date));
+    return `<div class="bkm${big ? " big" : ""}">
+      <div class="bkm-r ${played && hs > as ? "win" : ""} ${s.home.placeholder ? "tbd" : ""}">${slotInner(s.home)}${sc(hs)}</div>
+      <div class="bkm-r ${played && as > hs ? "win" : ""} ${s.away.placeholder ? "tbd" : ""}">${slotInner(s.away)}${sc(as)}</div>
+      <div class="bkm-v">📍 ${esc(where)}${when ? ` · ${esc(when)}` : ""}</div>
+    </div>`;
+  };
+  const colHtml = (label, list) =>
+    `<div class="bk-col"><div class="bk-cl">${esc(label)}</div><div class="bk-matches">${list.map((m) => card(m)).join("")}</div></div>`;
 
-  wrap.innerHTML = order.map((round) => {
-    const games = matches.filter((m) => m.round === round).sort(byKickoff);
-    if (!games.length) return "";
-    return `<div class="bracket-col"><h4>${roundLabel(round)}</h4>${
-      games.map((m) => {
-        const home = resolveSlot(m.home.name, ctx);
-        const away = resolveSlot(m.away.name, ctx);
-        const hs = m.score?.home, as = m.score?.away, played = hs != null;
-        const sc = (v) => (played ? `<span class="bk-sc">${v}</span>` : "");
-        const when = kickoffDateTime(m) || fmtDate(m.date);
-        return `<details class="bk">
-          <summary>
-            <div class="r ${played && hs > as ? "win" : ""} ${home.placeholder ? "tbd" : ""}">${slotInner(home)}${sc(hs)}</div>
-            <div class="r ${played && as > hs ? "win" : ""} ${away.placeholder ? "tbd" : ""}">${slotInner(away)}${sc(as)}</div>
-          </summary>
-          <div class="bk-detail">
-            <div class="bk-when">🗓️ ${esc(when)}</div>
-            <div class="bk-venue">📍 ${esc(venueFifa(m.ground))}</div>
-          </div>
-        </details>`;
-      }).join("")
-    }</div>`;
-  }).join("");
+  const L = (r) => left[r] || [], R = (r) => right[r] || [];
+  wrap.innerHTML = `
+    <div class="bracket-tree">
+      <div class="bk-half">
+        ${colHtml(t("br.r32"), L("Round of 32"))}
+        ${colHtml(t("br.r16"), L("Round of 16"))}
+        ${colHtml(t("br.qf"), L("Quarter-final"))}
+        ${colHtml(t("br.sf"), L("Semi-final"))}
+      </div>
+      <div class="bk-core">
+        <div class="bk-trophy" aria-hidden="true">🏆</div>
+        <div class="bk-final-label">${t("br.final")}</div>
+        ${card(final, true)}
+        ${third ? `<div class="bk-third"><div class="bk-third-label">${t("br.third")}</div>${card(third, true)}</div>` : ""}
+      </div>
+      <div class="bk-half">
+        ${colHtml(t("br.sf"), R("Semi-final"))}
+        ${colHtml(t("br.qf"), R("Quarter-final"))}
+        ${colHtml(t("br.r16"), R("Round of 16"))}
+        ${colHtml(t("br.r32"), R("Round of 32"))}
+      </div>
+    </div>`;
 }
 
 // ---- scorers ----
