@@ -935,6 +935,22 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
 .pred-note { color: var(--muted); font-size: 0.76rem; margin: 1.2rem 0 0; max-width: 80ch; line-height: 1.5; }
 @media (max-width: 560px) { .pred-grid { grid-template-columns: 1fr; } }
 
+/* ---- matches: collapsible round groups + multi-column grid ---- */
+.md-group { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.7rem;
+  background: var(--surface-2); overflow: hidden; }
+.md-group > summary { cursor: pointer; list-style: none; display: flex; align-items: baseline;
+  justify-content: space-between; gap: 0.8rem; padding: 0.7rem 1rem; font-weight: 700; }
+.md-group > summary::-webkit-details-marker { display: none; }
+.md-group > summary::before { content: "▸"; color: var(--muted); margin-right: 0.5rem; font-size: 0.8rem; transition: transform var(--t); display: inline-block; }
+.md-group[open] > summary::before { transform: rotate(90deg); }
+.md-group .mg-title { flex: 1; }
+.md-group .mg-meta { color: var(--muted); font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+.match-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 0.6rem;
+  padding: 0.3rem 0.8rem 0.9rem; }
+.match-grid .match { background: var(--surface); }
+.venue-meta { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
+@media (max-width: 560px) { .match-grid { grid-template-columns: 1fr; padding: 0.3rem 0.6rem 0.7rem; } }
+
 /* ---- clickable VAR aggregate cards + incident modal ---- */
 .stat.agg.clickable { position: relative; cursor: pointer; }
 .stat.agg.clickable:hover { transform: translateY(-3px); border-color: var(--border-strong); box-shadow: var(--shadow-hover); }

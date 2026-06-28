@@ -4,6 +4,7 @@ import { CONFIG, teamES } from "./config.js";
 import { getLang, setLang, applyStatic, t } from "./i18n.js";
 import { loadBase, applyLive, loadTeamStats, loadEfficacyHistory, loadSocial } from "./api.js";
 import { computeStandings } from "./standings.js";
+import { resolveKnockouts } from "./qualification.js";
 import { computeScorers, goalStats } from "./scorers.js";
 import { computeFacts } from "./facts.js";
 import { computeDiscipline } from "./discipline.js";
@@ -229,13 +230,13 @@ function initMatchControls() {
     const raw = $("#match-search").value.trim();
     const q = fold(raw);
     const round = $("#match-filter").value;
-    const filtered = state.matches.filter((m) => {
+    const filtered = (state.matchesResolved || state.matches).filter((m) => {
       if (round && m.round !== round) return false;
       if (!q) return true;
       return [m.home.name, m.away.name, UI.teamLabel(m.home.name), UI.teamLabel(m.away.name)]
         .some((n) => fold(n).includes(q));
     });
-    UI.renderMatches(filtered);
+    UI.renderMatches(filtered, { grouped: !raw && !round }); // grouped when unfiltered
     UI.renderMatchStatus({ count: filtered.length, query: raw, round });
   };
   $("#match-search").addEventListener("input", apply);
@@ -350,16 +351,20 @@ function renderAll() {
   const stats = goalStats(state.matches);
   const facts = computeFacts(state.matches);
   state._facts = facts; // for clickable fact-card drill-downs
-  UI.renderOverview(state.matches, stats, CONFIG.TOURNAMENT);
+  const standings = computeStandings(state.matches);
+  // Resolve knockout placeholder codes (1A, 3A/B/C/D/F, …) into real teams from
+  // the final standings — openfootball lags filling these once groups finish.
+  const resolved = resolveKnockouts(state.matches, standings);
+  state.matchesResolved = resolved;
+  UI.renderOverview(resolved, stats, CONFIG.TOURNAMENT);
   UI.renderHeroLead(stats);
   UI.animateCounts($("#overview-stats"));
-  UI.renderMatches(state.matches);
-  const standings = computeStandings(state.matches);
+  UI.renderMatches(resolved, { grouped: true });
   UI.renderStandings(standings);
   UI.renderBracket(state.matches, standings);
   UI.renderQualification(standings);
-  const model = buildModel(state.matches);
-  UI.renderPredictions(upcomingPredictions(state.matches, model, 16), backtest(state.matches));
+  const model = buildModel(resolved);
+  UI.renderPredictions(upcomingPredictions(resolved, model, 16), backtest(resolved));
   // Rank is assigned on the full FIFA-ordered table so it's preserved when the
   // list is filtered by search.
   state._scorers = computeScorers(state.matches).map((s, i) => ({ ...s, rank: i + 1 }));
