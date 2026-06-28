@@ -32,6 +32,13 @@ export const CONFIG = {
   //   "https://wc26-football-proxy.<your-subdomain>.workers.dev"
   // The proxy holds your API key server-side, so it is never exposed here.
   LIVE_PROXY_URL: "https://wc26-football-proxy.oscarzu.workers.dev",
+
+  // Web analytics (visit metrics) — Cloudflare Web Analytics: free, privacy-
+  // friendly, no cookies. Get the token at dash.cloudflare.com → Web Analytics
+  // → Add a site (oscarzu.github.io) → copy the token from the JS snippet, and
+  // paste it below. Empty = analytics disabled (no beacon loads).
+  CF_ANALYTICS_TOKEN: "",
+
   LIVE_LEAGUE: 1,     // API-Football league id for the FIFA World Cup
   LIVE_SEASON: 2026,
   LIVE_POLL: 3 * 60 * 1000,       // refresh live data every 3 min (matches the Worker cron)
@@ -169,80 +176,112 @@ export const VENUES = {
     fifa: "Atlanta Stadium", stadium: "Mercedes-Benz Stadium",
     city: "Atlanta", country: "USA",
     built: 2017, capacity: 71000, cost: "US$1,600 M", img: "Falcons Opening Day - MB Stadium.jpg",
+    fact: "Su techo retráctil se abre como el obturador de una cámara, con 8 “pétalos” triangulares, y luce una pantalla halo de 360°.",
+    factEn: "Its retractable roof opens like a camera shutter with 8 triangular ‘petals’, under a 360° halo video board.",
   },
   "Boston (Foxborough)": {
     fifa: "Boston Stadium", stadium: "Gillette Stadium",
     city: "Foxborough", country: "USA",
     built: 2002, capacity: 65878, cost: "US$325 M", img: "Gillette Stadium.JPG",
+    fact: "Casa de los New England Patriots; está a unos 40 km de Boston, en Foxborough.",
+    factEn: "Home of the New England Patriots; it's about 40 km from Boston, in Foxborough.",
   },
   "Dallas (Arlington)": {
     fifa: "Dallas Stadium", stadium: "AT&T Stadium",
     city: "Arlington", country: "USA",
     built: 2009, capacity: 80000, cost: "US$1,300 M", img: "AT&T Stadium 2022-08-24.jpg",
+    fact: "Uno de los interiores sin columnas más grandes del mundo; su pantalla central colgante fue récord al inaugurarse.",
+    factEn: "One of the world's largest column-free interiors; its center-hung video board was a record at opening.",
   },
   "Guadalajara (Zapopan)": {
     fifa: "Estadio Guadalajara", stadium: "Estadio Akron",
     city: "Guadalajara", country: "Mexico",
     built: 2010, capacity: 49850, cost: "US$197 M", img: "Estadio Omnilife Chivas.jpg",
+    fact: "Diseñado como un volcán con una “nube” de cubierta; es la casa de las Chivas de Guadalajara.",
+    factEn: "Designed as a volcano topped by a ‘cloud’ roof; it's the home of Chivas de Guadalajara.",
   },
   Houston: {
     fifa: "Houston Stadium", stadium: "NRG Stadium",
     city: "Houston", country: "USA",
     built: 2002, capacity: 72220, cost: "US$352 M", img: "Reliant stadium.jpg",
+    fact: "Fue el primer estadio de la NFL con techo retráctil; el césped natural se cultiva en bandejas modulares.",
+    factEn: "It was the NFL's first retractable-roof stadium; the natural grass grows in modular trays.",
   },
   "Kansas City": {
     fifa: "Kansas City Stadium", stadium: "Arrowhead Stadium",
     city: "Kansas City", country: "USA",
     built: 1972, capacity: 76416, cost: "US$43 M (1972)", img: "Arrowhead Stadium 2010.JPG",
+    fact: "Tiene el récord Guinness del estadio más ruidoso del mundo: 142.2 decibeles.",
+    factEn: "Holds the Guinness record for the loudest stadium in the world: 142.2 decibels.",
   },
   "Los Angeles (Inglewood)": {
     fifa: "Los Angeles Stadium", stadium: "SoFi Stadium",
     city: "Inglewood", country: "USA",
     built: 2020, capacity: 70240, cost: "US$5,500 M", img: "SoFi Stadium.jpg",
+    fact: "El estadio más caro jamás construido (~US$5,500 M), con un techo translúcido y una pantalla ovalada de doble cara.",
+    factEn: "The most expensive stadium ever built (~US$5.5 B), with a translucent roof and a dual-sided oval screen.",
   },
   "Mexico City": {
     fifa: "Estadio Ciudad de México", stadium: "Estadio Azteca",
     city: "Ciudad de México", country: "Mexico",
     built: 1966, capacity: 83264, cost: "US$26 M (1966)", img: "Estadio Azteca 1.JPG",
+    fact: "Único estadio que ha albergado dos finales del Mundial (1970 y 1986) y en 2026 será el primero en recibir tres Copas del Mundo. Escenario del gol del siglo y la “mano de Dios” de Maradona.",
+    factEn: "The only stadium to host two World Cup finals (1970 and 1986); in 2026 it becomes the first to host three World Cups. Stage of Maradona's ‘Goal of the Century’ and ‘Hand of God’.",
   },
   "Miami (Miami Gardens)": {
     fifa: "Miami Stadium", stadium: "Hard Rock Stadium",
     city: "Miami Gardens", country: "USA",
     built: 1987, capacity: 65326, cost: "US$115 M (1987)", img: "Hard Rock Stadium.jpg",
+    fact: "Alrededor de él se corre el Gran Premio de Miami de F1 y se juega el Miami Open de tenis.",
+    factEn: "The Miami F1 Grand Prix runs around it and the Miami Open tennis is played on site.",
   },
   "Monterrey (Guadalupe)": {
     fifa: "Estadio Monterrey", stadium: "Estadio BBVA",
     city: "Monterrey", country: "Mexico",
     built: 2015, capacity: 53500, cost: "US$200 M", img: "Estadio BBVA Bancomer (1).jpg",
+    fact: "Apodado “El Gigante de Acero”, su tribuna abierta enmarca el Cerro de la Silla de fondo.",
+    factEn: "Nicknamed ‘The Steel Giant’, its open end frames the Cerro de la Silla mountain behind the pitch.",
   },
   "New York/New Jersey (East Rutherford)": {
     fifa: "New York New Jersey Stadium", stadium: "MetLife Stadium",
     city: "East Rutherford", country: "USA",
     built: 2010, capacity: 82500, cost: "US$1,600 M", img: "MetLife Stadium exterior Super Bowl XLVIII.jpg",
+    fact: "Sede de la FINAL del Mundial 2026. Lo comparten los Giants y los Jets de la NFL.",
+    factEn: "Host of the 2026 World Cup FINAL. Shared by the NFL's Giants and Jets.",
   },
   Philadelphia: {
     fifa: "Philadelphia Stadium", stadium: "Lincoln Financial Field",
     city: "Philadelphia", country: "USA",
     built: 2003, capacity: 69176, cost: "US$512 M", img: "Lincoln Financial Field, Philadelphia, 2024.jpg",
+    fact: "Apodado “The Linc”, fue de los primeros estadios de la NFL en alimentarse con energía solar y eólica propia.",
+    factEn: "Nicknamed ‘The Linc’, it was among the first NFL stadiums powered by its own on-site solar and wind energy.",
   },
   "San Francisco Bay Area (Santa Clara)": {
     fifa: "San Francisco Bay Area Stadium", stadium: "Levi's Stadium",
     city: "Santa Clara", country: "USA",
     built: 2014, capacity: 68500, cost: "US$1,300 M", img: "Levi's Stadium from air.jpg",
+    fact: "Tiene una azotea verde y certificación LEED Oro; es famoso por el fuerte sol de la tarde sobre una de sus tribunas.",
+    factEn: "Has a green roof and LEED Gold certification; famous for the strong afternoon sun on one of its stands.",
   },
   Seattle: {
     fifa: "Seattle Stadium", stadium: "Lumen Field",
     city: "Seattle", country: "USA",
     built: 2002, capacity: 68740, cost: "US$430 M", img: "Artistic Design on Exterior of Lumen Field Stadium.jpg",
+    fact: "Su diseño atrapa el ruido a propósito: es de los estadios más ruidosos de la NFL, hogar del “12th man”.",
+    factEn: "Designed to trap crowd noise: one of the NFL's loudest stadiums, home of the ‘12th Man’.",
   },
   Toronto: {
     fifa: "Toronto Stadium", stadium: "BMO Field",
     city: "Toronto", country: "Canada",
     built: 2007, capacity: 45500, cost: "CA$62.9 M", img: "BMO Field, Toronto, Ontario (29969149766).jpg",
+    fact: "La sede más pequeña de 2026; se amplió especialmente para el Mundial. Casa del Toronto FC.",
+    factEn: "The smallest 2026 venue; expanded specially for the World Cup. Home of Toronto FC.",
   },
   Vancouver: {
     fifa: "Vancouver Stadium", stadium: "BC Place",
     city: "Vancouver", country: "Canada",
     built: 1983, capacity: 54500, cost: "CA$126 M (1983)", img: "BC Place (Vancouver).jpg",
+    fact: "Tiene el mayor techo retráctil soportado por cables del mundo; albergó las ceremonias de los Juegos de Invierno 2010.",
+    factEn: "Has the world's largest cable-supported retractable roof; it hosted the 2010 Winter Olympics ceremonies.",
   },
 };

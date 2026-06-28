@@ -78,6 +78,8 @@ const STR = {
   "hero.text": ["Primera edición con <strong>48 selecciones</strong>, repartida en tres países anfitriones y <strong>16 sedes</strong>.",
                 "The first edition with <strong>48 teams</strong>, across three host nations and <strong>16 venues</strong>."],
   "host.cst": ["Horarios en CST", "Times in CST"],
+  "hero.next": ["Próximo partido", "Next match"],
+  "hero.live": ["¡En juego!", "Kicking off!"],
 
   // generic section heads / cards
   "ov.next": ["Próximos y en vivo", "Live & upcoming"],

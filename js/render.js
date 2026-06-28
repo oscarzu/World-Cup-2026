@@ -73,7 +73,7 @@ export function showOfflineBanner() {
 
 // Wikimedia Commons hi-res image via the stable Special:FilePath redirect.
 const venuePhoto = (file) =>
-  `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1200`;
+  `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=1600`;
 
 function flagImg(team, cls = "flag", { eager = false } = {}) {
   const url = flagUrl(team);
@@ -557,6 +557,7 @@ export function renderVenues() {
           <div><span class="vk">${t("venue.capacity")}</span><span class="vv">${fmtInt(v.capacity)}</span></div>
           <div><span class="vk">${t("venue.cost")}</span><span class="vv">${esc(v.cost)}</span></div>
         </div>
+        ${(getLang() === "en" ? v.factEn : v.fact) ? `<p class="venue-fact">💡 ${esc(getLang() === "en" ? v.factEn : v.fact)}</p>` : ""}
       </div>
     </article>`;
   }).join("");
@@ -1092,6 +1093,40 @@ function loadScript(src, onload) {
 }
 
 // ---- editorial hero lead (key numbers in one line) ----
+// Next-match countdown card in the hero.
+export function renderHeroNext(matches) {
+  const el = $("#hero-next");
+  if (!el) return;
+  const now = Date.now();
+  const next = (matches || [])
+    .filter((m) => m.status === "scheduled" && kickoffDate(m) && kickoffDate(m).getTime() > now)
+    .sort((a, b) => kickoffDate(a) - kickoffDate(b))[0];
+  if (!next) { el.innerHTML = ""; delete el.dataset.ts; return; }
+  el.dataset.ts = String(kickoffDate(next).getTime());
+  el.innerHTML = `
+    <div class="hn-label">${t("hero.next")}</div>
+    <div class="hn-match">
+      ${flagImg(next.home.name, "flag", { eager: true })}<span class="hn-team">${esc(tn(next.home.name))}</span>
+      <span class="hn-vs">vs</span>
+      <span class="hn-team">${esc(tn(next.away.name))}</span>${flagImg(next.away.name, "flag", { eager: true })}
+    </div>
+    <div class="hn-count" id="hero-count"></div>
+    <div class="hn-meta">${esc(kickoffDateTime(next) || "")}${next.ground ? ` · 📍 ${esc(venueFifa(next.ground))}` : ""}</div>`;
+  tickHeroCountdown();
+}
+
+export function tickHeroCountdown() {
+  const host = $("#hero-next"), el = $("#hero-count");
+  if (!el || !host?.dataset.ts) return;
+  const diff = Number(host.dataset.ts) - Date.now();
+  if (diff <= 0) { el.textContent = t("hero.live"); return; }
+  const pad = (n) => String(n).padStart(2, "0");
+  const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000),
+    m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+  el.innerHTML = (d > 0 ? `<span class="hc-u"><b>${d}</b>d</span>` : "") +
+    `<span class="hc-u"><b>${pad(h)}</b>h</span><span class="hc-u"><b>${pad(m)}</b>m</span><span class="hc-u"><b>${pad(s)}</b>s</span>`;
+}
+
 export function renderHeroLead(stats) {
   const el = document.getElementById("hero-lead");
   if (!el) return;
