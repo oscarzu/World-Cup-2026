@@ -109,7 +109,7 @@ const STR = {
   "ov.next": ["Próximos y en vivo", "Live & upcoming"],
   "ov.seeAll": ["Ver todos los partidos", "See all matches"],
   "ov.goalsByMd": ["Goles por fase", "Goals by phase"],
-  "foot.goalsByMd": ["Fase de grupos y cada ronda de eliminatoria (16vos → final)", "Group stage and each knockout round (R32 → final)"],
+  "foot.goalsByMd": ["Fase de grupos y cada ronda de eliminatoria (16vos → final) · eje en escala logarítmica", "Group stage and each knockout round (R32 → final) · log-scale axis"],
   "ph.group": ["Fase de grupos", "Group stage"],
   "rules.kicker": ["Reglamento", "Rules"],
   "rules.title": ["Reglas esenciales de esta Copa", "Key rules of this World Cup"],
