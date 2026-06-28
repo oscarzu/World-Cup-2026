@@ -358,6 +358,57 @@ const BROADCAST = {
   en: "📺 USA: FOX & FS1 (FOX Sports app / FOX One) — Spanish: Telemundo / Peacock",
 };
 
+// Editorial "must-watch" hooks, keyed by ISO so every ESPN name variant maps
+// cleanly. One evocative clause per team, written like a sports columnist
+// selling the ticket. [es, en].
+const HOOK = {
+  ar: ["los campeones del mundo defienden su corona y exprimen la era Messi", "the reigning world champions defend their crown in Messi's twilight"],
+  br: ["la Canarinha persigue la sexta estrella que se le niega desde 2002", "the Seleção chase the sixth star denied them since 2002"],
+  fr: ["la Francia de Mbappé golea y da miedo", "Mbappé's France score for fun and terrify defenses"],
+  es: ["la Roja del toque infinito y la chispa de Lamine Yamal", "Spain's endless tiki-taka and Lamine Yamal's spark"],
+  "gb-eng": ["Inglaterra carga con 60 años de espera y un plantel para romperla", "England carry a 60-year wait and a squad to end it"],
+  "gb-sct": ["Escocia, corazón y orgullo, viene a incomodar a los grandes", "Scotland bring heart and pride to upset the big names"],
+  pt: ["puede ser el último baile mundialista de Cristiano Ronaldo", "this may be Cristiano Ronaldo's last World Cup dance"],
+  de: ["la Alemania tetracampeona quiere reconstruir su imperio", "four-time champions Germany want to rebuild their empire"],
+  nl: ["la Naranja Mecánica busca por fin la copa que tres finales le negaron", "the Oranje hunt the cup three finals denied them"],
+  mx: ["el Tri sueña en casa con romper por fin el maleficio del quinto partido", "host Mexico dream of finally breaking their last-16 curse"],
+  us: ["los anfitriones quieren encender al país y volverlo loco por el futbol", "the hosts want to set the country alight for soccer"],
+  ca: ["Canadá, la sorpresa anfitriona, llega sin nada que perder", "co-hosts Canada arrive with nothing to lose"],
+  hr: ["la Croacia de Modrić, eterna sorpresa que nunca muere", "Modrić's Croatia, the dark horse that never dies"],
+  uy: ["la garra charrúa, dos veces campeona, jamás se rinde", "Uruguay's two-time champions and never-say-die garra"],
+  ma: ["Marruecos, los héroes de 2022, ya no sorprenden a nadie", "2022 semifinalists Morocco surprise nobody anymore"],
+  be: ["la generación dorada belga dispara su última bala", "Belgium's golden generation fire their final shot"],
+  jp: ["Japón, el gigante asiático que ya tumbó a Alemania y España", "Japan, the Asian giant that toppled Germany and Spain"],
+  co: ["Colombia baila, ataca y enamora al neutral", "Colombia dance, attack and win over the neutral"],
+  sn: ["los Leones de Teranga, campeones de África, rugen fuerte", "the Lions of Teranga, African champions, roar loud"],
+  ch: ["Suiza, rocosa y siempre incómoda en los cruces", "rock-solid Switzerland, forever awkward in knockouts"],
+  no: ["la Noruega de Haaland es pura dinamita", "Haaland's Norway are pure dynamite"],
+  za: ["Sudáfrica, los Bafana Bafana, vuelven a ilusionar a un continente", "South Africa's Bafana Bafana rekindle a continent's hope"],
+  ec: ["Ecuador, joven y atrevido, no le tiembla la mano", "Ecuador, young and fearless, never blink"],
+  au: ["los Socceroos australianos venden cara su piel", "Australia's Socceroos sell their skin dearly"],
+  kr: ["Corea del Sur corre los 90 minutos como si fueran el último", "South Korea run every minute like it's their last"],
+};
+// Sorted ISO pair → a marquee-rivalry line that trumps the per-team hooks.
+const RIVAL = {
+  "ar|br": ["el clásico sudamericano que paraliza a un continente entero", "the South American superclásico that stops a whole continent"],
+  "mx|us": ["el pleito de toda la vida: México vs USA, la frontera arde", "the oldest of grudges: Mexico vs USA, the border on fire"],
+  "de|nl": ["odio histórico sobre el césped: Alemania vs Países Bajos", "pure historic needle: Germany vs the Netherlands"],
+  "ar|gb-eng": ["la herida abierta del 86 vuelve: Argentina vs Inglaterra", "the open wound of '86 reopens: Argentina vs England"],
+  "es|pt": ["vecinos ibéricos que no se perdonan nada", "Iberian neighbors who give each other no quarter"],
+  "br|fr": ["revancha de altura: Brasil vs Francia, fútbol de otra galaxia", "a heavyweight rematch: Brazil vs France, football from another galaxy"],
+};
+function highlight(hIso, aIso, hDisp, aDisp, lang) {
+  const L = lang === "es" ? 0 : 1;
+  if (!hIso || !aIso) return null;
+  const key = [hIso, aIso].sort().join("|");
+  if (RIVAL[key]) return RIVAL[key][L];
+  const fb = (d) => (lang === "es" ? `${d} quiere dar la campanada` : `${d} are out to cause a shock`);
+  const h = HOOK[hIso] ? HOOK[hIso][L] : fb(hDisp);
+  const a = HOOK[aIso] ? HOOK[aIso][L] : fb(aDisp);
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  return `${cap(h)} — ${a}.`;
+}
+
 function buildICS(events, koStart, lang, teamGoals) {
   const L = lang === "es" ? 0 : 1;
   const tName = (n) => (L === 0 && TEAM[n] ? TEAM[n][0] : n);
@@ -389,12 +440,16 @@ function buildICS(events, koStart, lang, teamGoals) {
     const gH = teamGoals?.[hRaw]?.goals, gA = teamGoals?.[aRaw]?.goals;
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
 
+    const hIso = TEAM[hRaw]?.[1], aIso = TEAM[aRaw]?.[1];
+    const hl = (hRaw && aRaw) ? highlight(hIso, aIso, tName(hRaw), tName(aRaw), lang) : null;
+
     const lines = [];
     lines.push(`🏟️ ${venue}${city ? `, ${city}` : ""}`);
     lines.push(BROADCAST[lang === "es" ? "es" : "en"]);
+    if (hl) lines.push(`⚡ ${hl}`);
     lines.push(lang === "es"
-      ? `⭐ ${hn} vs ${an} — se juega ${stake[0]}.`
-      : `⭐ ${hn} vs ${an} — playing for ${stake[1]}.`);
+      ? `⭐ Se juega ${stake[0]}.`
+      : `⭐ Playing for ${stake[1]}.`);
     if (gH != null && gA != null) {
       lines.push(lang === "es"
         ? `⚽ Goleo en el torneo: ${tName(hRaw)} ${gH} · ${tName(aRaw)} ${gA}.`
