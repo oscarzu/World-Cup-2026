@@ -42,11 +42,13 @@ export default {
         capturedMatches: Object.keys(agg.fixtures || {}).length,
         liveNow: (snap.live || []).length,
         snapshotUpdatedAt: snap.updatedAt || null,
-        hasCalendar: !!(await env.WC26.get("calendar")), lastResult }, 200, cors);
+        hasCalendar: !!(await env.WC26.get("calendar:es")), lastResult }, 200, cors);
     }
     if (path === "/calendar.ics") {
-      let ics = await env.WC26.get("calendar");
-      if (!ics) { await collect(env); ics = await env.WC26.get("calendar"); } // build on first hit
+      const lang = new URL(request.url).searchParams.get("lang") === "en" ? "en" : "es";
+      const key = "calendar:" + lang;
+      let ics = await env.WC26.get(key);
+      if (!ics) { await collect(env); ics = await env.WC26.get(key); } // build on first hit
       return new Response(ics || "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR", {
         status: 200,
         headers: { ...cors, "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "public, max-age=300" },
@@ -144,10 +146,15 @@ async function collect(env, { reset = false, backfillLimit } = {}) {
       await env.WC26.put("agg", JSON.stringify(agg));
       wrote++;
     }
-    // Knockout calendar: rebuild from ESPN, store only when it actually changed
-    // (real teams replacing TBD as the bracket advances).
-    const ics = buildICS(events, env.WC_KO_START || "2026-06-28");
-    if (ics !== (await env.WC26.get("calendar"))) { await env.WC26.put("calendar", ics); wrote++; }
+    // Knockout calendar: rebuild from ESPN in both languages, store only when it
+    // actually changed (real teams replacing TBD as the bracket advances).
+    const koStart = env.WC_KO_START || "2026-06-28";
+    const teamGoals = aggregateTeams(agg);
+    for (const lang of ["es", "en"]) {
+      const ics = buildICS(events, koStart, lang, teamGoals);
+      const key = "calendar:" + lang;
+      if (ics !== (await env.WC26.get(key))) { await env.WC26.put(key, ics); wrote++; }
+    }
     result.wrote = wrote;
     result.ok = true;
   } catch (e) {
@@ -308,39 +315,104 @@ function icsZ(d) {
 }
 function icsEsc(s) { return String(s ?? "").replace(/[\\;,]/g, (m) => "\\" + m).replace(/\n/g, "\\n"); }
 
-function buildICS(events, koStart) {
-  // Fixed stamp so the .ics only changes when the FIXTURES change (teams, dates,
-  // venues) — not every run. Keeps KV writes near zero (a per-run DTSTAMP would
-  // make the calendar look "changed" every cron and burn the put budget).
+// ESPN team name → Spanish name + ISO flag code (for emoji flags in the .ics).
+const TEAM = {
+  "South Africa": ["Sudáfrica", "za"], Canada: ["Canadá", "ca"], Germany: ["Alemania", "de"],
+  Sweden: ["Suecia", "se"], Netherlands: ["Países Bajos", "nl"], Morocco: ["Marruecos", "ma"],
+  Brazil: ["Brasil", "br"], Japan: ["Japón", "jp"], "Ivory Coast": ["Costa de Marfil", "ci"],
+  "Cote d'Ivoire": ["Costa de Marfil", "ci"], Mexico: ["México", "mx"], USA: ["Estados Unidos", "us"],
+  "United States": ["Estados Unidos", "us"], Switzerland: ["Suiza", "ch"], Australia: ["Australia", "au"],
+  Argentina: ["Argentina", "ar"], France: ["Francia", "fr"], Spain: ["España", "es"], Portugal: ["Portugal", "pt"],
+  England: ["Inglaterra", "gb-eng"], Croatia: ["Croacia", "hr"], Uruguay: ["Uruguay", "uy"], Colombia: ["Colombia", "co"],
+  Belgium: ["Bélgica", "be"], Senegal: ["Senegal", "sn"], Norway: ["Noruega", "no"], Egypt: ["Egipto", "eg"],
+  Ecuador: ["Ecuador", "ec"], "South Korea": ["Corea del Sur", "kr"], "Korea Republic": ["Corea del Sur", "kr"],
+  Iran: ["Irán", "ir"], "IR Iran": ["Irán", "ir"], Austria: ["Austria", "at"], Scotland: ["Escocia", "gb-sct"],
+  Paraguay: ["Paraguay", "py"], Panama: ["Panamá", "pa"], Ghana: ["Ghana", "gh"], "Cape Verde": ["Cabo Verde", "cv"],
+  "Cabo Verde": ["Cabo Verde", "cv"], Algeria: ["Argelia", "dz"], Tunisia: ["Túnez", "tn"], Qatar: ["Catar", "qa"],
+  "Saudi Arabia": ["Arabia Saudita", "sa"], Jordan: ["Jordania", "jo"], Iraq: ["Irak", "iq"], Uzbekistan: ["Uzbekistán", "uz"],
+  "DR Congo": ["RD Congo", "cd"], "New Zealand": ["Nueva Zelanda", "nz"], Haiti: ["Haití", "ht"], "Curacao": ["Curazao", "cw"],
+  "Curaçao": ["Curazao", "cw"], "Bosnia & Herzegovina": ["Bosnia y Herzegovina", "ba"], "Czech Republic": ["República Checa", "cz"],
+  Czechia: ["República Checa", "cz"], Turkey: ["Turquía", "tr"], Turkiye: ["Turquía", "tr"], "Türkiye": ["Turquía", "tr"],
+};
+function flagEmoji(iso) {
+  if (!iso) return "";
+  if (iso === "gb-eng") return "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}";
+  if (iso === "gb-sct") return "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}";
+  return iso.slice(0, 2).toUpperCase().replace(/./g, (c) => String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0)));
+}
+// round headline → [es, en] label + [es, en] "what's at stake".
+const ROUNDS = [
+  [/round of 32|1\/16/i, ["Dieciseisavos", "Round of 32"], ["el pase a Octavos", "a spot in the Round of 16"]],
+  [/round of 16|1\/8/i, ["Octavos de final", "Round of 16"], ["el pase a Cuartos", "a spot in the quarter-finals"]],
+  [/quarter/i, ["Cuartos de final", "Quarter-final"], ["el pase a Semifinales", "a spot in the semi-finals"]],
+  [/semi/i, ["Semifinal", "Semi-final"], ["el pase a la Final", "a spot in the final"]],
+  [/third|3rd/i, ["Tercer lugar", "Third place"], ["el bronce", "the bronze medal"]],
+  [/final/i, ["Final", "Final"], ["el título mundial", "the world title"]],
+];
+function roundInfo(headline) {
+  for (const [re, label, stake] of ROUNDS) if (re.test(headline || "")) return { label, stake };
+  return { label: ["Eliminatoria", "Knockout"], stake: ["el avance", "advancing"] };
+}
+const BROADCAST = {
+  es: "📺 México: Televisa (Canal 5 · TUDN · VIX) y TV Azteca (Azteca 7 · Azteca Deportes)",
+  en: "📺 USA: FOX & FS1 (FOX Sports app / FOX One) — Spanish: Telemundo / Peacock",
+};
+
+function buildICS(events, koStart, lang, teamGoals) {
+  const L = lang === "es" ? 0 : 1;
+  const tName = (n) => (L === 0 && TEAM[n] ? TEAM[n][0] : n);
+  const tFlag = (n) => (TEAM[n] ? flagEmoji(TEAM[n][1]) : "");
+  const TBD = lang === "es" ? "Por definir" : "TBD";
+  // Fixed stamp so the .ics only changes when the FIXTURES change.
   const stamp = "20260101T000000Z";
+  const calName = lang === "es" ? "Mundial 2026 — Eliminatorias" : "World Cup 2026 — Knockouts";
   const out = [
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//World Cup 2026//Worker//EN",
-    "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:World Cup 2026 — Knockouts",
+    "CALSCALE:GREGORIAN", "METHOD:PUBLISH", `X-WR-CALNAME:${icsEsc(calName)}`,
     "REFRESH-INTERVAL;VALUE=DURATION:PT3H", "X-PUBLISHED-TTL:PT3H",
   ];
   for (const ev of events || []) {
     const date = (ev.date || "");
-    if (date.slice(0, 10) < koStart) continue; // group stage → skip
+    if (date.slice(0, 10) < koStart) continue;
     const start = new Date(ev.date);
     if (isNaN(start)) continue;
     const comp = ev.competitions?.[0] || {};
     const cs = comp.competitors || [];
     const home = cs.find((c) => c.homeAway === "home") || cs[0] || {};
     const away = cs.find((c) => c.homeAway === "away") || cs[1] || {};
-    const hn = home.team?.displayName || "TBD";
-    const an = away.team?.displayName || "TBD";
-    const round = comp.notes?.[0]?.headline || ev.season?.slug || "Knockout stage";
+    const hRaw = home.team?.displayName || "", aRaw = away.team?.displayName || "";
+    const hn = hRaw ? `${tFlag(hRaw)} ${tName(hRaw)}`.trim() : TBD;
+    const an = aRaw ? `${tFlag(aRaw)} ${tName(aRaw)}`.trim() : TBD;
+    const { label, stake } = roundInfo(comp.notes?.[0]?.headline || ev.season?.slug);
     const venue = comp.venue?.fullName || "";
+    const city = comp.venue?.address?.city || "";
+    const gH = teamGoals?.[hRaw]?.goals, gA = teamGoals?.[aRaw]?.goals;
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+
+    const lines = [];
+    lines.push(`🏟️ ${venue}${city ? `, ${city}` : ""}`);
+    lines.push(BROADCAST[lang === "es" ? "es" : "en"]);
+    lines.push(lang === "es"
+      ? `⭐ ${hn} vs ${an} — se juega ${stake[0]}.`
+      : `⭐ ${hn} vs ${an} — playing for ${stake[1]}.`);
+    if (gH != null && gA != null) {
+      lines.push(lang === "es"
+        ? `⚽ Goleo en el torneo: ${tName(hRaw)} ${gH} · ${tName(aRaw)} ${gA}.`
+        : `⚽ Tournament goals: ${hRaw} ${gH} · ${aRaw} ${gA}.`);
+    }
+    lines.push(lang === "es"
+      ? "🔄 Equipos según el cuadro actual; se actualizan al avanzar la fase."
+      : "🔄 Teams reflect the current bracket; they update as the round advances.");
+
     out.push(
       "BEGIN:VEVENT",
       `UID:wc2026-espn-${ev.id}@wc26-football-proxy`,
       `DTSTAMP:${stamp}`,
       `DTSTART:${icsZ(start)}`,
       `DTEND:${icsZ(end)}`,
-      `SUMMARY:${icsEsc(`WC 2026 · ${round}: ${hn} vs ${an}`)}`,
-      `LOCATION:${icsEsc(venue)}`,
-      `DESCRIPTION:${icsEsc("Copa Mundial de la FIFA 2026 — se actualiza automáticamente conforme avanza el cuadro.")}`,
+      `SUMMARY:${icsEsc(`${hn} vs ${an} · ${label[L]}`)}`,
+      `LOCATION:${icsEsc(`${venue}${city ? `, ${city}` : ""}`)}`,
+      `DESCRIPTION:${icsEsc(lines.join("\n"))}`,
       "END:VEVENT",
     );
   }

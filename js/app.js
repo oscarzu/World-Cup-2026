@@ -297,9 +297,11 @@ function initSubnav() {
 
 // ---- add knockout fixtures to calendar ----
 function initCalendar() {
-  // Download a static .ics (snapshot of today's projected teams).
+  // Download a static .ics (snapshot of today's projected teams), localized to
+  // the current UI language and enriched with flags, venue and broadcasters.
   $("#add-calendar")?.addEventListener("click", () => {
-    const ics = buildKnockoutICS(state.matches, computeStandings(state.matches));
+    const matches = state.matchesResolved || state.matches;
+    const ics = buildKnockoutICS(matches, computeStandings(state.matches), getLang());
     downloadICS(ics);
   });
   // Subscribe to the Worker feed — auto-updates teams as the bracket advances.
@@ -310,10 +312,11 @@ function initCalendar() {
     const base = (CONFIG.LIVE_PROXY_URL || "").trim();
     if (!base) { sub.hidden = true; }
     else {
-      const httpsUrl = base.replace(/\/+$/, "") + "/calendar.ics";
-      const webcal = httpsUrl.replace(/^https?:/, "webcal:");
-      const gcal = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(webcal);
       sub.addEventListener("click", () => {
+        // ?lang follows the selected tab so the feed comes in the right language.
+        const httpsUrl = base.replace(/\/+$/, "") + "/calendar.ics?lang=" + getLang();
+        const webcal = httpsUrl.replace(/^https?:/, "webcal:");
+        const gcal = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(webcal);
         UI.openInfoModal({
           title: t("cal.subTitle"),
           html: `<p class="modal-sub">${t("cal.subBody")}</p>
