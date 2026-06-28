@@ -132,7 +132,8 @@ export const FLAGS = {
   "United States": "us", "Korea Republic": "kr", "IR Iran": "ir",
   "Côte d'Ivoire": "ci", "Cote d'Ivoire": "ci", Czechia: "cz",
   "Cabo Verde": "cv", "Türkiye": "tr", Turkiye: "tr",
-  "Bosnia and Herzegovina": "ba", "Czech Republic ": "cz",
+  "Bosnia and Herzegovina": "ba", "Bosnia-Herzegovina": "ba", "Bosnia Herzegovina": "ba",
+  "Czech Republic ": "cz",
 };
 
 // Spanish (Mexico) names for selecciones. Display only — flag lookups keep the
@@ -143,6 +144,7 @@ export const TEAM_ES = {
   Australia: "Australia", Netherlands: "Países Bajos", Japan: "Japón", Iran: "Irán", "IR Iran": "Irán",
   "New Zealand": "Nueva Zelanda", "Czech Republic": "República Checa", Czechia: "República Checa",
   Canada: "Canadá", "Bosnia & Herzegovina": "Bosnia y Herzegovina", "Bosnia and Herzegovina": "Bosnia y Herzegovina",
+  "Bosnia-Herzegovina": "Bosnia y Herzegovina", "Bosnia Herzegovina": "Bosnia y Herzegovina",
   Qatar: "Catar", Switzerland: "Suiza", Brazil: "Brasil", Morocco: "Marruecos", Scotland: "Escocia",
   Paraguay: "Paraguay", "Curaçao": "Curazao", "Ivory Coast": "Costa de Marfil",
   "Côte d'Ivoire": "Costa de Marfil", "Cote d'Ivoire": "Costa de Marfil",

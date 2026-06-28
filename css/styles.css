@@ -266,6 +266,52 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
 
 .match-list { display: grid; gap: 0.65rem; }
 .match-list.compact .match { padding: 0.75rem 0.95rem; }
+/* "See all" link at the end of the home live/upcoming list */
+.see-more { display: block; width: 100%; margin-top: 0.4rem; padding: 0.7rem 1rem;
+  background: var(--surface-2); color: var(--accent); border: 1px solid var(--border);
+  border-radius: var(--radius); font: inherit; font-weight: 700; font-size: 0.85rem;
+  cursor: pointer; transition: border-color var(--t), background var(--t); }
+.see-more:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+/* model report card: predicted vs actual */
+.pred-report { margin-top: 0.4rem; }
+.pr-summary { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.pr-summary > div { flex: 1; min-width: 140px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.8rem 1rem; display: flex; flex-direction: column; gap: 0.1rem; }
+.pr-summary .pr-k { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.pr-summary .pr-v { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pr-summary small { color: var(--muted); font-size: 0.72rem; }
+.pr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.6rem; }
+.pr-card { background: var(--surface); border: 1px solid var(--border); border-left-width: 3px;
+  border-radius: var(--radius); padding: 0.7rem 0.85rem; }
+.pr-card.hit { border-left-color: var(--accent); }
+.pr-card.miss { border-left-color: var(--live); }
+.pr-match { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.4rem; }
+.pr-t { display: flex; align-items: center; gap: 0.4rem; min-width: 0; flex: 1; }
+.pr-t.right { flex-direction: row-reverse; text-align: right; }
+.pr-t .flag { width: 22px; height: 15px; border-radius: 3px; object-fit: cover; flex: 0 0 auto; }
+.pr-tn { font-weight: 600; font-size: 0.84rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-sc { font-weight: 800; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+.pr-lines { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.78rem; }
+.pr-line { color: var(--muted); }
+.pr-line b { color: var(--text); font-weight: 700; }
+.pr-verdict { font-weight: 800; font-size: 0.74rem; flex: 0 0 auto; }
+.pr-verdict.ok { color: var(--accent); }
+.pr-verdict.no { color: var(--live); }
+
+/* scorer rows: clickable + per-goal log modal */
+.scorer.clickable { cursor: pointer; }
+.scorer.clickable:hover { border-color: var(--accent); }
+.scorer-go { color: var(--muted); font-size: 0.8rem; margin-left: 0.3rem; opacity: 0.7; }
+.goal-log { display: grid; gap: 0.4rem; margin-top: 0.6rem; }
+.gl-row { display: flex; align-items: center; gap: 0.55rem; padding: 0.4rem 0.5rem;
+  background: var(--surface-2); border-radius: 10px; }
+.gl-row .flag { width: 22px; height: 15px; border-radius: 3px; object-fit: cover; flex: 0 0 auto; }
+.gl-n { color: var(--muted); font-weight: 800; font-variant-numeric: tabular-nums; min-width: 1.2rem; }
+.gl-vs { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gl-min { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+/* even number alignment in stat/fact cards */
+.fact-value, .stat .num, .num { font-variant-numeric: tabular-nums; }
 .day-sep { color: var(--muted); font-size: 0.76rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.06em; margin: 1rem 0 0.3rem; scroll-margin-top: 130px; }
 
@@ -297,6 +343,8 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
   border-top: 1px dashed var(--border); padding-top: 0.55rem; margin-top: 0.25rem; }
 .match-venue { grid-column: 1 / -1; font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.match-when { grid-column: 1 / -1; order: -1; font-size: 0.72rem; font-weight: 700; color: var(--accent);
+  letter-spacing: 0.01em; margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---- standings ---- */
 .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.1rem; }

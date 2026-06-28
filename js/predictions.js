@@ -188,6 +188,7 @@ export function backtest(matches) {
   let n = 0, hit = 0, exact = 0, brier = 0, rps = 0, logloss = 0;
   let baseRps = 0, baseHit = 0; // uniform 1/3 baseline + "home always"
   const order = ["home", "draw", "away"];
+  const samples = []; // per-match predicted vs actual, for the "report card" UI
   for (let idx = 0; idx < finished.length; idx++) {
     const m = finished[idx];
     // Train on strictly-earlier matches only: keep results for the first `idx`
@@ -202,8 +203,14 @@ export function backtest(matches) {
     const act = outcome(m.score.home, m.score.away);
     const y = { home: act === "home" ? 1 : 0, draw: act === "draw" ? 1 : 0, away: act === "away" ? 1 : 0 };
     const pred = order.reduce((b, k) => (p.probs[k] > p.probs[b] ? k : b), "home");
+    const exactHit = p.scoreline === `${m.score.home}–${m.score.away}`;
     if (pred === act) hit++;
-    if (p.scoreline === `${m.score.home}–${m.score.away}`) exact++;
+    if (exactHit) exact++;
+    samples.push({
+      match: m, predOutcome: pred, actOutcome: act, correct: pred === act,
+      exact: exactHit, predScore: p.scoreline, actScore: `${m.score.home}–${m.score.away}`,
+      probs: p.probs, confidence: p.confidence,
+    });
     for (const k of order) brier += (p.probs[k] - y[k]) ** 2;
     logloss += -Math.log(Math.max(1e-9, p.probs[act]));
     // RPS (ordered home>draw>away): mean of squared cumulative diffs
@@ -226,6 +233,7 @@ export function backtest(matches) {
     baselineRps: round2(baseRpsMean), baselineAccuracy: round2(n ? baseHit / n : 0),
     skillVsUniform: round2(skill),
     confidence: confidenceLabel(n, skill, accuracy),
+    samples, // chronological; UI shows the most recent
   };
 }
 

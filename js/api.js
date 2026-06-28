@@ -192,10 +192,12 @@ export async function loadTeamStats() {
   }
 }
 
-// Per-matchday efficacy history (illustrative). Never throws.
+// Per-phase efficacy history (illustrative). Never throws. Supports the new
+// phase-based shape (byPhase) and the legacy matchday shape (history).
 export async function loadEfficacyHistory() {
   try {
     const d = await cachedFetch(CONFIG.EFFICACY_HISTORY_URL, CONFIG.BASE_TTL);
+    if (Array.isArray(d?.byPhase)) return d.byPhase;
     return Array.isArray(d?.history) ? d.history : [];
   } catch (_) {
     return [];
