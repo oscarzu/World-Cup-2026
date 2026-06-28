@@ -8,7 +8,7 @@ import { resolveKnockouts, rankThirds } from "./qualification.js";
 import { computeScorers, goalStats, goalsByScorer } from "./scorers.js";
 import { computeFacts } from "./facts.js";
 import { computeDiscipline } from "./discipline.js";
-import { renderCharts, rethemeCharts } from "./charts.js";
+import { renderCharts, rethemeCharts, drawGoalsByMatchday } from "./charts.js";
 import { buildKnockoutICS, downloadICS } from "./calendar.js";
 import { buildModel, upcomingPredictions, backtest } from "./predictions.js";
 import * as AF from "./apifootball.js";
@@ -106,7 +106,28 @@ function initTabs() {
 function dispatchDrill(chart, key) {
   if (chart === "chart-groups") return drillGroup(key);
   if (chart === "chart-moments") return drillFact(key); // category → which games
+  if (chart === "chart-overview") return drillPhase(key); // phase → zoom into detail
   return drillTeam(chart, key); // teams / fouls / efficacy / red charts key on team name
+}
+
+// Goals-by-phase drill-down: the group bar zooms into goals per matchday; a
+// knockout-round bar lists that round's matches.
+function drillPhase(key) {
+  if (key === "group") {
+    const md = (state._stats && state._stats.byMatchday) || [];
+    UI.openInfoModal({
+      title: `${t("ov.goalsByMd")} · ${t("ph.group")}`,
+      html: `<p class="modal-sub">${t("drill.mdSub")}</p><div class="chart-box modal-chart"><canvas id="md-zoom"></canvas></div>`,
+    });
+    // Wait for the canvas to be in the DOM, then draw the zoomed chart.
+    requestAnimationFrame(() => drawGoalsByMatchday("md-zoom", md));
+    return;
+  }
+  // Knockout round → the matches played in that round.
+  const ms = state.matches
+    .filter((m) => m.round === key && m.score?.home != null)
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  UI.openModal({ title: UI.roundLabel(key), matches: ms });
 }
 
 // Match list behind a derived stat (comebacks, shootouts, biggest, …).
@@ -415,6 +436,7 @@ function initBackToTop() {
 // ---- rendering pass ----
 function renderAll() {
   const stats = goalStats(state.matches);
+  state._stats = stats; // for the goals-by-phase → matchday drill-down
   const facts = computeFacts(state.matches);
   state._facts = facts; // for clickable fact-card drill-downs
   const standings = computeStandings(state.matches);

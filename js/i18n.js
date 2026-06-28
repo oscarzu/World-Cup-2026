@@ -389,6 +389,7 @@ const STR = {
   "drill.groupLegend": ["✅ avanzó · ❌ eliminado · pts = puntos · GF-GC = goles a favor y en contra",
                         "✅ advanced · ❌ eliminated · pts = points · GF-GA = goals for and against"],
   "drill.scorerSub": ["contra qué selecciones marcó", "which teams they scored against"],
+  "drill.mdSub": ["Goles de la fase de grupos, jornada por jornada (J1–J17).", "Group-stage goals, matchday by matchday (MD1–MD17)."],
 
   // social fallback
   "social.fail": ["No se pudo cargar el feed aquí — ábrelo en la app ↗", "Couldn't load the feed here — open it in the app ↗"],
