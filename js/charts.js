@@ -66,9 +66,18 @@ function emphasize(data, signal, context, leadFirst = false) {
   return data.map((v) => (v === max ? signal : context));
 }
 
-function baseOpts(t2, { horizontal = false, valueLabels = true, valueColor, suffix = "", lineY = false } = {}) {
+function baseOpts(t2, { horizontal = false, valueLabels = true, valueColor, suffix = "", lineY = false, logY = false } = {}) {
   const ticks = { color: t2.text, font: { size: 11, family: FONT }, autoSkip: false };
   const catTicks = { color: t2.textStrong, font: { size: 11, family: FONT, weight: "600" }, autoSkip: false };
+  // Logarithmic y compresses huge absolute gaps (e.g. 215 group goals vs a few
+  // per knockout round) so the smaller phases stay readable. min<1 keeps a
+  // value of 1 from collapsing onto the axis.
+  const yAxis = logY
+    ? { type: "logarithmic", min: 0.5, grid: { display: true, color: t2.grid, drawBorder: false },
+        ticks: { color: t2.text, font: { size: 11, family: FONT },
+          callback: (v) => ([1, 3, 10, 30, 100, 300].includes(v) ? v : "") } }
+    : { grid: { display: lineY, color: t2.grid, drawBorder: false },
+        ticks: horizontal ? catTicks : (lineY ? ticks : { display: false }), beginAtZero: true };
   return {
     responsive: true, maintainAspectRatio: false,
     indexAxis: horizontal ? "y" : "x",
@@ -85,7 +94,7 @@ function baseOpts(t2, { horizontal = false, valueLabels = true, valueColor, suff
     },
     scales: {
       x: { grid: { display: false, drawBorder: false }, ticks: horizontal ? { display: false } : catTicks, beginAtZero: true },
-      y: { grid: { display: lineY, color: t2.grid, drawBorder: false }, ticks: horizontal ? catTicks : (lineY ? ticks : { display: false }), beginAtZero: true },
+      y: yAxis,
     },
   };
 }
@@ -154,7 +163,7 @@ export function renderCharts(stats, facts, disc, effHist) {
     const phaseLabel = (e) => (e.stage === "group" ? t("ph.group") : (KO_SHORT[e.key] ? t(KO_SHORT[e.key]) : e.key));
     const phColors = ph.map((e) => (e.stage === "group" ? tc.accent : tc.gold));
     upsert("chart-overview", "bar", ph.map(phaseLabel), ph.map((e) => e.goals), t("u.goals"),
-      { colors: phColors, valueLabels: true, valueColor: tc.textStrong, drillKeys: ph.map((e) => e.key) });
+      { colors: phColors, valueLabels: true, valueColor: tc.textStrong, logY: true, drillKeys: ph.map((e) => e.key) });
     if (ph.length) {
       const groupG = ph.filter((e) => e.stage === "group").reduce((s, e) => s + e.goals, 0);
       const koG = ph.filter((e) => e.stage === "knockout").reduce((s, e) => s + e.goals, 0);
