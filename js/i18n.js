@@ -42,6 +42,18 @@ const STR = {
   "tab.predict": ["Predicciones", "Predictions"],
   "tab.venues": ["Sedes", "Venues"],
 
+  // matches hub: list vs bracket sub-views
+  "mv.list": ["📅 Calendario", "📅 Schedule"],
+  "mv.bracket": ["🏆 Eliminatorias", "🏆 Knockouts"],
+  // live match centre on the home page
+  "live.kicker": ["En vivo", "Live now"],
+  "live.nowTitle": ["Partidos en juego", "Matches in play"],
+  // predictions on the home page
+  "pred.homeKicker": ["Modelo predictivo", "Predictive model"],
+  // road to R32, moved to the Groups tab (past tense — results are final)
+  "q.kickerPast": ["Camino a la ronda de 32", "Road to the Round of 32"],
+  "q.titlePast": ["Así quedó la clasificación", "How qualification finished"],
+
   // predictions
   "pred.kicker": ["Modelo predictivo", "Predictive model"],
   "pred.title": ["Probabilidades de los próximos partidos", "Odds for the upcoming matches"],
@@ -68,7 +80,7 @@ const STR = {
   "a.varNote": ["Incidencias destacadas (ilustrativas; no hay un feed público con el desglose por jugada).",
                 "Notable incidents (illustrative; there's no public feed with the play-by-play breakdown)."],
   // qualification tables
-  "q.qualifiedTitle": ["Clasificados por grupo (proyección hoy)", "Qualified by group (today's projection)"],
+  "q.qualifiedTitle": ["Clasificados por grupo", "Qualified by group"],
   "q.thStatus": ["Estado", "Status"],
   "q.thIn": ["Clasifica", "Qualifies"],
   "q.thOut": ["Fuera", "Out"],
@@ -141,8 +153,9 @@ const STR = {
   "foulsRank.title": ["Top 10 selecciones con más faltas por partido", "Top 10 teams by fouls per match"],
   "foulsChart.title": ["Selecciones con más faltas (por partido)", "Teams with most fouls (per match)"],
   "foulsChart.foot": ["Promedio de faltas por partido", "Average fouls per match"],
-  "cardsChart.title": ["Jugadores con más amarillas", "Players with most yellow cards"],
-  "cardsChart.foot": ["Top 10 jugadores", "Top 10 players"],
+  "cardsChart.title": ["Amarillas acumuladas en el torneo", "Yellow cards accumulated in the tournament"],
+  "cardsChart.foot": ["Top 10 · contamos todas las amarillas del torneo. Para sanción, la acumulación se reinicia tras la fase de grupos y de nuevo tras los cuartos de final (nadie se pierde la final por amarillas).",
+                      "Top 10 · we count every yellow of the tournament. For suspensions, accumulation resets after the group stage and again after the quarter-finals (no one misses the final on yellows)."],
   "groupsChart.title": ["Goles por grupo", "Goals by group"],
   "groupsChart.foot": ["Goles por grupo", "Goals by group"],
   "teamsChart.title": ["Selecciones más goleadoras", "Top-scoring teams"],
@@ -301,10 +314,10 @@ const STR = {
   "q.seconds": ["2.º de grupo", "Runners-up"],
   "q.thirdsTitle": ["Mejores terceros", "Best third-placed teams"],
   "q.cut": ["línea de corte: top 8", "cut line: top 8"],
-  "q.whatifTitle": ["Última jornada: ¿quién pasa? (proyección)", "Final matchday: who advances? (projection)"],
-  "q.in": ["Top 2 asegurado", "Top 2 secured"],
+  "q.whatifTitle": ["Cómo terminó cada grupo", "How each group finished"],
+  "q.in": ["Top 2", "Top 2"],
   "q.live": ["En disputa", "In contention"],
-  "q.out": ["Sin opción de top 2", "No top-2 path"],
+  "q.out": ["3.º o menos", "3rd or below"],
   "q.noteProj": ["Proyección con los resultados de hoy; cambia con cada partido. «Sin opción de top 2» no significa eliminado: un tercero aún puede clasificar entre los 8 mejores.",
                  "Projection from today's results; it changes every match. “No top-2 path” isn't elimination — a third-placed team can still qualify among the best 8."],
   "q.noteDone": ["Fase de grupos completa: clasificados definitivos.", "Group stage complete: final qualifiers."],
@@ -314,8 +327,9 @@ const STR = {
   "br.qf": ["Cuartos", "Quarter-finals"], "br.sf": ["Semifinal", "Semi-finals"], "br.final": ["Final", "Final"],
   "br.third": ["Tercer lugar", "Third place"],
   "br.matchday": ["Jornada", "Matchday"],
-  "br.legend": ["Cuadro proyectado en vivo con la clasificación actual. Toca un duelo para ver sede y horario.",
-                "Live projected bracket from current standings. Tap a tie for venue and kickoff."],
+  "br.legend": ["Cuadro en vivo con la clasificación actual. Cada llave muestra su número de partido (#) para identificar de dónde sale cada cruce; p. ej. «Ganador #97» avanza desde el partido #97.",
+                "Live bracket from current standings. Each tie shows its match number (#) so you can trace each pairing; e.g. “Winner #97” advances from match #97."],
+  "br.game": ["Partido", "Match"],
   "cal.add": ["📅 Añadir al calendario", "📅 Add to calendar"],
   "cal.download": ["📅 Descargar (.ics)", "📅 Download (.ics)"],
   "cal.subscribe": ["🔄 Suscribirse (se actualiza solo)", "🔄 Subscribe (auto-updates)"],
@@ -383,6 +397,8 @@ const STR = {
                "<b>39-day tournament</b><p>From 11 June to 19 July 2026 — the longest World Cup ever.</p>"],
   "rules.r9": ["<b>Pausas de hidratación</b><p>En sedes con calor extremo (México, Dallas, Houston…) el árbitro detiene el juego ~3 min cerca del minuto 30 y 75 para que los jugadores se hidraten.</p>",
                "<b>Hydration breaks</b><p>At hot venues (Mexico City, Dallas, Houston…) the referee pauses play ~3 min around the 30th and 75th minute so players can rehydrate.</p>"],
+  "rules.r10": ["<b>Las amarillas se reinician dos veces</b><p>Dos amarillas en partidos distintos = un partido de suspensión. La cuenta para sanción se borra <b>tras la fase de grupos</b> y otra vez <b>tras los cuartos de final</b>, así que nadie se pierde la final por amarillas acumuladas.</p>",
+                "<b>Yellow cards reset twice</b><p>Two yellows in separate games = a one-match ban. The suspension count is wiped <b>after the group stage</b> and again <b>after the quarter-finals</b>, so no one misses the final on accumulated yellows.</p>"],
 };
 
 export function t(key) {

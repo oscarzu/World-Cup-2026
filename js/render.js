@@ -510,7 +510,10 @@ export function renderBracket(matches, standings = new Map()) {
     const v = VENUES[m.ground];
     const where = v ? v.city : (m.ground || "");
     const when = played ? "" : (kickoffDate(m) ? kickoffDateTime(m) : fmtDate(m.date));
+    // Match number badge so "Ganador #97" placeholders can be traced to a tie.
+    const no = m.num != null ? `<span class="bkm-no" title="${esc(t("br.game"))} ${m.num}">#${m.num}</span>` : "";
     return `<div class="bkm${big ? " big" : ""}">
+      <div class="bkm-h">${no}<span class="bkm-round">${esc(roundLabel(m.round))}</span></div>
       <div class="bkm-r ${played && hs > as ? "win" : ""} ${s.home.placeholder ? "tbd" : ""}">${slotInner(s.home)}${sc(hs)}</div>
       <div class="bkm-r ${played && as > hs ? "win" : ""} ${s.away.placeholder ? "tbd" : ""}">${slotInner(s.away)}${sc(as)}</div>
       <div class="bkm-v">📍 ${esc(where)}${when ? ` · ${esc(when)}` : ""}</div>
@@ -628,6 +631,21 @@ export function renderLiveStatus({ provider, updatedAt, intervalMin }) {
     <span class="live-status-dot ${provider ? "on" : ""}"></span>
     <span class="live-status-txt">${t("live.source")}: <b>${src}</b> · ${t("live.everyPre")} ${intervalMin} min</span>
     <span class="live-status-ago">${t("live.updated")} ${relTime(updatedAt)}</span>`;
+}
+
+// ---- home live centre: the live scoreboard, shown only while a match plays ----
+export function renderHomeLive(matches) {
+  const sec = document.getElementById("home-live");
+  if (!sec) return;
+  const live = (matches || []).filter((m) => m.status === "live");
+  if (!live.length) { sec.hidden = true; sec.innerHTML = ""; return; }
+  sec.hidden = false;
+  sec.innerHTML = `
+    <div class="section-head">
+      <p class="kicker live-kick"><span class="live-status-dot on"></span>${t("live.kicker")}</p>
+      <h3 class="section-title">${t("live.nowTitle")}</h3>
+    </div>
+    <div class="live-feed">${live.map(liveCard).join("")}</div>`;
 }
 
 // ---- live match centre ----
