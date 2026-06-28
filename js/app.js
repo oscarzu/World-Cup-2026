@@ -357,6 +357,7 @@ function renderAll() {
   const resolved = resolveKnockouts(state.matches, standings);
   state.matchesResolved = resolved;
   UI.renderOverview(resolved, stats, CONFIG.TOURNAMENT);
+  UI.renderHeroNext(resolved);
   UI.renderHeroLead(stats);
   UI.animateCounts($("#overview-stats"));
   UI.renderMatches(resolved, { grouped: true });
@@ -537,6 +538,18 @@ async function loadData() {
   }
 }
 
+// Privacy-friendly visit metrics (Cloudflare Web Analytics) — only when a token
+// is configured; no cookies, no PII. Stats appear in the Cloudflare dashboard.
+function initAnalytics() {
+  const token = (CONFIG.CF_ANALYTICS_TOKEN || "").trim();
+  if (!token) return;
+  const s = document.createElement("script");
+  s.defer = true;
+  s.src = "https://static.cloudflareinsights.com/beacon.min.js";
+  s.setAttribute("data-cf-beacon", JSON.stringify({ token }));
+  document.body.appendChild(s);
+}
+
 async function boot() {
   initTheme();
   initLang();
@@ -547,6 +560,8 @@ async function boot() {
   initBackToTop();
   initCalendar();
   initDrill();
+  initAnalytics();
+  setInterval(() => UI.tickHeroCountdown(), 1000); // hero countdown
   await loadData();
 }
 

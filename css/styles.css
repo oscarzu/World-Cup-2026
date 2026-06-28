@@ -935,6 +935,33 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
 .pred-note { color: var(--muted); font-size: 0.76rem; margin: 1.2rem 0 0; max-width: 80ch; line-height: 1.5; }
 @media (max-width: 560px) { .pred-grid { grid-template-columns: 1fr; } }
 
+/* ---- venue curious fact ---- */
+.venue-fact { margin: 0.7rem 0 0; font-size: 0.82rem; line-height: 1.45; color: var(--text);
+  border-top: 1px solid var(--border); padding-top: 0.6rem; }
+
+/* ---- hero: animated glow + next-match countdown ---- */
+.hero { position: relative; overflow: hidden; }
+.hero-glow { position: absolute; inset: -40% -10% auto -10%; height: 360px; z-index: 0; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(47,217,104,0.20), transparent 70%),
+              radial-gradient(closest-side, rgba(20,184,166,0.16), transparent 70%);
+  background-position: 20% 0, 80% 10%; background-repeat: no-repeat; background-size: 55% 100%, 50% 90%;
+  filter: blur(6px); animation: heroDrift 14s ease-in-out infinite alternate; }
+@keyframes heroDrift { from { transform: translate3d(-4%, -2%, 0) scale(1); opacity: 0.85; }
+  to { transform: translate3d(6%, 3%, 0) scale(1.12); opacity: 1; } }
+.hero > *:not(.hero-glow) { position: relative; z-index: 1; }
+.hero-next { display: inline-flex; flex-direction: column; gap: 0.45rem; margin: 1.1rem 0 0.3rem;
+  padding: 0.9rem 1.1rem; border-radius: var(--radius); background: var(--surface);
+  border: 1px solid var(--border-strong); box-shadow: var(--shadow); backdrop-filter: var(--glass-blur); }
+.hero-next:empty { display: none; }
+.hn-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); font-weight: 700; }
+.hn-match { display: flex; align-items: center; gap: 0.45rem; font-weight: 700; font-size: 1.02rem; flex-wrap: wrap; }
+.hn-match .flag { width: 26px; height: 18px; border-radius: 3px; object-fit: cover; }
+.hn-vs { color: var(--muted); font-weight: 600; font-size: 0.85rem; }
+.hn-count { display: flex; gap: 0.7rem; font-family: var(--font-display); }
+.hc-u { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.hc-u b { font-size: 1.5rem; color: var(--text); font-variant-numeric: tabular-nums; margin-right: 1px; }
+.hn-meta { font-size: 0.76rem; color: var(--muted); }
+
 /* ---- matches: collapsible round groups + multi-column grid ---- */
 .md-group { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.7rem;
   background: var(--surface-2); overflow: hidden; }
