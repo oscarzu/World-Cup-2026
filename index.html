@@ -41,11 +41,8 @@
   <nav class="tabs" id="tabs" role="tablist" aria-label="Secciones">
     <button class="tab is-active" role="tab" aria-selected="true" aria-controls="overview" id="tab-overview" data-tab="overview" data-i18n="tab.overview">Resumen</button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="stats" id="tab-stats" data-tab="stats" data-i18n="tab.stats">Estadísticas</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="live" id="tab-live" data-tab="live"><span class="tab-label" data-i18n="tab.live">En vivo</span></button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="matches" id="tab-matches" data-tab="matches" data-i18n="tab.matches">Partidos</button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="standings" id="tab-standings" data-tab="standings" data-i18n="tab.standings">Grupos</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="bracket" id="tab-bracket" data-tab="bracket" data-i18n="tab.bracket">Eliminatorias</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="predict" id="tab-predict" data-tab="predict" data-i18n="tab.predict">Predicciones</button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="scorers" id="tab-scorers" data-tab="scorers" data-i18n="tab.scorers">Goleadores</button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="venues" id="tab-venues" data-tab="venues" data-i18n="tab.venues">Sedes</button>
   </nav>
@@ -69,6 +66,10 @@
         </div>
       </div>
       <div class="stat-grid" id="overview-stats"></div>
+
+      <!-- Live match centre — only visible while a match is in play -->
+      <section id="home-live" class="home-live" hidden aria-live="polite"></section>
+
       <div class="overview-split">
         <div class="card">
           <h3 data-i18n="ov.next">Próximos y en vivo</h3>
@@ -98,55 +99,59 @@
         <div class="rule"><span class="rule-ic" aria-hidden="true">🏟️</span><div data-i18n-html="rules.r7"><b>16 sedes, 3 países</b><p>Canadá, México y EE. UU.; la final será en el MetLife Stadium (Nueva York/Nueva Jersey).</p></div></div>
         <div class="rule"><span class="rule-ic" aria-hidden="true">🗓️</span><div data-i18n-html="rules.r8"><b>39 días de torneo</b><p>Del 11 de junio al 19 de julio de 2026, la Copa del Mundo más larga de la historia.</p></div></div>
         <div class="rule"><span class="rule-ic" aria-hidden="true">💧</span><div data-i18n-html="rules.r9"><b>Pausas de hidratación</b><p>En sedes con calor extremo (México, Dallas, Houston…) el árbitro detiene el juego ~3 min cerca del minuto 30 y 75 para que los jugadores se hidraten.</p></div></div>
+        <div class="rule"><span class="rule-ic" aria-hidden="true">🟨</span><div data-i18n-html="rules.r10"><b>Las amarillas se reinician dos veces</b><p>Dos amarillas en partidos distintos = un partido de suspensión. La cuenta para sanción se borra tras la fase de grupos y otra vez tras los cuartos de final.</p></div></div>
       </div>
 
-      <div class="section-head">
-        <p class="kicker" data-i18n="q.kicker">Camino a la ronda de 32</p>
-        <h3 class="section-title" data-i18n="q.title">Quién está clasificado hoy</h3>
+      <!-- Match predictions (moved from its own tab) -->
+      <div class="section-head lead">
+        <p class="kicker" data-i18n="pred.homeKicker">Modelo predictivo</p>
+        <h2 class="section-title big" data-i18n="pred.title">Probabilidades de los próximos partidos</h2>
+        <p class="section-sub" data-i18n="pred.sub">Modelo Poisson con prior Elo y forma actual.</p>
       </div>
-      <div id="qualification" class="qualification"></div>
+      <div id="predictions" class="predictions"></div>
     </section>
 
-    <!-- Live -->
-    <section id="live" class="panel" role="tabpanel" aria-labelledby="tab-live" tabindex="0">
-      <div id="live-status" class="live-status"></div>
-      <div id="live-feed" class="live-feed" aria-live="polite"></div>
-      <div class="section-head">
-        <p class="kicker" data-i18n="live.socialK">Social</p>
-        <h3 class="section-title" data-i18n="live.socialT">Redes en vivo</h3>
-        <p class="section-sub" data-i18n="live.socialS">Cobertura oficial del torneo en X e Instagram.</p>
-      </div>
-      <div id="social-wrap"></div>
-    </section>
-
-    <!-- Matches -->
+    <!-- Matches hub: schedule + bracket in one tab -->
     <section id="matches" class="panel" role="tabpanel" aria-labelledby="tab-matches" tabindex="0">
-      <div class="toolbar">
-        <input id="match-search" type="search" name="match-search" autocomplete="off" spellcheck="false" data-i18n-ph="matches.search" placeholder="Buscar selección…" aria-label="Buscar / Search" />
-        <select id="match-filter" aria-label="Filtrar por fase"></select>
+      <div class="seg subviews" id="match-views" role="tablist" aria-label="Vista de partidos">
+        <button type="button" class="subview-btn is-active" role="tab" aria-selected="true" data-view="list" data-i18n="mv.list">📅 Calendario</button>
+        <button type="button" class="subview-btn" role="tab" aria-selected="false" data-view="bracket" data-i18n="mv.bracket">🏆 Eliminatorias</button>
       </div>
-      <div id="match-status" class="match-status" role="status" aria-live="polite" hidden></div>
-      <div id="match-list" class="match-list"></div>
+
+      <!-- Schedule view -->
+      <div id="view-list" class="match-view">
+        <div class="toolbar">
+          <input id="match-search" type="search" name="match-search" autocomplete="off" spellcheck="false" data-i18n-ph="matches.search" placeholder="Buscar selección…" aria-label="Buscar / Search" />
+          <select id="match-filter" aria-label="Filtrar por fase"></select>
+        </div>
+        <div id="match-status" class="match-status" role="status" aria-live="polite" hidden></div>
+        <div id="match-list" class="match-list"></div>
+      </div>
+
+      <!-- Bracket view -->
+      <div id="view-bracket" class="match-view" hidden>
+        <div class="section-head lead">
+          <p class="kicker" data-i18n="tab.bracket">Eliminatorias</p>
+          <h2 class="section-title big" data-i18n="br.r32">Dieciseisavos</h2>
+          <p class="section-sub" id="bracket-legend" data-i18n="br.legend">Cuadro en vivo con la clasificación actual.</p>
+          <div class="cal-actions">
+            <button id="add-calendar" class="btn-cal" type="button" data-i18n="cal.download">📅 Descargar (.ics)</button>
+            <button id="sub-calendar" class="btn-cal alt" type="button" data-i18n="cal.subscribe">🔄 Suscribirse (se actualiza solo)</button>
+          </div>
+        </div>
+        <p class="scroll-hint" data-i18n="br.swipe">Desliza para ver más rondas →</p>
+        <div id="bracket-wrap" class="bracket"></div>
+      </div>
     </section>
 
     <!-- Standings -->
     <section id="standings" class="panel" role="tabpanel" aria-labelledby="tab-standings" tabindex="0">
       <div id="groups-grid" class="groups-grid"></div>
-    </section>
-
-    <!-- Bracket -->
-    <section id="bracket" class="panel" role="tabpanel" aria-labelledby="tab-bracket" tabindex="0">
-      <div class="section-head lead">
-        <p class="kicker" data-i18n="tab.bracket">Eliminatorias</p>
-        <h2 class="section-title big" data-i18n="br.r32">Dieciseisavos</h2>
-        <p class="section-sub" id="bracket-legend" data-i18n="br.legend">Cuadro proyectado en vivo con la clasificación actual.</p>
-        <div class="cal-actions">
-          <button id="add-calendar" class="btn-cal" type="button" data-i18n="cal.download">📅 Descargar (.ics)</button>
-          <button id="sub-calendar" class="btn-cal alt" type="button" data-i18n="cal.subscribe">🔄 Suscribirse (se actualiza solo)</button>
-        </div>
+      <div class="section-head">
+        <p class="kicker" data-i18n="q.kickerPast">Camino a la ronda de 32</p>
+        <h3 class="section-title" data-i18n="q.titlePast">Así quedó la clasificación</h3>
       </div>
-      <p class="scroll-hint" data-i18n="br.swipe">Desliza para ver más rondas →</p>
-      <div id="bracket-wrap" class="bracket"></div>
+      <div id="qualification" class="qualification"></div>
     </section>
 
     <!-- Scorers -->
@@ -163,16 +168,6 @@
         <div id="scorers-list" class="scorers-list"></div>
         <p class="card-foot" data-i18n="sc.foot">Orden oficial FIFA: goles, luego asistencias y menos minutos jugados (cuando hay datos). Los penales cuentan como gol.</p>
       </div>
-    </section>
-
-    <!-- Predictions -->
-    <section id="predict" class="panel" role="tabpanel" aria-labelledby="tab-predict" tabindex="0">
-      <div class="section-head lead">
-        <p class="kicker" data-i18n="pred.kicker">Modelo predictivo</p>
-        <h2 class="section-title big" data-i18n="pred.title">Probabilidades de los próximos partidos</h2>
-        <p class="section-sub" data-i18n="pred.sub">Modelo Poisson con prior Elo y forma actual.</p>
-      </div>
-      <div id="predictions" class="predictions"></div>
     </section>
 
     <!-- Venues -->

@@ -69,7 +69,6 @@ function activateTab(btn, { updateHash = true } = {}) {
   // Reflect state in the URL so tabs are deep-linkable / shareable (WIG).
   if (updateHash && location.hash.slice(1) !== id) history.replaceState(null, "", `#${id}`);
   if (id === "stats" || id === "overview") renderCharts();
-  if (id === "live") { UI.renderSocial(); UI.renderSocialArchive(state.matches, state.social); }
   if (id === "matches") setTimeout(() => UI.scrollMatchesToToday(), 60); // jump to today's fixtures
 }
 
@@ -295,6 +294,25 @@ function initSubnav() {
   for (const id of ids) { const sec = document.getElementById(id); if (sec) io.observe(sec); }
 }
 
+// ---- matches hub: schedule ↔ bracket sub-views (one consolidated tab) ----
+function initMatchViews() {
+  const seg = document.getElementById("match-views");
+  if (!seg) return;
+  const views = { list: $("#view-list"), bracket: $("#view-bracket") };
+  seg.addEventListener("click", (e) => {
+    const btn = e.target.closest(".subview-btn");
+    if (!btn) return;
+    const v = btn.dataset.view;
+    seg.querySelectorAll(".subview-btn").forEach((b) => {
+      const on = b === btn;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    for (const k in views) if (views[k]) views[k].hidden = k !== v;
+    if (v === "list") setTimeout(() => UI.scrollMatchesToToday(), 60);
+  });
+}
+
 // ---- add knockout fixtures to calendar ----
 function initCalendar() {
   // Download a static .ics (snapshot of today's projected teams), localized to
@@ -375,7 +393,7 @@ function renderAll() {
   UI.renderScorersPodium(state._scorers);
   applyScorerFilter();
   const liveList = state.liveMatches.length ? state.liveMatches : state.matches;
-  UI.renderLive(liveList, state.matches);
+  UI.renderHomeLive(liveList);
   UI.renderVenues();
   UI.renderStatsKpis(stats, state.matches);
   UI.renderAggregates(facts);
@@ -396,21 +414,9 @@ function renderAll() {
   UI.renderDiscipline(disc);
   UI.renderInsightStrip(stats, facts, disc);
   renderCharts(stats, facts, disc, state.effHistory);
-  UI.renderSocialArchive(state.matches, state.social);
 
-  // Live indicator + freshness.
+  // Freshness label.
   const en = getLang() === "en";
-  const liveCount = (state.liveMatches.length ? state.liveMatches : state.matches)
-    .filter((m) => m.status === "live").length;
-  // Colour the "Live" tab only while a match is actually live, and surface the
-  // count in the label (not colour-only — accessible signal).
-  const liveTab = document.querySelector('.tab[data-tab="live"]');
-  if (liveTab) {
-    liveTab.classList.toggle("has-live", liveCount > 0);
-    const label = liveTab.querySelector(".tab-label");
-    if (label) label.textContent = liveCount > 0 ? `${t("tab.live")} · ${liveCount}` : t("tab.live");
-    liveTab.setAttribute("aria-label", liveCount > 0 ? `${t("tab.live")} (${liveCount})` : t("tab.live"));
-  }
   const time = new Date().toLocaleTimeString(en ? "en-US" : "es-MX",
     { timeZone: CONFIG.TIMEZONE, hour: "2-digit", minute: "2-digit" });
   $("#updated").textContent = `${en ? "Upd." : "Act."} ${time} ${CONFIG.TIMEZONE_LABEL}`;
@@ -558,6 +564,7 @@ async function boot() {
   initLang();
   initTabs();
   initMatchControls();
+  initMatchViews();
   initScorerControls();
   initSubnav();
   initBackToTop();
