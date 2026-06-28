@@ -185,16 +185,46 @@ export function renderOverview(matches, stats, tournament) {
 }
 
 // ---- matches tab ----
-export function renderMatches(matches) {
+// grouped (default): collapsible sections per round, each a multi-column grid
+// that uses the desktop width and keeps the long list compact. flat: a simple
+// dated list (used for filtered/search results).
+export function renderMatches(matches, { grouped = false } = {}) {
   const wrap = $("#match-list");
+  if (!wrap) return;
   if (!matches.length) { wrap.innerHTML = `<p class="empty">${t("empty.noResults")}</p>`; return; }
-  const ordered = [...matches].sort(byKickoff); // chronological
-  let html = "", lastDay = "";
-  for (const m of ordered) {
-    if (m.date !== lastDay) { html += `<div class="day-sep" data-date="${esc(m.date)}">${fmtDate(m.date)} — ${esc(roundLabel(m.round))}</div>`; lastDay = m.date; }
-    html += matchCard(m);
+  const ordered = [...matches].sort(byKickoff);
+
+  if (!grouped) {
+    let html = "", lastDay = "";
+    for (const m of ordered) {
+      if (m.date !== lastDay) { html += `<div class="day-sep" data-date="${esc(m.date)}">${fmtDate(m.date)} — ${esc(roundLabel(m.round))}</div>`; lastDay = m.date; }
+      html += matchCard(m);
+    }
+    wrap.innerHTML = html;
+    return;
   }
-  wrap.innerHTML = html;
+
+  // Group by round, preserving chronological order.
+  const groups = [];
+  const idx = new Map();
+  for (const m of ordered) {
+    if (!idx.has(m.round)) { idx.set(m.round, groups.length); groups.push({ round: m.round, items: [] }); }
+    groups[idx.get(m.round)].items.push(m);
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  let openIdx = groups.findIndex((g) => g.items.some((m) => (m.date || "") >= today));
+  if (openIdx < 0) openIdx = groups.length - 1;
+
+  wrap.innerHTML = groups.map((g, i) => {
+    const dates = g.items.map((m) => m.date).filter(Boolean).sort();
+    const range = dates.length
+      ? (dates[0] === dates[dates.length - 1] ? fmtDate(dates[0]) : `${fmtDate(dates[0])} – ${fmtDate(dates[dates.length - 1])}`)
+      : "";
+    return `<details class="md-group" data-date="${esc(dates[0] || "")}"${i === openIdx ? " open" : ""}>
+      <summary><span class="mg-title">${esc(roundLabel(g.round))}</span><span class="mg-meta">${g.items.length} ${t("u.matches")}${range ? ` · ${range}` : ""}</span></summary>
+      <div class="match-grid">${g.items.map((m) => matchCard(m)).join("")}</div>
+    </details>`;
+  }).join("");
 }
 
 // Position the matches list at today's date (or the next upcoming day).
@@ -202,8 +232,9 @@ export function scrollMatchesToToday() {
   const wrap = $("#match-list");
   if (!wrap) return;
   const today = new Date().toISOString().slice(0, 10);
+  const open = wrap.querySelector(".md-group[open]");
   const seps = [...wrap.querySelectorAll(".day-sep")];
-  const target = seps.find((s) => (s.dataset.date || "") >= today) || seps[seps.length - 1];
+  const target = open || seps.find((s) => (s.dataset.date || "") >= today) || seps[seps.length - 1];
   target?.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
@@ -627,12 +658,14 @@ function liveCard(m) {
 }
 
 function upcomingCard(m) {
+  const venue = m.ground ? `<div class="meta venue-meta">📍 ${esc(venueFifa(m.ground))}</div>` : "";
   return `
-  <div class="match">
+  <div class="match has-venue">
     <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(tn(m.home.name))}</span></div>
     <div class="center">
       <span class="badge up">${t("badge.up")}</span>
       <div class="meta">${esc(kickoffDateTime(m) || kickoffLabel(m) || t("tbd"))}</div>
+      ${venue}
     </div>
     <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(tn(m.away.name))}</span></div>
   </div>`;

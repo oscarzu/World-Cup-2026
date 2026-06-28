@@ -10,6 +10,53 @@ export function groupComplete(rows) {
   return rows && rows.length >= 4 && rows.every((r) => r.P >= 3);
 }
 
+const isRealName = (n) => !!n && !/^(\d[A-L]|3[A-L/]+|[WL]\d+)$/.test(n);
+
+// Resolve knockout placeholder codes (1A, 2B, 3A/B/C/D/F, W73) into real teams
+// using the (complete) standings — openfootball often lags filling these, so we
+// do it ourselves once the group stage is decided. Returns a NEW matches array
+// with knockout home/away names resolved where possible. Best-third slots are a
+// greedy projection (FIFA's official slotting table isn't modelled).
+export function resolveKnockouts(matches, standings) {
+  if (!standings || !standings.size) return matches;
+  const thirds = rankThirds(standings).filter((t) => t.qualified && t.P > 0); // top 8
+  const used = new Set();
+  // Winners of already-played knockout matches (by match number).
+  const winners = {};
+  for (const m of matches) {
+    const hs = m.score?.home, as = m.score?.away;
+    if (hs == null || as == null || m.num == null) continue;
+    if (hs > as && isRealName(m.home?.name)) winners[m.num] = m.home.name;
+    else if (as > hs && isRealName(m.away?.name)) winners[m.num] = m.away.name;
+  }
+  const resolveCode = (code) => {
+    if (isRealName(code)) return code;
+    let mm = /^([12])([A-L])$/.exec(code);
+    if (mm) { const rows = standings.get("Group " + mm[2]); const r = rows && rows[Number(mm[1]) - 1]; return r && r.P > 0 ? r.name : code; }
+    if (/^3/.test(code)) {
+      const groups = code.slice(1).split("/");
+      for (const tr of thirds) { if (groups.includes(tr.group) && !used.has(tr.name)) { used.add(tr.name); return tr.name; } }
+      return code;
+    }
+    mm = /^W(\d+)$/.exec(code);
+    if (mm) return winners[mm[1]] || code;
+    return code;
+  };
+  // Process knockout fixtures in match order so the greedy third assignment is
+  // deterministic.
+  const order = [...matches].sort((a, b) => (a.num ?? 0) - (b.num ?? 0));
+  const resolved = new Map();
+  for (const m of order) {
+    if (m.stage !== "knockout") continue;
+    resolved.set(m.id, { home: resolveCode(m.home?.name), away: resolveCode(m.away?.name) });
+  }
+  return matches.map((m) => {
+    const r = resolved.get(m.id);
+    if (!r) return m;
+    return { ...m, home: { ...m.home, name: r.home }, away: { ...m.away, name: r.away } };
+  });
+}
+
 // Rank the 12 third-placed teams by FIFA's criteria. The first 8 advance.
 // Tiebreakers we can compute from results: points → goal difference → goals
 // scored → (fair play / draw are not modelled). Returns rows tagged with group.
