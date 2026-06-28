@@ -70,13 +70,26 @@ export function buildModel(matches, { priorOnly = false } = {}) {
   for (const m of finished) { goals += m.score.home + m.score.away; n++; }
   const MU = n ? goals / (2 * n) : 1.35; // mean goals per team per match
 
+  // Recency weighting (captures form/trends): a match counts more the closer it
+  // is to the latest game played. Fixed half-life (theory-driven, not tuned to
+  // the back-test → no overfitting). Gw = effective (weighted) games.
+  const TAU_DAYS = 14;
+  const dates = finished.map((m) => m.date).filter(Boolean).sort();
+  const maxDate = dates[dates.length - 1];
+  const weightOf = (m) => {
+    if (!m.date || !maxDate) return 1;
+    const days = (Date.parse(maxDate) - Date.parse(m.date)) / 86400000;
+    return Number.isFinite(days) ? Math.exp(-days / TAU_DAYS) : 1;
+  };
+
   const tally = new Map();
-  const get = (name) => { if (!tally.has(name)) tally.set(name, { GF: 0, GA: 0, G: 0 }); return tally.get(name); };
+  const get = (name) => { if (!tally.has(name)) tally.set(name, { GF: 0, GA: 0, G: 0, Gw: 0 }); return tally.get(name); };
   if (!priorOnly) {
     for (const m of finished) {
+      const w = weightOf(m);
       const h = get(m.home.name), a = get(m.away.name);
-      h.GF += m.score.home; h.GA += m.score.away; h.G++;
-      a.GF += m.score.away; a.GA += m.score.home; a.G++;
+      h.GF += w * m.score.home; h.GA += w * m.score.away; h.G++; h.Gw += w;
+      a.GF += w * m.score.away; a.GA += w * m.score.home; a.G++; a.Gw += w;
     }
   }
 
@@ -90,13 +103,14 @@ export function buildModel(matches, { priorOnly = false } = {}) {
 
   const ratings = new Map();
   for (const name of teams) {
-    const t = tally.get(name) || { GF: 0, GA: 0, G: 0 };
+    const t = tally.get(name) || { GF: 0, GA: 0, G: 0, Gw: 0 };
     const elo = ELO[name] ?? DEFAULT_ELO;
     const f = Math.pow(10, (elo - avgElo) / 400);       // strength multiplier vs field
     const priorAtt = MU * Math.sqrt(f);                 // strong → score more
     const priorDef = MU / Math.sqrt(f);                 // strong → concede less
-    const att = (t.GF + K_SHRINK * priorAtt) / (t.G + K_SHRINK);
-    const def = (t.GA + K_SHRINK * priorDef) / (t.G + K_SHRINK);
+    // Shrink the (recency-weighted) form toward the Elo prior.
+    const att = (t.GF + K_SHRINK * priorAtt) / (t.Gw + K_SHRINK);
+    const def = (t.GA + K_SHRINK * priorDef) / (t.Gw + K_SHRINK);
     ratings.set(name, { name, elo, games: t.G, att: round2(att), def: round2(def) });
   }
   return { MU: round2(MU), ratings, finished: finished.length, avgElo: Math.round(avgElo) };
