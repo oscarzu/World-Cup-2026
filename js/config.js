@@ -37,7 +37,7 @@ export const CONFIG = {
   // friendly, no cookies. Get the token at dash.cloudflare.com → Web Analytics
   // → Add a site (oscarzu.github.io) → copy the token from the JS snippet, and
   // paste it below. Empty = analytics disabled (no beacon loads).
-  CF_ANALYTICS_TOKEN: "",
+  CF_ANALYTICS_TOKEN: "b587ab001bc04c7db1910b295019ce8b",
 
   LIVE_LEAGUE: 1,     // API-Football league id for the FIFA World Cup
   LIVE_SEASON: 2026,
