@@ -214,8 +214,8 @@ const STR = {
   "tbd": ["Por definir", "TBD"],
 
   // footer
-  "credit": ["En vivo y estadísticas: ESPN · Calendario base: openfootball (dominio público) · Banderas: flagcdn.com · Visualización con Chart.js.",
-             "Live & stats: ESPN · Base fixtures: openfootball (public domain) · Flags: flagcdn.com · Charts by Chart.js."],
+  "credit": ["Reglamento: Reglamento oficial de la FIFA 26 · En vivo y estadísticas: ESPN · Calendario base: openfootball (dominio público) · Banderas: flagcdn.com · Visualización con Chart.js.",
+             "Rules: official FIFA 26 regulations · Live & stats: ESPN · Base fixtures: openfootball (public domain) · Flags: flagcdn.com · Charts by Chart.js."],
   "credit.dim": ["Autor: Zuriel Santibañez", "Author: Zuriel Santibañez"],
 
   // units / common words used in dynamic strings
@@ -395,10 +395,17 @@ const STR = {
                "<b>16 venues, 3 countries</b><p>Canada, Mexico and the USA; the final is at MetLife Stadium (New York/New Jersey).</p>"],
   "rules.r8": ["<b>39 días de torneo</b><p>Del 11 de junio al 19 de julio de 2026, la Copa del Mundo más larga de la historia.</p>",
                "<b>39-day tournament</b><p>From 11 June to 19 July 2026 — the longest World Cup ever.</p>"],
-  "rules.r9": ["<b>Pausas de hidratación</b><p>En sedes con calor extremo (México, Dallas, Houston…) el árbitro detiene el juego ~3 min cerca del minuto 30 y 75 para que los jugadores se hidraten.</p>",
-               "<b>Hydration breaks</b><p>At hot venues (Mexico City, Dallas, Houston…) the referee pauses play ~3 min around the 30th and 75th minute so players can rehydrate.</p>"],
+  "rules.r9": ["<b>Pausas de refresco</b><p>En clima extremo, el árbitro puede ordenar pausas para beber (típicamente cerca del minuto 30 y 75); se decide caso por caso según el protocolo médico de la FIFA.</p>",
+               "<b>Cooling breaks</b><p>In extreme heat the referee may call drinks breaks (typically around the 30th and 75th minute); decided case by case under FIFA's medical protocol.</p>"],
   "rules.r10": ["<b>Las amarillas se reinician dos veces</b><p>Dos amarillas en partidos distintos = un partido de suspensión. La cuenta para sanción se borra <b>tras la fase de grupos</b> y otra vez <b>tras los cuartos de final</b>, así que nadie se pierde la final por amarillas acumuladas.</p>",
                 "<b>Yellow cards reset twice</b><p>Two yellows in separate games = a one-match ban. The suspension count is wiped <b>after the group stage</b> and again <b>after the quarter-finals</b>, so no one misses the final on accumulated yellows.</p>"],
+  "rules.r11": ["<b>Prórroga y penales</b><p>En eliminación directa, si hay empate se juega una <b>prórroga de 2×15 min</b> y, si persiste, <b>tanda de penales</b>. En la prórroga cada equipo dispone de un cambio y una ventana de sustitución adicionales.</p>",
+                "<b>Extra time &amp; penalties</b><p>In the knockouts, a draw goes to <b>2×15 min extra time</b> and, if still level, a <b>penalty shootout</b>. In extra time each side gets one extra substitution and window.</p>"],
+  "rules.r12": ["<b>Desempate en los grupos</b><p>A igualdad de puntos: <b>1)</b> resultados entre las empatadas (puntos, dif. de goles, goles), <b>2)</b> dif. de goles global, <b>3)</b> goles, <b>4)</b> fair-play (amarilla −1, roja −3/−4), <b>5)</b> ranking FIFA.</p>",
+                "<b>Group tie-breakers</b><p>On equal points: <b>1)</b> head-to-head among the tied teams (points, goal difference, goals), <b>2)</b> overall goal difference, <b>3)</b> goals, <b>4)</b> fair-play (yellow −1, red −3/−4), <b>5)</b> FIFA ranking.</p>"],
+  "rules.r13": ["<b>Anfitriones con lugar fijo</b><p>Por reglamento, <b>México es A1</b>, <b>Canadá B1</b> y <b>EE. UU. D1</b>: las tres sedes locales abren su grupo como cabezas de serie.</p>",
+                "<b>Hosts in fixed slots</b><p>By regulation, <b>Mexico is A1</b>, <b>Canada B1</b> and the <b>USA D1</b>: the three host nations open their group as seeds.</p>"],
+  "rules.source": ["📄 Fuente: Reglamento oficial de la FIFA 26 (PDF)", "📄 Source: official FIFA 26 regulations (PDF)"],
 };
 
 export function t(key) {
