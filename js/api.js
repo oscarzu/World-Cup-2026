@@ -192,9 +192,18 @@ export async function loadTeamStats() {
   }
 }
 
-// Per-phase efficacy history (illustrative). Never throws. Supports the new
-// phase-based shape (byPhase) and the legacy matchday shape (history).
+// Per-phase efficacy history. Prefers REAL per-phase conversion computed by the
+// Worker from captured per-fixture shots (so knockout rounds appear with true
+// numbers as each one finishes); falls back to the bundled illustrative file
+// (group stage only) when the proxy is unavailable. Never throws.
 export async function loadEfficacyHistory() {
+  const base = (CONFIG.LIVE_PROXY_URL || "").trim();
+  if (base) {
+    try {
+      const live = await cachedFetch(base.replace(/\/+$/, "") + "/efficacy.json", 5 * 60 * 1000);
+      if (Array.isArray(live?.byPhase) && live.byPhase.length) return live.byPhase;
+    } catch (_) { /* fall back to the static file */ }
+  }
   try {
     const d = await cachedFetch(CONFIG.EFFICACY_HISTORY_URL, CONFIG.BASE_TTL);
     if (Array.isArray(d?.byPhase)) return d.byPhase;

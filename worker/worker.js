@@ -34,6 +34,12 @@ export default {
       const agg = JSON.parse((await env.WC26.get("agg")) || '{"fixtures":{}}');
       return json({ teams: aggregateTeams(agg), updatedAt: agg.updatedAt || null }, 200, cors);
     }
+    if (path === "/efficacy.json") {
+      // Real conversion % per phase, computed on the fly from the captured
+      // per-fixture shots (no extra KV writes).
+      const agg = JSON.parse((await env.WC26.get("agg")) || '{"fixtures":{}}');
+      return json({ byPhase: efficacyByPhase(agg), updatedAt: agg.updatedAt || null }, 200, cors);
+    }
     if (path === "/health") {
       const agg = JSON.parse((await env.WC26.get("agg")) || '{"fixtures":{}}');
       const snap = JSON.parse((await env.WC26.get("snapshot")) || "{}");
@@ -62,7 +68,7 @@ export default {
       return json(r, 200, cors);
     }
 
-    return json({ error: "not found", routes: ["/snapshot", "/teamstats", "/health", "/calendar.ics", "/refresh", "/rebuild"] }, 404, cors);
+    return json({ error: "not found", routes: ["/snapshot", "/teamstats", "/efficacy.json", "/health", "/calendar.ics", "/refresh", "/rebuild"] }, 404, cors);
   },
 
   // ---- Cron: the only consumer of the upstream API ----
@@ -274,10 +280,67 @@ function extractAgg(ev, summary, m) {
     }
   }
   return {
+    round: m.round || "", // phase tag, for per-phase efficacy (group vs knockout round)
     home: { name: m.home.name, fouls: m.stats.home.fouls || 0, shots: m.stats.home.shots || 0, goals: m.score.home || 0, red: homeRed },
     away: { name: m.away.name, fouls: m.stats.away.fouls || 0, shots: m.stats.away.shots || 0, goals: m.score.away || 0, red: awayRed },
     yc,
   };
+}
+
+// Canonical phase key from an ESPN round headline. Missing/group → "group";
+// knockout rounds → the same names openfootball/the client use, so the client's
+// completion gate matches. Order matters (Quarter/Semi contain "final").
+function phaseKey(round) {
+  const r = (round || "").toLowerCase();
+  if (/round of 32|1\/16|round-of-32/.test(r)) return "Round of 32";
+  if (/round of 16|1\/8|round-of-16/.test(r)) return "Round of 16";
+  if (/quarter/.test(r)) return "Quarter-final";
+  if (/semi/.test(r)) return "Semi-final";
+  if (/third|3rd/.test(r)) return "Match for third place";
+  if (/final/.test(r)) return "Final";
+  return "group";
+}
+const PHASE_ORDER = ["group", "Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Match for third place", "Final"];
+
+// Real efficacy (goals ÷ shots on target) per phase, from the captured per-team
+// per-fixture shots. Returns entries the client charts directly:
+//   { phase, perPhase:{best,worst}, accumulated:{best,worst} }
+// A team needs a minimum of shots to enter, so 1-shot flukes don't dominate.
+function efficacyByPhase(agg) {
+  const MIN_SHOTS = 4;
+  const perPhase = {}; // phase -> team -> { shots, goals }
+  for (const id in (agg.fixtures || {})) {
+    const fx = agg.fixtures[id];
+    const ph = phaseKey(fx.round);
+    for (const side of ["home", "away"]) {
+      const s = fx[side];
+      if (!s || !s.name) continue;
+      (perPhase[ph] ||= {});
+      const t = (perPhase[ph][s.name] ||= { shots: 0, goals: 0 });
+      t.shots += s.shots || 0; t.goals += s.goals || 0;
+    }
+  }
+  const bestWorst = (teams) => {
+    const arr = Object.entries(teams)
+      .filter(([, v]) => v.shots >= MIN_SHOTS)
+      .map(([name, v]) => ({ team: name, pct: Math.round((v.goals / v.shots) * 100) }))
+      .sort((a, b) => b.pct - a.pct || a.team.localeCompare(b.team));
+    if (!arr.length) return null;
+    return { best: arr[0], worst: arr[arr.length - 1] };
+  };
+  const out = [];
+  const cum = {}; // cumulative team -> { shots, goals } across phases in order
+  for (const ph of PHASE_ORDER) {
+    if (!perPhase[ph]) continue;
+    for (const name in perPhase[ph]) {
+      const t = (cum[name] ||= { shots: 0, goals: 0 });
+      t.shots += perPhase[ph][name].shots; t.goals += perPhase[ph][name].goals;
+    }
+    const per = bestWorst(perPhase[ph]);
+    const acc = bestWorst(cum);
+    if (per && acc) out.push({ phase: ph, perPhase: per, accumulated: acc });
+  }
+  return out;
 }
 
 function aggregateTeams(agg) {
