@@ -1,69 +1,50 @@
-# Borradores para LinkedIn
+# Publicación para LinkedIn
 
-> Tono personal, congruente con la voz del proyecto (reflexiva, honesta, de
-> _maker_). Elige el que más te suene; ambos llevan el mismo enlace y CTA.
+> Una versión en español y una en inglés. Tono de perfil de datos: concisa,
+> clara y pensada para generar conversación. Termina con una pregunta (CTA).
 
 ---
 
-## Versión principal (ES)
+## Español
 
-🏆 Mi panel del Mundial 2026 — un proyecto personal que se me fue de las manos, para bien.
+¿Qué haces cuando faltan datos: los estimas… o esperas? 🤔
 
-Quería algo simple: seguir la Copa con datos de verdad, bonito y claro. Terminó siendo un ejercicio de ingeniería de datos de punta a punta.
+Construí un panel del Mundial 2026 como proyecto personal y terminó siendo un buen recordatorio de algo que en data damos por obvio, pero cuesta sostener: **mostrar solo lo que de verdad pasó.**
 
-Qué hace:
-• Datos casi en vivo (marcadores, goles, tarjetas, tiros) de ESPN.
-• Un Cloudflare Worker + KV que consulta una sola vez y sirve el mismo snapshot a todos… respetando los límites del plan gratuito.
-• Bilingüe ES/EN, modo claro/oscuro y enfoque de _data storytelling_: cada gráfica cuenta una idea.
-• Un modelo de predicciones (Poisson/Dixon–Coles con prior Elo) validado _walk-forward_, sin hacerme trampas.
+Lo técnico, en una línea:
+📥 datos casi en vivo de ESPN → ⚙️ Cloudflare Worker + KV → un mismo *snapshot* para todos (una sola lectura a la fuente).
+🔮 un modelo de predicciones (Poisson/Dixon–Coles + prior Elo) validado *walk-forward*: sin fuga de información, sin overfitting.
+📊 visualización con intención: cada gráfica, una sola idea.
 
-Pero lo que más me llevo es una lección sobre honestidad del dato. En un punto, una gráfica mostraba rondas de eliminación que aún no se jugaban (datos "ilustrativos" que yo mismo había puesto). En vez de maquillarlo, lo reescribí para calcular la eficacia real por fase y no graficar ninguna ronda hasta que termina. Prefiero un dashboard que diga "todavía no" a uno que invente.
+Pero la mejor lección no fue de código. Una gráfica llegó a mostrar fases de eliminación **que aún no se jugaban** (datos "ilustrativos" que yo mismo había metido). En vez de maquillarlo, lo reescribí para calcular métricas **reales por fase** y no graficar una ronda hasta que termina.
 
-Hecho con HTML/CSS/JS vanilla + Chart.js y desplegado en GitHub Pages. Buena parte del camino —arquitectura, diagnóstico de despliegues, rediseño visual— la trabajé con Claude Code, y fue un acelerador brutal.
+Prefiero un tablero que diga "todavía no" a uno que rellene huecos. La integridad del dato no es un *feature*: es la base.
 
 🔗 En vivo: https://oscarzu.github.io/World-Cup-2026/
-💻 Código: https://github.com/oscarzu/World-Cup-2026
 
-¿Comentarios o ideas? Los recibo con gusto. 👇
+Y tú, ¿estimas o esperas? 👇
 
-#DataEngineering #DataVisualization #WorldCup2026 #CloudflareWorkers #JavaScript #SideProject #Futbol
-
----
-
-## Versión corta (ES)
-
-Construí un panel del Mundial 2026, por gusto. ⚽📊
-
-Datos casi en vivo de ESPN, servidos a todos por igual con un Cloudflare Worker + KV; bilingüe, claro/oscuro, con un modelo de predicciones validado sin trampas.
-
-La mejor lección no fue técnica: una gráfica mostraba datos de rondas que aún no se jugaban. Lo reescribí para calcular solo lo real y no graficar una fase hasta que termina. Mejor decir "todavía no" que inventar.
-
-🔗 https://oscarzu.github.io/World-Cup-2026/
-💻 https://github.com/oscarzu/World-Cup-2026
-
-#DataEngineering #DataVisualization #WorldCup2026 #SideProject
+#DataEngineering #DataVisualization #MachineLearning #Analytics #DataIntegrity
 
 ---
 
-## English version
+## English
 
-🏆 A personal World Cup 2026 dashboard — a side project that grew on me.
+When data is missing, do you estimate it… or wait for it? 🤔
 
-I wanted something simple: follow the tournament with real data, clean and good-looking. It turned into an end-to-end data project.
+I built a World Cup 2026 dashboard as a personal project, and it became a sharp reminder of something we take for granted in data but rarely hold the line on: **show only what actually happened.**
 
-What it does:
-• Near-live data (scores, goals, cards, shots) from ESPN.
-• A Cloudflare Worker + KV that calls the source once and serves the same snapshot to everyone, within the free tier's limits.
-• Bilingual (ES/EN), dark/light, and a data-storytelling approach: each chart makes one point.
-• A prediction model (Poisson/Dixon–Coles with an Elo prior), validated walk-forward — no cheating.
+The technical part, in one line:
+📥 near-live data from ESPN → ⚙️ Cloudflare Worker + KV → one shared *snapshot* for everyone (a single read at the source).
+🔮 a prediction model (Poisson/Dixon–Coles + Elo prior), validated *walk-forward*: no leakage, no overfitting.
+📊 charts with intent: one idea per chart.
 
-My biggest takeaway, though, was about data honesty. At one point a chart showed knockout rounds that hadn't been played yet ("illustrative" numbers I'd put in myself). Instead of dressing it up, I rewrote it to compute real per-phase efficiency and to show no round until it's actually complete. I'd rather a dashboard that says "not yet" than one that makes things up.
+But the best lesson wasn't about code. One chart ended up showing knockout rounds **that hadn't been played yet** ("illustrative" numbers I'd added myself). Instead of dressing it up, I rewrote it to compute **real per-phase metrics** and to show no round until it's actually complete.
 
-Built with vanilla HTML/CSS/JS + Chart.js, deployed on GitHub Pages. A lot of the work — architecture, deploy debugging, visual redesign — I did with Claude Code, and it was a huge accelerator.
+I'd rather a dashboard that says "not yet" than one that fills the gaps. Data integrity isn't a feature — it's the foundation.
 
 🔗 Live: https://oscarzu.github.io/World-Cup-2026/
-💻 Code: https://github.com/oscarzu/World-Cup-2026
 
-Feedback welcome. 👇
+So — do you estimate, or do you wait? 👇
 
-#DataEngineering #DataVisualization #WorldCup2026 #CloudflareWorkers #JavaScript #SideProject
+#DataEngineering #DataVisualization #MachineLearning #Analytics #DataIntegrity

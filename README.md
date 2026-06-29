@@ -7,8 +7,8 @@ Dashboard **responsive**, **bilingüe (ES/EN)**, con **modo oscuro/claro** y enf
 🔗 **En vivo:** https://oscarzu.github.io/World-Cup-2026/
 
 Sin paso de build: HTML + CSS + JavaScript (ES modules) y [Chart.js](https://www.chartjs.org/)
-por CDN. Se despliega tal cual en GitHub Pages. Los datos en vivo llegan, sin exponer
-ninguna API key, a través de un **Cloudflare Worker** (ver [`worker/`](worker/)).
+por CDN. Se despliega tal cual en GitHub Pages. Los datos en vivo llegan a través de un
+**Cloudflare Worker** (ver [`worker/`](worker/)).
 
 ## Características
 
@@ -42,8 +42,8 @@ Seis pestañas: **Resumen · Estadísticas · Partidos · Grupos · Goleadores �
 
 ```
             cron cada 3 min (un solo consumidor)        lecturas ilimitadas, 0 costo
-ESPN API ─────────────────────────────────▶ Cloudflare Worker ──▶ KV ──▶ navegador (snapshot)
-(fifa.world)                                    │
+ESPN ─────────────────────────────────────▶ Cloudflare Worker ──▶ KV ──▶ navegador (snapshot)
+                                                │
                                                 ├─ acumula nuestro propio dataset (agg)
                                                 ├─ /efficacy.json (conversión real por fase)
                                                 └─ calendar:es / calendar:en (.ics suscribible)
@@ -61,7 +61,7 @@ peticiones por usuario). Con un contador diario nunca se exceden los límites.
 
 | Fuente | Uso | Tipo |
 | --- | --- | --- |
-| [ESPN API](https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard) | En vivo: marcadores, goles, faltas, tiros, tarjetas | **Real** · gratis, sin key, sin límite de temporada |
+| ESPN | En vivo: marcadores, goles, faltas, tiros, tarjetas | **Real** · datos del torneo |
 | [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json) | Calendario / resultados base | **Real** · dominio público |
 | Worker `/efficacy.json` | Eficacia (conversión) **real por fase** desde tiros a puerta capturados | **Real** (cuando el Worker está desplegado) |
 | `data/teamstats.json` | Faltas/tiros/rojas/lesiones por selección | **Estimado** (fallback) cuando no hay proveedor en vivo |
@@ -142,8 +142,8 @@ repositorio (`ETL-Project`) hacia este, dejándolo listo para GitHub Pages.
    Resultó que Pages no estaba habilitado con *GitHub Actions* como fuente. Una vez
    activado, el sitio salió a producción.
 2. **Sin datos reales de 2026.** Intentamos *API-Football*, pero su **plan gratuito no da
-   acceso a la temporada 2026** (solo 2022–2024). En lugar de pagar, descubrimos la **API
-   pública de ESPN** (`fifa.world`): gratis, sin API key y sin candado de temporada.
+   acceso a la temporada 2026** (solo 2022–2024). En lugar de pagar, optamos por traer los
+   **datos de ESPN**, que sí cubren el torneo.
 3. **Que el dato fuera el mismo para todos y no agotara cuotas.** Montamos un **Cloudflare
    Worker con KV + un cron** cada 3 min: el servidor consulta una sola vez y todos leen el
    mismo *snapshot*. De paso, el Worker **acumula nuestro propio dataset** del torneo. Más
