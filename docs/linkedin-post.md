@@ -1,8 +1,6 @@
 # Publicación para LinkedIn
 
 
-## Español
-
 ¿Qué haces cuando faltan datos: los estimas o esperas hasta que estén disponibles? 🤔
 
 Construí un dashboard del Mundial 2026 como proyecto personal y terminó siendo un buen recordatorio de que la limpieza y precisión en los datos debe de ser el punto de partida no negociable en cualquier proyecto, ya que de nada sirve tener gráficos increibles y una web responsiva si el raw data no es confiable.
