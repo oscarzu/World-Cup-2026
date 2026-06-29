@@ -379,6 +379,30 @@ function initMatchViews() {
   });
 }
 
+// Subscribe modal — copy URL + platform links. More reliable than navigating to
+// a webcal:// URL (which errors in browsers without a handler).
+function openSubscribeModal() {
+  const base = (CONFIG.LIVE_PROXY_URL || "").trim();
+  if (!base) return;
+  // ?lang follows the selected tab so the feed comes in the right language.
+  const httpsUrl = base.replace(/\/+$/, "") + "/calendar.ics?lang=" + getLang();
+  const webcal = httpsUrl.replace(/^https?:/, "webcal:");
+  const gcal = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(webcal);
+  UI.openInfoModal({
+    title: t("cal.subTitle"),
+    html: `<p class="modal-sub">${t("cal.subBody")}</p>
+      <input class="cal-url" type="text" readonly value="${httpsUrl}" onclick="this.select()" />
+      <div class="cal-links">
+        <button type="button" id="cal-copy" class="btn-cal">${t("cal.copy")}</button>
+        <a class="btn-cal" href="${gcal}" target="_blank" rel="noopener">${t("cal.gcal")}</a>
+        <a class="btn-cal" href="${webcal}">${t("cal.apple")}</a>
+      </div>`,
+  });
+  document.getElementById("cal-copy")?.addEventListener("click", async (e) => {
+    try { await navigator.clipboard.writeText(httpsUrl); e.target.textContent = t("cal.copied"); } catch (_) {}
+  });
+}
+
 // ---- add knockout fixtures to calendar ----
 function initCalendar() {
   // Download a static .ics (snapshot of today's projected teams), localized to
@@ -388,35 +412,24 @@ function initCalendar() {
     const ics = buildKnockoutICS(matches, computeStandings(state.matches), getLang());
     downloadICS(ics);
   });
-  // Subscribe to the Worker feed — auto-updates teams as the bracket advances.
-  // A modal with copy + platform links is more reliable than navigating to a
-  // webcal:// URL (which errors in browsers without a handler).
-  const sub = $("#sub-calendar");
-  if (sub) {
-    const base = (CONFIG.LIVE_PROXY_URL || "").trim();
-    if (!base) { sub.hidden = true; }
-    else {
-      sub.addEventListener("click", () => {
-        // ?lang follows the selected tab so the feed comes in the right language.
-        const httpsUrl = base.replace(/\/+$/, "") + "/calendar.ics?lang=" + getLang();
-        const webcal = httpsUrl.replace(/^https?:/, "webcal:");
-        const gcal = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(webcal);
-        UI.openInfoModal({
-          title: t("cal.subTitle"),
-          html: `<p class="modal-sub">${t("cal.subBody")}</p>
-            <input class="cal-url" type="text" readonly value="${httpsUrl}" onclick="this.select()" />
-            <div class="cal-links">
-              <button type="button" id="cal-copy" class="btn-cal">${t("cal.copy")}</button>
-              <a class="btn-cal" href="${gcal}" target="_blank" rel="noopener">${t("cal.gcal")}</a>
-              <a class="btn-cal" href="${webcal}">${t("cal.apple")}</a>
-            </div>`,
-        });
-        document.getElementById("cal-copy")?.addEventListener("click", async (e) => {
-          try { await navigator.clipboard.writeText(httpsUrl); e.target.textContent = t("cal.copied"); } catch (_) {}
-        });
-      });
-    }
-  }
+  // Subscribe buttons live in both the Matches/bracket view AND the home page.
+  const base = (CONFIG.LIVE_PROXY_URL || "").trim();
+  const subBtns = document.querySelectorAll("#sub-calendar, #sub-calendar-home");
+  subBtns.forEach((b) => {
+    if (!base) { b.hidden = true; return; }
+    b.addEventListener("click", openSubscribeModal);
+  });
+}
+
+// Keep --topbar-h in sync with the sticky topbar's real height, so sub-stickies
+// (e.g. the Matches view switcher) can sit exactly below it on any viewport.
+function initStickyOffset() {
+  const bar = document.querySelector(".topbar");
+  if (!bar) return;
+  const set = () => document.documentElement.style.setProperty("--topbar-h", `${bar.offsetHeight}px`);
+  set();
+  if ("ResizeObserver" in window) new ResizeObserver(set).observe(bar);
+  window.addEventListener("resize", set, { passive: true });
 }
 
 // ---- back-to-top (long Stats page) ----
@@ -647,6 +660,7 @@ async function boot() {
   initMatchViews();
   initScorerControls();
   initSubnav();
+  initStickyOffset();
   initBackToTop();
   initCalendar();
   initDrill();
