@@ -12,7 +12,7 @@
 Quería algo simple: seguir la Copa con datos de verdad, bonito y claro. Terminó siendo un ejercicio de ingeniería de datos de punta a punta.
 
 Qué hace:
-• Datos casi en vivo (marcadores, goles, tarjetas, tiros) desde la API pública de ESPN — sin API key y sin costo.
+• Datos casi en vivo (marcadores, goles, tarjetas, tiros) de ESPN.
 • Un Cloudflare Worker + KV que consulta una sola vez y sirve el mismo snapshot a todos… respetando los límites del plan gratuito.
 • Bilingüe ES/EN, modo claro/oscuro y enfoque de _data storytelling_: cada gráfica cuenta una idea.
 • Un modelo de predicciones (Poisson/Dixon–Coles con prior Elo) validado _walk-forward_, sin hacerme trampas.
@@ -34,7 +34,7 @@ Hecho con HTML/CSS/JS vanilla + Chart.js y desplegado en GitHub Pages. Buena par
 
 Construí un panel del Mundial 2026, por gusto. ⚽📊
 
-Datos casi en vivo de la API pública de ESPN (sin API key), servidos a todos por igual con un Cloudflare Worker + KV; bilingüe, claro/oscuro, con un modelo de predicciones validado sin trampas.
+Datos casi en vivo de ESPN, servidos a todos por igual con un Cloudflare Worker + KV; bilingüe, claro/oscuro, con un modelo de predicciones validado sin trampas.
 
 La mejor lección no fue técnica: una gráfica mostraba datos de rondas que aún no se jugaban. Lo reescribí para calcular solo lo real y no graficar una fase hasta que termina. Mejor decir "todavía no" que inventar.
 
@@ -52,7 +52,7 @@ La mejor lección no fue técnica: una gráfica mostraba datos de rondas que aú
 I wanted something simple: follow the tournament with real data, clean and good-looking. It turned into an end-to-end data project.
 
 What it does:
-• Near-live data (scores, goals, cards, shots) from ESPN's public API — no API key, no cost.
+• Near-live data (scores, goals, cards, shots) from ESPN.
 • A Cloudflare Worker + KV that calls the source once and serves the same snapshot to everyone, within the free tier's limits.
 • Bilingual (ES/EN), dark/light, and a data-storytelling approach: each chart makes one point.
 • A prediction model (Poisson/Dixon–Coles with an Elo prior), validated walk-forward — no cheating.
