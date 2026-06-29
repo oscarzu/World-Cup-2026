@@ -258,10 +258,14 @@ export function renderCharts(stats, facts, disc, effHist) {
   if (lastEffHist && lastEffHist.length) {
     // New shape uses perPhase; fall back to the legacy perJornada key.
     const perKey = lastEffHist[0] && lastEffHist[0].perPhase ? "perPhase" : "perJornada";
-    effSeries("chart-eff-jornada", lastEffHist, perKey, tc);
-    effSeries("chart-eff-cumulative", lastEffHist, "accumulated", tc);
-    const note = sub("Etiquetas sobre cada punto: selección y su % de conversión.",
-      "Labels on each point: team and its conversion %.");
+    effDumbbell("chart-eff-jornada", lastEffHist, perKey, tc);
+    // The cumulative view is identical to per-phase until a 2nd phase exists, so
+    // hide its card while there's only the group stage (avoids two twin charts).
+    const cumCard = document.getElementById("chart-eff-cumulative")?.closest(".card.viz");
+    if (cumCard) cumCard.style.display = lastEffHist.length < 2 ? "none" : "";
+    if (lastEffHist.length >= 2) effDumbbell("chart-eff-cumulative", lastEffHist, "accumulated", tc);
+    const note = sub("Cada fila es una fase: la selección más eficaz (verde) y la menos eficaz (rojo), unidas por su rango de conversión.",
+      "Each row is a phase: most efficient team (green) and least efficient (red), joined by their conversion range.");
     setSub("sub-eff-jornada", note); setSub("sub-eff-cumulative", note);
   }
 }
@@ -274,8 +278,12 @@ function phaseAxisLabel(h) {
   return h.phase || "";
 }
 
-// Two-line efficacy chart (best vs worst) with the team labelled at every point.
-function effSeries(canvasId, history, kind, tc) {
+// Dumbbell (connected-dot) chart — the standard at Opta / The Athletic for
+// "best vs worst per category". Each phase is a horizontal row: a soft track
+// runs from the least-efficient team (red dot) to the most-efficient (green
+// dot), each end labelled with team + %. Reads cleanly with one row and scales
+// to many — no sparse points, no label pile-ups.
+function effDumbbell(canvasId, history, kind, tc) {
   if (typeof Chart === "undefined") return;
   const el = document.getElementById(canvasId);
   if (!el) return;
@@ -283,66 +291,91 @@ function effSeries(canvasId, history, kind, tc) {
   if (charts[canvasId]) { charts[canvasId].destroy(); delete charts[canvasId]; }
 
   const labels = history.map(phaseAxisLabel);
-  const bestTeams = history.map((h) => tName(h[kind].best.team));
-  const worstTeams = history.map((h) => tName(h[kind].worst.team));
-  const bestData = history.map((h) => h[kind].best.pct);
-  const worstData = history.map((h) => h[kind].worst.pct);
+  const best = history.map((h) => ({ team: tName(h[kind].best.team), pct: h[kind].best.pct }));
+  const worst = history.map((h) => ({ team: tName(h[kind].worst.team), pct: h[kind].worst.pct }));
+  // Floating bars [worst, best] become the connecting track.
+  const ranges = history.map((h) => [h[kind].worst.pct, h[kind].best.pct]);
 
-  const pointLabels = {
-    id: "pointLabels",
+  const dumbbell = {
+    id: "dumbbell",
     afterDatasetsDraw(chart) {
-      const ctx = chart.ctx; ctx.save(); ctx.font = `700 10px ${FONT}`; ctx.textAlign = "center";
-      chart.data.datasets.forEach((ds, di) => {
-        const meta = chart.getDatasetMeta(di);
-        const teams = di === 0 ? bestTeams : worstTeams;
-        const above = di === 0;
-        ctx.fillStyle = ds.borderColor;
-        ctx.textBaseline = above ? "bottom" : "top";
-        meta.data.forEach((pt, i) => {
-          ctx.fillText(`${teams[i]} ${ds.data[i]}%`, pt.x, pt.y + (above ? -9 : 9));
-        });
+      const ctx = chart.ctx;
+      const xs = chart.scales.x;
+      const meta = chart.getDatasetMeta(0);
+      ctx.save();
+      meta.data.forEach((bar, i) => {
+        const y = bar.y;
+        const xW = xs.getPixelForValue(worst[i].pct);
+        const xB = xs.getPixelForValue(best[i].pct);
+        const dot = (x, color) => {
+          ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2);
+          ctx.fillStyle = color; ctx.fill();
+          ctx.lineWidth = 2.5; ctx.strokeStyle = tc.tooltipBg; ctx.stroke();
+        };
+        dot(xW, tc.live); dot(xB, tc.accent);
+        ctx.font = `700 11px ${FONT}`;
+        // best (green) label — above the green dot, flipped near the right edge.
+        ctx.fillStyle = tc.accent; ctx.textBaseline = "bottom";
+        const bRight = xB > xs.right - 90;
+        ctx.textAlign = bRight ? "right" : "left";
+        ctx.fillText(`${best[i].team} ${best[i].pct}%`, bRight ? xB - 10 : xB + 10, y - 9);
+        // worst (red) label — below the red dot, flipped near the left edge.
+        ctx.fillStyle = tc.live; ctx.textBaseline = "top";
+        const wLeft = xW < xs.left + 90;
+        ctx.textAlign = wLeft ? "left" : "right";
+        ctx.fillText(`${worst[i].team} ${worst[i].pct}%`, wLeft ? xW + 10 : xW - 10, y + 11);
       });
       ctx.restore();
     },
   };
 
   charts[canvasId] = new Chart(el, {
-    type: "line",
-    data: { labels, datasets: [
-      { label: t("eff.seriesBest"), data: bestData, borderColor: tc.accent, backgroundColor: tc.accent + "22",
-        tension: 0.35, pointRadius: 4, pointBackgroundColor: tc.accent, borderWidth: 2.5, fill: false },
-      { label: t("eff.seriesWorst"), data: worstData, borderColor: tc.live, backgroundColor: tc.live + "22",
-        tension: 0.35, pointRadius: 4, pointBackgroundColor: tc.live, borderWidth: 2.5, fill: false },
-    ] },
+    type: "bar",
+    data: { labels, datasets: [{
+      data: ranges, backgroundColor: tc.context, borderRadius: 999,
+      barThickness: 5, borderSkipped: false,
+    }] },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: 22, bottom: 22, left: 8, right: 8 } },
+      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 26, bottom: 26, left: 6, right: 10 } },
       animation: { duration: 700, easing: "easeOutQuart" },
       plugins: {
         valueLabels: { display: false },
-        legend: { display: true, position: "top", align: "end",
-          labels: { color: tc.text, font: { family: FONT, size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true } },
+        legend: {
+          display: true, position: "top", align: "end",
+          labels: {
+            color: tc.text, font: { family: FONT, size: 11 }, usePointStyle: true, boxWidth: 8,
+            generateLabels: () => [
+              { text: t("eff.seriesBest"), fillStyle: tc.accent, strokeStyle: tc.accent, pointStyle: "circle" },
+              { text: t("eff.seriesWorst"), fillStyle: tc.live, strokeStyle: tc.live, pointStyle: "circle" },
+            ],
+          },
+          onClick: () => {},
+        },
         tooltip: {
           backgroundColor: tc.tooltipBg, titleColor: tc.textStrong, bodyColor: tc.textStrong,
-          borderColor: tc.border, borderWidth: 1, padding: 10, cornerRadius: 10,
-          callbacks: { label(ctx) {
-            const team = ctx.datasetIndex === 0 ? bestTeams[ctx.dataIndex] : worstTeams[ctx.dataIndex];
-            return `${ctx.dataset.label}: ${team} (${ctx.formattedValue}%)`;
-          } },
+          borderColor: tc.border, borderWidth: 1, padding: 10, cornerRadius: 10, displayColors: false,
+          callbacks: {
+            title: (items) => labels[items[0].dataIndex],
+            label: (ctx) => [
+              `${t("eff.seriesBest")}: ${best[ctx.dataIndex].team} ${best[ctx.dataIndex].pct}%`,
+              `${t("eff.seriesWorst")}: ${worst[ctx.dataIndex].team} ${worst[ctx.dataIndex].pct}%`,
+            ],
+          },
         },
       },
       scales: {
-        x: { grid: { display: false, drawBorder: false }, ticks: { color: tc.text, font: { size: 11, family: FONT } } },
-        y: { min: 0, max: 100, grid: { display: true, color: tc.grid, drawBorder: false },
-          ticks: { color: tc.text, font: { size: 11, family: FONT }, callback: (v) => v + "%" } },
+        x: { min: 0, max: 100, grid: { display: true, color: tc.grid, drawBorder: false },
+          ticks: { color: tc.text, font: { size: 11, family: FONT }, callback: (v) => v + "%", stepSize: 25 } },
+        y: { grid: { display: false, drawBorder: false },
+          ticks: { color: tc.textStrong, font: { size: 12, family: FONT, weight: "600" } } },
       },
     },
-    plugins: [pointLabels],
+    plugins: [dumbbell],
   });
   el.setAttribute("role", "img");
   el.setAttribute("aria-label",
-    `${t("a11y.chart")}: ${t("eff.seriesBest")} ${bestTeams.map((tm, i) => `${tm} ${bestData[i]}%`).join(", ")}. ` +
-    `${t("eff.seriesWorst")} ${worstTeams.map((tm, i) => `${tm} ${worstData[i]}%`).join(", ")}.`);
+    `${t("a11y.chart")}: ${labels.map((l, i) => `${l} — ${t("eff.seriesBest")} ${best[i].team} ${best[i].pct}%, ${t("eff.seriesWorst")} ${worst[i].team} ${worst[i].pct}%`).join(". ")}.`);
 }
 
 // Goals-by-matchday "zoom" chart for the group-stage drill-down (rendered into
