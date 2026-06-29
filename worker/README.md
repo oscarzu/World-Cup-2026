@@ -4,11 +4,14 @@ This Cloudflare Worker gives the dashboard **real World Cup 2026 data for free**
 using ESPN's public API (`fifa.world`) — **no API key, no season restriction**.
 
 ```
-            (every 5 min, ONE consumer)              (unlimited reads, 0 cost)
+            (every 3 min, ONE consumer)              (unlimited reads, 0 cost)
 Cron Trigger ─────────────────────────▶ Worker ──▶ KV store ──▶ every visitor's browser
                                           │
                                           └─ accumulates our own dataset (agg)
 ```
+
+> KV is written **only when the content changes**, to stay within the free tier
+> (1000 puts/day).
 
 - A **Cron Trigger** runs the Worker, calls ESPN **once**, and stores a
   normalized snapshot in **KV**.
@@ -31,7 +34,7 @@ Copy the printed `id` into **`wrangler.toml`** (the `id = "…"` line under
 ## 2. Deploy
 ```bash
 npx wrangler login        # if needed
-npx wrangler deploy        # registers the worker, KV binding and 5-min cron
+npx wrangler deploy        # registers the worker, KV binding and 3-min cron
 ```
 No secret/API key is required anymore. (You can remove the old one with
 `npx wrangler secret delete API_FOOTBALL_KEY`.)
@@ -53,13 +56,16 @@ https://wc26-football-proxy.<your-subdomain>.workers.dev/health    ← see statu
 `js/config.js` → `LIVE_PROXY_URL` already holds your Worker URL. Done.
 
 ## Routes
-- `GET /snapshot`  → `{ updatedAt, live:[…], yellowCards:[…] }` (what the UI reads)
-- `GET /teamstats` → `{ teams: { name: { fouls, shotsOnTarget, goals } } }`
-- `GET /health`    → status + fetches used today + last run diagnostics
-- `GET /refresh`   → force a collection now
+- `GET /snapshot`      → `{ updatedAt, live:[…], yellowCards:[…] }` (what the UI reads)
+- `GET /teamstats`     → `{ teams: { name: { fouls, shotsOnTarget, goals, red, matches } } }`
+- `GET /efficacy.json` → `{ byPhase:[{ phase, perPhase:{best,worst}, accumulated:{…} }] }`
+- `GET /calendar.ics`  → subscribable knockout calendar (`?lang=es|en`)
+- `GET /health`        → status + last-run diagnostics
+- `GET /refresh`       → force a collection now
+- `GET /rebuild`       → backfill every played match (`?reset=1` starts fresh)
 
 ## Tuning (`wrangler.toml` → `[vars]`)
 - `ENRICH_LIMIT` — live matches enriched with fouls/shots/cards per run (default 6).
 - `MAX_DAILY` — safety cap on ESPN fetches/day (default 2000).
-- Cron cadence — `crons = ["*/5 * * * *"]`.
+- Cron cadence — `crons = ["*/3 * * * *"]`.
 - `ALLOW_ORIGIN` — lock CORS to your site instead of `*`.

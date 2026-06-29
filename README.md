@@ -12,31 +12,46 @@ ninguna API key, a través de un **Cloudflare Worker** (ver [`worker/`](worker/)
 
 ## Características
 
-- **Resumen** — cifras clave, titular dinámico, goleo por jornada y una franja de
-  *insights* (estilo data-journalism). Muestra **empates** (p. ej. si dos selecciones
-  comparten el liderato de goles, aparecen ambas).
+Seis pestañas: **Resumen · Estadísticas · Partidos · Grupos · Goleadores · Sedes**.
+
+- **Resumen (home)** — cifras clave, titular dinámico y franja de *insights* (estilo
+  data-journalism). Trae la **caja de partidos en vivo** (aparece solo cuando hay juego),
+  el **goleo por fase** (escala logarítmica, con *drill-down* a goles por jornada) y el
+  **modelo de predicciones** con su comparativo **pronóstico vs. resultado real**.
 - **Estadísticas** — el corazón del proyecto:
-  - KPIs del torneo y **datos curiosos** (partido más goleador, remontadas, hat-tricks…).
-  - **Agregados** (fueras de lugar, VAR, tarjetas, faltas, asistencia…).
-  - Gráficas con **etiquetas directas** sobre cada barra, color-señal + contexto.
+  - KPIs del torneo y **datos curiosos** (partido más goleador, remontadas, hat-tricks,
+    gol más madrugador/tardío con minuto exacto…).
+  - **Agregados** (fueras de lugar, VAR, goles anulados/restituidos, tarjetas, faltas,
+    corners, atajadas, asistencia…).
+  - Gráficas con **etiquetas directas**, color-señal + contexto y *drill-down* al detalle.
   - **Disciplina y eficacia**: faltas **por partido** (normalizadas), **% de conversión**
-    (goles ÷ tiros a puerta), top-10 más/menos eficaces, **tarjetas rojas por selección**,
-    **lesiones graves** y un histórico de eficacia por jornada vs acumulado (fase de grupos).
-- **En vivo** — marcadores, minuto y estadísticas en directo; la pestaña se ilumina en
-  rojo **solo** cuando hay un partido en juego. Incluye un **archivo social por jornada**
-  (se organiza solo por día y sede).
-- **Partidos / Grupos / Eliminatorias / Goleadores / Sedes** — con horarios en **CST**,
-  nombres de selección traducidos y fotos de los 16 estadios.
+    (goles ÷ tiros a puerta), top-10 más/menos eficaces, **rojas por selección**, lesiones
+    y una gráfica **dumbbell de eficacia por fase** (datos reales del Worker; ver abajo).
+- **Partidos** — calendario agrupado por ronda con **fecha y hora** por partido, más el
+  **bracket** de eliminatorias (con número de partido para rastrear cada cruce) en la
+  misma pestaña, vía control segmentado. Calendario `.ics` **descargable y suscribible**
+  (bilingüe, con banderas, sede y transmisión).
+- **Grupos** — tablas de clasificación + **cómo terminó cada grupo** (Avanzó / Avanzó
+  como mejor 3.º / Eliminado, con certeza).
+- **Goleadores** — orden oficial FIFA; al hacer clic, **contra qué selecciones marcó**
+  cada jugador.
+- **Sedes** — los 16 estadios con foto, datos y un dato curioso.
+- **Reglamento** — 13 reglas verificadas contra el [reglamento oficial FIFA 26](docs/Reglamento_WC26.pdf).
 
 ## Arquitectura de datos
 
 ```
-            cron cada 5 min (un solo consumidor)        lecturas ilimitadas, 0 costo
+            cron cada 3 min (un solo consumidor)        lecturas ilimitadas, 0 costo
 ESPN API ─────────────────────────────────▶ Cloudflare Worker ──▶ KV ──▶ navegador (snapshot)
 (fifa.world)                                    │
-                                                └─ acumula nuestro propio dataset (agg)
+                                                ├─ acumula nuestro propio dataset (agg)
+                                                ├─ /efficacy.json (conversión real por fase)
+                                                └─ calendar:es / calendar:en (.ics suscribible)
 openfootball ──▶ raw.githubusercontent ──▶ navegador (calendario base / respaldo)
 ```
+
+> El Worker escribe en KV **solo cuando el contenido cambia**, para respetar el límite
+> gratuito (1000 puts/día).
 
 El Worker es el **único** que llama a ESPN; guarda un *snapshot* normalizado en **KV** y
 todos los visitantes leen lo mismo (idéntico, a prueba de recargas, sin multiplicar
@@ -48,9 +63,11 @@ peticiones por usuario). Con un contador diario nunca se exceden los límites.
 | --- | --- | --- |
 | [ESPN API](https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard) | En vivo: marcadores, goles, faltas, tiros, tarjetas | **Real** · gratis, sin key, sin límite de temporada |
 | [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json) | Calendario / resultados base | **Real** · dominio público |
+| Worker `/efficacy.json` | Eficacia (conversión) **real por fase** desde tiros a puerta capturados | **Real** (cuando el Worker está desplegado) |
 | `data/teamstats.json` | Faltas/tiros/rojas/lesiones por selección | **Estimado** (fallback) cuando no hay proveedor en vivo |
-| `data/efficacy-history.json` | Eficacia por jornada (fase de grupos) | **Ilustrativo** |
+| `data/efficacy-history.json` | Eficacia por fase (respaldo) | **Ilustrativo** (solo si el Worker no responde) |
 | `data/social.json` | Posts de Instagram curados por fecha | Curado a mano |
+| [reglamento oficial FIFA 26](docs/Reglamento_WC26.pdf) | Fuente base de las reglas | **Oficial** |
 | [flagcdn.com](https://flagcdn.com) | Banderas | — |
 
 ### Integridad de los datos (importante)
@@ -81,14 +98,19 @@ js/i18n.js             Internacionalización ES/EN
 js/api.js              Fetch + caché + normalización + carga de capas de datos
 js/apifootball.js      Cliente del Worker (snapshot en vivo)
 js/standings.js        Cálculo de tablas de grupos
-js/scorers.js          Goleadores y estadísticas de gol
+js/qualification.js    Clasificación a R32 + resolución de llaves (1A, 3A/B/C, W##)
+js/scorers.js          Goleadores, goles por fase y log por jugador
 js/facts.js            Datos curiosos derivados de los resultados
 js/discipline.js       Faltas/partido, % de conversión, rojas, lesiones
+js/predictions.js      Modelo Poisson/Dixon–Coles + Elo + back-test walk-forward
+js/calendar.js         Generación del calendario .ics (bilingüe, enriquecido)
 js/render.js           Renderizado del DOM (bilingüe)
 js/charts.js           Gráficas (Chart.js) con etiquetas directas
-js/app.js              Orquestación: tabs, tema, idioma, polling en vivo
+js/app.js              Orquestación: tabs, tema, idioma, polling en vivo, drill-downs
+model.html             Página de datos del modelo (metodología, Elo, back-test)
 data/                  worldcup.json + capas curadas
-worker/                Cloudflare Worker (recolector ESPN + KV + cron)
+docs/                  Reglamento oficial (PDF) + informe de métricas
+worker/                Cloudflare Worker (recolector ESPN + KV + cron + /efficacy + .ics)
 ```
 
 ## Cómo ejecutar localmente
@@ -123,8 +145,10 @@ repositorio (`ETL-Project`) hacia este, dejándolo listo para GitHub Pages.
    acceso a la temporada 2026** (solo 2022–2024). En lugar de pagar, descubrimos la **API
    pública de ESPN** (`fifa.world`): gratis, sin API key y sin candado de temporada.
 3. **Que el dato fuera el mismo para todos y no agotara cuotas.** Montamos un **Cloudflare
-   Worker con KV + un cron** cada 5 min: el servidor consulta una sola vez y todos leen el
-   mismo *snapshot*. De paso, el Worker **acumula nuestro propio dataset** del torneo.
+   Worker con KV + un cron** cada 3 min: el servidor consulta una sola vez y todos leen el
+   mismo *snapshot*. De paso, el Worker **acumula nuestro propio dataset** del torneo. Más
+   adelante, cuando Cloudflare avisó de un exceso de escrituras, se ajustó para **escribir
+   en KV solo cuando el contenido cambia** (dentro del tope gratuito).
 4. **Tropiezos de entorno.** Node sin instalar, `wrangler` fuera del PATH, un repositorio
    git local corrupto (*bad object*)… se resolvieron con `npx`, reinstalación de Node y un
    re-clonado limpio.
@@ -139,7 +163,13 @@ repositorio (`ETL-Project`) hacia este, dejándolo listo para GitHub Pages.
 **Cómo evolucionó.** De un dashboard minimalista pasó a un producto de **data
 storytelling**: etiquetas directas en las gráficas, color con intención, un titular por
 visualización, franja de *insights*, métricas más rigurosas (faltas por partido, **% de
-conversión**), **bilingüe ES/EN** y una capa en vivo robusta y compartida.
+conversión**), **bilingüe ES/EN** y una capa en vivo robusta y compartida. Después llegó
+otra ronda: un **modelo de predicciones** (Poisson/Dixon–Coles con prior Elo y validación
+*walk-forward*), un **calendario `.ics` suscribible** y bilingüe, la **consolidación de
+pestañas** (de 9 a 6, con el vivo y las predicciones en el home), las **reglas verificadas
+contra el reglamento oficial de la FIFA**, y un compromiso firme con la **honestidad del
+dato**: cuando una gráfica mostraba eliminatorias inexistentes, se reescribió para calcular
+**eficacia real por fase** y no graficar ninguna ronda hasta que se completa.
 
 **Status actual.** Funcionando y desplegado: datos reales de ESPN en vivo a través del
 Worker, calendario base de openfootball, capas estimadas claramente señaladas, diseño
