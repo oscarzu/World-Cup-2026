@@ -982,7 +982,12 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
 .cal-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
 .cal-actions .btn-cal { margin-top: 0; }
 .btn-cal.alt { background: var(--accent-soft); border-color: var(--accent); }
-.btn-cal.sm { margin-top: 0; font-size: 0.76rem; padding: 0.38rem 0.7rem; }
+/* filled, high-emphasis CTA (the subscribe action — it's the recommended one) */
+.btn-cal.cta { background: var(--accent-grad); color: #04140a; border-color: transparent;
+  font-weight: 800; box-shadow: 0 4px 14px rgba(47, 217, 104, 0.28); }
+[data-theme="light"] .btn-cal.cta { color: #03210f; }
+.btn-cal.cta:hover { border-color: transparent; filter: brightness(1.06); transform: translateY(-1px); }
+.btn-cal.sm { margin-top: 0; font-size: 0.76rem; padding: 0.42rem 0.8rem; }
 /* "Próximos y en vivo" card header: title + subscribe action on one row */
 .ov-next-head { display: flex; align-items: center; justify-content: space-between;
   gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
