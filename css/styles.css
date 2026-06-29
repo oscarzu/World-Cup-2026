@@ -473,8 +473,11 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 .home-live .section-head { margin-bottom: 0.8rem; }
 .live-kick { display: inline-flex; align-items: center; gap: 0.4rem; }
 .home-live .live-feed { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-/* matches hub: schedule ↔ bracket sub-views */
-.seg.subviews { display: flex; width: 100%; max-width: 360px; margin: 0 auto 1.2rem; }
+/* matches hub: schedule ↔ bracket sub-views — sticky so the view switcher
+   stays reachable while scrolling the long list/bracket (no jumping to top). */
+.seg.subviews { display: flex; width: 100%; max-width: 360px; margin: 0 auto 1.2rem;
+  position: sticky; top: calc(var(--topbar-h, 108px) + 0.5rem); z-index: 15;
+  box-shadow: var(--shadow); }
 .seg.subviews button { flex: 1; padding: 0.55rem 0.8rem; font-size: 0.82rem; }
 .match-view { animation: fadeIn 0.25s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -979,6 +982,11 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
 .cal-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
 .cal-actions .btn-cal { margin-top: 0; }
 .btn-cal.alt { background: var(--accent-soft); border-color: var(--accent); }
+.btn-cal.sm { margin-top: 0; font-size: 0.76rem; padding: 0.38rem 0.7rem; }
+/* "Próximos y en vivo" card header: title + subscribe action on one row */
+.ov-next-head { display: flex; align-items: center; justify-content: space-between;
+  gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+.ov-next-head h3 { margin: 0; }
 .modal-body .cal-url { width: 100%; margin: 0.4rem 0 0.9rem; padding: 0.6rem 0.7rem; font-size: 0.82rem;
   border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); color: var(--text); }
 .cal-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
