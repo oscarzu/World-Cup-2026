@@ -483,7 +483,17 @@ function renderAll() {
   state._lastDisc = disc; // for chart drill-downs
   UI.renderDiscipline(disc);
   UI.renderInsightStrip(stats, facts, disc);
-  renderCharts(stats, facts, disc, state.effHistory);
+  // Efficacy history: never show a phase that hasn't actually been played. Group
+  // matchday entries always pass (the group stage is complete); a knockout-phase
+  // entry only shows once every match in that round has a result.
+  const KO_PHASES = ["Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Match for third place", "Final"];
+  const phaseComplete = (round) => {
+    const ms = state.matches.filter((m) => m.round === round);
+    return ms.length > 0 && ms.every((m) => m.score && m.score.home != null);
+  };
+  const completed = new Set(KO_PHASES.filter(phaseComplete));
+  const effHist = (state.effHistory || []).filter((h) => h.matchday != null || h.phase === "group" || completed.has(h.phase));
+  renderCharts(stats, facts, disc, effHist);
 
   // Freshness label.
   const en = getLang() === "en";
