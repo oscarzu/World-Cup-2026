@@ -351,7 +351,7 @@ const STR = {
   "br.game": ["Partido", "Match"],
   "cal.add": ["📅 Añadir al calendario", "📅 Add to calendar"],
   "cal.download": ["📅 Descargar (.ics)", "📅 Download (.ics)"],
-  "cal.subscribe": ["🔄 Suscribirse (se actualiza solo)", "🔄 Subscribe (auto-updates)"],
+  "cal.subscribe": ["📅 Suscribirse (se actualiza solo)", "📅 Subscribe (auto-updates)"],
   "br.proj": ["proy.", "proj."],
   "br.projFull": ["Proyección según los resultados de hoy", "Projection based on today's results"],
   "br.swipe": ["Desliza para ver más rondas →", "Swipe to see more rounds →"],
