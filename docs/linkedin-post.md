@@ -7,8 +7,7 @@ Construí un dashboard del Mundial 2026 como proyecto personal y terminó siendo
 
 Lo técnico, en una línea:
 Datos casi en vivo de ESPN > Cloudflare Worker + KV > un mismo *snapshot* para todos (una sola lectura a la fuente).
-Modelo de predicciones 
-Visualización con intención: cada gráfica, una sola idea.
+Modelo de predicciones y visualización con intención: cada gráfica, una sola idea.
 
 Pero la mejor lección no fue de código. Una gráfica llegó a mostrar fases de eliminación **que aún no se jugaban** (datos "ilustrativos" que yo mismo había metido). En vez de maquillarlo, lo reescribí para calcular métricas **reales por fase** y no graficar una ronda hasta que termina.
 
