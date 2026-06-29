@@ -1,15 +1,13 @@
 # Publicación para LinkedIn
 
-> Una versión en español y una en inglés. Tono de perfil de datos: concisa,
-> clara y pensada para generar conversación. Termina con una pregunta (CTA).
 
 ---
 
 ## Español
 
-¿Qué haces cuando faltan datos: los estimas… o esperas? 🤔
+¿Qué haces cuando faltan datos: los estimas o esperas hasta que estén disponibles? 🤔
 
-Construí un panel del Mundial 2026 como proyecto personal y terminó siendo un buen recordatorio de algo que en data damos por obvio, pero cuesta sostener: **mostrar solo lo que de verdad pasó.**
+Construí un panel del Mundial 2026 como proyecto personal y terminó siendo un buen recordatorio de algo que en el mundo de los datos damos por setnado **la limpieza en los datos fuente siempre .**
 
 Lo técnico, en una línea:
 📥 datos casi en vivo de ESPN → ⚙️ Cloudflare Worker + KV → un mismo *snapshot* para todos (una sola lectura a la fuente).
