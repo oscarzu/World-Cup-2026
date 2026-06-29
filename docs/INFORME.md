@@ -8,8 +8,8 @@
 ## 1. Resumen ejecutivo
 
 Dashboard interactivo, bilingüe (ES/EN) y con tema claro/oscuro de la Copa
-Mundial 2026. Se alimenta de la API pública de ESPN (a través de un Worker
-propio de Cloudflare + KV) y de un calendario base de openfootball. Todo el
+Mundial 2026. Se alimenta de datos de ESPN (a través de un Worker propio de
+Cloudflare + KV) y de un calendario base de openfootball. Todo el
 procesamiento de métricas ocurre en el cliente (JavaScript vanilla, sin
 framework) y en el Worker (agregación y persistencia).
 
@@ -29,7 +29,7 @@ framework) y en el Worker (agregación y persistencia).
 ## 2. Arquitectura y fuentes de datos
 
 ```
-ESPN API (pública)  ──►  Cloudflare Worker (cron cada 3 min)
+ESPN  ──►  Cloudflare Worker (cron cada 3 min)
                           │   • snapshot en vivo (marcadores, tarjetas)
                           │   • agg: dataset propio acumulado
                           │     (goles, tiros a puerta, faltas, rojas por partido)

@@ -1,7 +1,7 @@
 # Shared live collector (ESPN → KV → dashboard)
 
 This Cloudflare Worker gives the dashboard **real World Cup 2026 data for free**,
-using ESPN's public API (`fifa.world`) — **no API key, no season restriction**.
+sourced from ESPN.
 
 ```
             (every 3 min, ONE consumer)              (unlimited reads, 0 cost)
@@ -20,8 +20,8 @@ Cron Trigger ──────────────────────�
 - Each run also merges live fouls/shots/goals and yellow-card events into `agg`,
   building **your own dataset** over the tournament (served at `/teamstats`).
 
-> ESPN's endpoints are unofficial (no uptime guarantee) but free and key-less.
-> If ESPN ever changes, the dashboard simply falls back to the bundled data.
+> The source offers no uptime guarantee. If it ever changes, the dashboard
+> simply falls back to the bundled data.
 
 ## 1. Create the KV store (once)
 From this `worker/` folder:
@@ -41,8 +41,8 @@ No secret/API key is required anymore. (You can remove the old one with
 
 ## 3. Fill + verify
 ```
-https://wc26-football-proxy.<your-subdomain>.workers.dev/refresh   ← collect now
-https://wc26-football-proxy.<your-subdomain>.workers.dev/health    ← see status
+https://<your-worker>.<your-subdomain>.workers.dev/refresh   ← collect now
+https://<your-worker>.<your-subdomain>.workers.dev/health    ← see status
 ```
 `/refresh` returns diagnostics, e.g.:
 ```json
