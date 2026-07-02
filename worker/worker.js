@@ -412,7 +412,22 @@ const ROUNDS = [
   [/third|3rd/i, ["Tercer lugar", "Third place"], ["el bronce", "the bronze medal"]],
   [/final/i, ["Final", "Final"], ["el título mundial", "the world title"]],
 ];
-function roundInfo(headline) {
+// Authoritative round-by-date windows (official 2026 schedule). Since the .ics
+// only contains matches on/after the knockout start, the date pins the round
+// exactly — no dependency on ESPN's (sometimes empty) headline field.
+// [startDate, endDate, [esLabel,enLabel], [esStake,enStake]]
+const ROUND_DATES = [
+  ["2026-06-28", "2026-07-03", ["Dieciseisavos", "Round of 32"], ["el pase a Octavos", "a spot in the Round of 16"]],
+  ["2026-07-04", "2026-07-07", ["Octavos de final", "Round of 16"], ["el pase a Cuartos", "a spot in the quarter-finals"]],
+  ["2026-07-09", "2026-07-11", ["Cuartos de final", "Quarter-final"], ["el pase a Semifinales", "a spot in the semi-finals"]],
+  ["2026-07-14", "2026-07-15", ["Semifinal", "Semi-final"], ["el pase a la Final", "a spot in the final"]],
+  ["2026-07-18", "2026-07-18", ["Tercer lugar", "Third place"], ["el bronce", "the bronze medal"]],
+  ["2026-07-19", "2026-07-19", ["Final", "Final"], ["el título mundial", "the world title"]],
+];
+function roundInfo(headline, dateStr) {
+  // Date wins (deterministic); headline is a fallback hint; then a generic label.
+  const d = (dateStr || "").slice(0, 10);
+  if (d) for (const [a, b, label, stake] of ROUND_DATES) if (d >= a && d <= b) return { label, stake };
   for (const [re, label, stake] of ROUNDS) if (re.test(headline || "")) return { label, stake };
   return { label: ["Eliminatoria", "Knockout"], stake: ["el avance", "advancing"] };
 }
@@ -497,7 +512,7 @@ function buildICS(events, koStart, lang, teamGoals) {
     const hRaw = home.team?.displayName || "", aRaw = away.team?.displayName || "";
     const hn = hRaw ? `${tFlag(hRaw)} ${tName(hRaw)}`.trim() : TBD;
     const an = aRaw ? `${tFlag(aRaw)} ${tName(aRaw)}`.trim() : TBD;
-    const { label, stake } = roundInfo(comp.notes?.[0]?.headline || ev.season?.slug);
+    const { label, stake } = roundInfo(comp.notes?.[0]?.headline || ev.season?.slug, date);
     const venue = comp.venue?.fullName || "";
     const city = comp.venue?.address?.city || "";
     const gH = teamGoals?.[hRaw]?.goals, gA = teamGoals?.[aRaw]?.goals;
