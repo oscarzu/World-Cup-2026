@@ -543,7 +543,7 @@ function buildICS(events, koStart, lang, teamGoals) {
       `DTSTAMP:${stamp}`,
       `DTSTART:${icsZ(start)}`,
       `DTEND:${icsZ(end)}`,
-      `SUMMARY:${icsEsc(`${hn} vs ${an} · ${label[L]}`)}`,
+      `SUMMARY:${icsEsc(`${label[L]}: ${hn} vs ${an}`)}`,
       `LOCATION:${icsEsc(`${venue}${city ? `, ${city}` : ""}`)}`,
       `DESCRIPTION:${icsEsc(lines.join("\n"))}`,
       "END:VEVENT",

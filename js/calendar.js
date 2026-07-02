@@ -152,7 +152,7 @@ export function buildKnockoutICS(matches, standings = new Map(), lang = "es") {
       `DTSTAMP:${stamp}`,
       `DTSTART:${icsDate(ko)}`,
       `DTEND:${icsDate(end)}`,
-      `SUMMARY:${esc(`${home} vs ${away} · ${roundLabel}`)}`,
+      `SUMMARY:${esc(`${roundLabel}: ${home} vs ${away}`)}`,
       `LOCATION:${esc(loc)}`,
       `DESCRIPTION:${esc(desc)}`,
       "END:VEVENT",
