@@ -512,6 +512,12 @@ function buildICS(events, koStart, lang, teamGoals) {
     const hRaw = home.team?.displayName || "", aRaw = away.team?.displayName || "";
     const hn = hRaw ? `${tFlag(hRaw)} ${tName(hRaw)}`.trim() : TBD;
     const an = aRaw ? `${tFlag(aRaw)} ${tName(aRaw)}`.trim() : TBD;
+    // Final score for already-played matches (so past events show the result).
+    const hScore = num(home.score), aScore = num(away.score);
+    const played = ev.status?.type?.state === "post" && hScore != null && aScore != null;
+    const pen = num(home.shootoutScore) != null && num(away.shootoutScore) != null
+      ? ` (pen ${num(home.shootoutScore)}-${num(away.shootoutScore)})` : "";
+    const matchup = played ? `${hn} ${hScore}-${aScore} ${an}` : `${hn} vs ${an}`;
     const { label, stake } = roundInfo(comp.notes?.[0]?.headline || ev.season?.slug, date);
     const venue = comp.venue?.fullName || "";
     const city = comp.venue?.address?.city || "";
@@ -522,10 +528,15 @@ function buildICS(events, koStart, lang, teamGoals) {
     const hl = (hRaw && aRaw) ? highlight(hIso, aIso, tName(hRaw), tName(aRaw), lang) : null;
 
     const lines = [];
+    if (played) {
+      lines.push(lang === "es"
+        ? `✅ Final: ${tName(hRaw)} ${hScore}-${aScore} ${tName(aRaw)}${pen}`
+        : `✅ Full-time: ${hRaw} ${hScore}-${aScore} ${aRaw}${pen}`);
+    }
     lines.push(`🏟️ ${venue}${city ? `, ${city}` : ""}`);
     lines.push(BROADCAST[lang === "es" ? "es" : "en"]);
-    if (hl) lines.push(`⚡ ${hl}`);
-    lines.push(lang === "es"
+    if (hl && !played) lines.push(`⚡ ${hl}`);
+    if (!played) lines.push(lang === "es"
       ? `⭐ Se juega ${stake[0]}.`
       : `⭐ Playing for ${stake[1]}.`);
     if (gH != null && gA != null) {
@@ -543,7 +554,7 @@ function buildICS(events, koStart, lang, teamGoals) {
       `DTSTAMP:${stamp}`,
       `DTSTART:${icsZ(start)}`,
       `DTEND:${icsZ(end)}`,
-      `SUMMARY:${icsEsc(`${label[L]}: ${hn} vs ${an}`)}`,
+      `SUMMARY:${icsEsc(`${matchup} · ${label[L]}`)}`,
       `LOCATION:${icsEsc(`${venue}${city ? `, ${city}` : ""}`)}`,
       `DESCRIPTION:${icsEsc(lines.join("\n"))}`,
       "END:VEVENT",

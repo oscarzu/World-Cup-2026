@@ -547,7 +547,9 @@ export function renderBracket(matches, standings = new Map()) {
     const tag = s.proj ? `<span class="bk-proj" title="${esc(t("br.projFull"))}">${t("br.proj")}</span>` : "";
     return `${flag}<span class="nm">${esc(s.name)}</span>${tag}`;
   };
-  // Compact card with the venue/time always visible (no click needed).
+  // Compact tie card. Round comes from the column header, so the card stays
+  // small (2 rows + score) and short → the boxes line up cleanly under each
+  // phase like a real bracket. Venue/time live in the title (and show on mobile).
   const card = (m, big = false) => {
     if (!m) return "";
     const s = slot.get(m.id) || { home: resolveSlot(m.home.name, ctx), away: resolveSlot(m.away.name, ctx) };
@@ -556,13 +558,14 @@ export function renderBracket(matches, standings = new Map()) {
     const v = VENUES[m.ground];
     const where = v ? v.city : (m.ground || "");
     const when = played ? "" : (kickoffDate(m) ? kickoffDateTime(m) : fmtDate(m.date));
-    // Match number badge so "Ganador #97" placeholders can be traced to a tie.
-    const no = m.num != null ? `<span class="bkm-no" title="${esc(t("br.game"))} ${m.num}">#${m.num}</span>` : "";
-    return `<div class="bkm${big ? " big" : ""}">
-      <div class="bkm-h">${no}<span class="bkm-round">${esc(roundLabel(m.round))}</span></div>
+    const meta = `${where}${when ? ` · ${when}` : ""}`;
+    const no = m.num != null ? `<span class="bkm-no" aria-hidden="true">#${m.num}</span>` : "";
+    const title = `${m.num != null ? `#${m.num} · ` : ""}${meta}`;
+    return `<div class="bkm${big ? " big" : ""}" title="${esc(title)}">
+      ${no}
       <div class="bkm-r ${played && hs > as ? "win" : ""} ${s.home.placeholder ? "tbd" : ""}">${slotInner(s.home)}${sc(hs)}</div>
       <div class="bkm-r ${played && as > hs ? "win" : ""} ${s.away.placeholder ? "tbd" : ""}">${slotInner(s.away)}${sc(as)}</div>
-      <div class="bkm-v">📍 ${esc(where)}${when ? ` · ${esc(when)}` : ""}</div>
+      ${meta ? `<div class="bkm-v">📍 ${esc(meta)}</div>` : ""}
     </div>`;
   };
   const colHtml = (label, list) =>
@@ -571,19 +574,23 @@ export function renderBracket(matches, standings = new Map()) {
   const L = (r) => left[r] || [], R = (r) => right[r] || [];
   wrap.innerHTML = `
     <div class="bracket-tree">
-      <div class="bk-half">
+      <div class="bk-half left">
         ${colHtml(t("br.r32"), L("Round of 32"))}
         ${colHtml(t("br.r16"), L("Round of 16"))}
         ${colHtml(t("br.qf"), L("Quarter-final"))}
         ${colHtml(t("br.sf"), L("Semi-final"))}
       </div>
       <div class="bk-core">
-        <div class="bk-trophy" aria-hidden="true">🏆</div>
+        <div class="bk-trophy" aria-hidden="true">
+          <img class="bk-cup bk-cup-img" src="./assets/wc26-logo.png" alt=""
+               onerror="this.style.display='none';this.nextElementSibling.style.display='block'" />
+          <span class="bk-cup-fallback" style="display:none">${TROPHY_SVG}</span>
+        </div>
         <div class="bk-final-label">${t("br.final")}</div>
         ${card(final, true)}
         ${third ? `<div class="bk-third"><div class="bk-third-label">${t("br.third")}</div>${card(third, true)}</div>` : ""}
       </div>
-      <div class="bk-half">
+      <div class="bk-half right">
         ${colHtml(t("br.sf"), R("Semi-final"))}
         ${colHtml(t("br.qf"), R("Quarter-final"))}
         ${colHtml(t("br.r16"), R("Round of 16"))}
@@ -591,6 +598,27 @@ export function renderBracket(matches, standings = new Map()) {
       </div>
     </div>`;
 }
+
+// Stylized World Cup trophy (gold, on a green marble base) — the centrepiece of
+// the "road to the final". Inline SVG so it scales crisply in light/dark.
+const TROPHY_SVG = `
+<svg class="bk-cup" viewBox="0 0 120 172" role="img" aria-label="World Cup">
+  <defs>
+    <linearGradient id="wc-cup" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff2c8"/><stop offset=".45" stop-color="#eabf4d"/><stop offset="1" stop-color="#a67912"/>
+    </linearGradient>
+    <linearGradient id="wc-base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2fa06a"/><stop offset="1" stop-color="#12603c"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#wc-cup)">
+    <ellipse cx="60" cy="31" rx="23" ry="25"/>
+    <path d="M45 47 C 33 80, 46 110, 60 120 C 74 110, 87 80, 75 47 C 71 62, 65 65, 60 65 C 55 65, 49 62, 45 47 Z"/>
+    <path d="M52 118 h16 l-3 20 h-10 z"/>
+  </g>
+  <path d="M33 140 q27 -11 54 0 l4 13 q-31 -10 -62 0 z" fill="url(#wc-base)"/>
+  <rect x="33" y="151" width="54" height="9" rx="3.5" fill="url(#wc-cup)"/>
+</svg>`;
 
 // ---- scorers ----
 export function renderScorers(list, { filtered = false } = {}) {

@@ -136,12 +136,17 @@ export function buildKnockoutICS(matches, standings = new Map(), lang = "es") {
     const roundLabel = info[0][es ? 0 : 1];
     const stake = info[1][es ? 0 : 1];
     const hl = highlight(homeName, awayName, lang);
+    // Final score for already-played matches (past events show the result).
+    const sh = mt.score?.home, sa = mt.score?.away, played = mt.status === "finished" && sh != null;
+    const pen = mt.score?.penHome != null ? ` (pen ${mt.score.penHome}-${mt.score.penAway})` : "";
+    const matchup = played ? `${home} ${sh}-${sa} ${away}` : `${home} vs ${away}`;
 
     const desc = [
+      ...(played ? [es ? `✅ Final: ${homeName} ${sh}-${sa} ${awayName}${pen}` : `✅ Full-time: ${homeName} ${sh}-${sa} ${awayName}${pen}`] : []),
       `🏟️ ${loc}`,
       BROADCAST[lang],
-      ...(hl ? [`⚡ ${hl}`] : []),
-      es ? `⭐ Se juega ${stake}.` : `⭐ Playing for ${stake}.`,
+      ...(hl && !played ? [`⚡ ${hl}`] : []),
+      ...(played ? [] : [es ? `⭐ Se juega ${stake}.` : `⭐ Playing for ${stake}.`]),
       es ? "🔄 Equipos según la clasificación al momento de exportar; suscríbete al feed para que se actualicen al avanzar."
         : "🔄 Teams reflect the standings at export time; subscribe to the feed for auto-updating teams.",
     ].join("\n");
@@ -152,7 +157,7 @@ export function buildKnockoutICS(matches, standings = new Map(), lang = "es") {
       `DTSTAMP:${stamp}`,
       `DTSTART:${icsDate(ko)}`,
       `DTEND:${icsDate(end)}`,
-      `SUMMARY:${esc(`${roundLabel}: ${home} vs ${away}`)}`,
+      `SUMMARY:${esc(`${matchup} · ${roundLabel}`)}`,
       `LOCATION:${esc(loc)}`,
       `DESCRIPTION:${esc(desc)}`,
       "END:VEVENT",
