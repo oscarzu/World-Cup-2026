@@ -402,6 +402,11 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 .bk-trophy { animation: trophyFloat 4s ease-in-out infinite alternate; line-height: 0; }
 .bk-cup { width: 88px; height: auto; filter: drop-shadow(0 6px 16px rgba(234, 191, 77, 0.45)); }
 .bk-cup-img { width: 118px; height: auto; object-fit: contain; }
+/* dark theme: soft "spotlight" behind the logo so its dark numerals stay legible */
+[data-theme="dark"] .bk-trophy {
+  background: radial-gradient(ellipse 58% 52% at 50% 46%,
+    rgba(244, 246, 252, 0.94), rgba(244, 246, 252, 0.6) 48%, transparent 72%);
+}
 @keyframes trophyFloat { from { transform: translateY(0); } to { transform: translateY(-7px); } }
 .bk-final-label { font-family: var(--font-display); font-weight: 800; letter-spacing: 0.05em;
   text-transform: uppercase; font-size: 0.9rem; color: var(--gold); }
