@@ -384,6 +384,8 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 .bkm-r.win { color: var(--accent); font-weight: 800; }
 .bkm-r.tbd .nm { color: var(--muted); font-style: italic; }
 .bk-sc { font-weight: 800; font-variant-numeric: tabular-nums; margin-left: auto; padding-left: 0.3rem; }
+.bk-pen { margin-top: 0.15rem; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.02em;
+  color: var(--gold); text-transform: uppercase; text-align: right; }
 .bk-proj { display: none; }               /* hidden in compact cards to save width */
 .bkm-v { margin-top: 0.3rem; padding-top: 0.28rem; border-top: 1px solid var(--border);
   color: var(--muted); font-size: 0.64rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

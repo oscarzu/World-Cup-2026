@@ -349,6 +349,8 @@ const STR = {
   "br.legend": ["Cuadro en vivo con la clasificación actual. Cada llave muestra su número de partido (#) para identificar de dónde sale cada cruce; p. ej. «Ganador #97» avanza desde el partido #97.",
                 "Live bracket from current standings. Each tie shows its match number (#) so you can trace each pairing; e.g. “Winner #97” advances from match #97."],
   "br.game": ["Partido", "Match"],
+  "br.pens": ["pen.", "pen."],
+  "br.aet": ["t. extra", "a.e.t."],
   "cal.add": ["📅 Añadir al calendario", "📅 Add to calendar"],
   "cal.download": ["📅 Descargar (.ics)", "📅 Download (.ics)"],
   "cal.subscribe": ["📅 Suscribirse (se actualiza solo)", "📅 Subscribe (auto-updates)"],

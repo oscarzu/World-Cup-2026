@@ -126,6 +126,22 @@ const byKickoff = (a, b) => {
   return ta - tb;
 };
 
+// Knockout winner: goals decide it; if level after extra time, the penalty
+// shootout does. Returns "home" | "away" | null.
+export function koWinnerSide(m) {
+  const hs = m.score?.home, as = m.score?.away;
+  if (hs == null || as == null) return null;
+  if (hs > as) return "home";
+  if (as > hs) return "away";
+  const ph = m.score?.penHome, pa = m.score?.penAway;
+  if (ph == null || pa == null) return null;
+  return ph > pa ? "home" : pa > ph ? "away" : null;
+}
+export function koWinnerName(m) {
+  const side = koWinnerSide(m);
+  return side === "home" ? m.home?.name : side === "away" ? m.away?.name : null;
+}
+
 // ---- match card ----
 export function matchCard(m, { showGoals = true } = {}) {
   const st = STATUS[m.status] || STATUS.scheduled;
@@ -134,7 +150,8 @@ export function matchCard(m, { showGoals = true } = {}) {
     ? `<div class="score">${m.score.home} – ${m.score.away}</div>`
     : `<div class="meta">${esc(kickoffLabel(m) || t("tbd"))}</div>`;
   const pen = m.score?.penHome != null
-    ? `<div class="meta">pen. ${m.score.penHome}–${m.score.penAway}</div>` : "";
+    ? `<div class="meta">${t("br.pens")} ${m.score.penHome}–${m.score.penAway}</div>`
+    : (m.score?.etHome != null ? `<div class="meta">${t("br.aet")}</div>` : "");
 
   let goals = "";
   if (showGoals && m.goals?.length) {
@@ -502,12 +519,13 @@ export function renderBracket(matches, standings = new Map()) {
   if (!wrap) return;
 
   // Map finished knockout matches → winner (real team), so later rounds resolve.
+  // A level score after extra time is decided by the penalty shootout.
   const isCode = (s) => RE_CODE.test(s || "");
   const winners = {};
   for (const m of matches) {
     const hs = m.score?.home, as = m.score?.away;
     if (hs == null || as == null || m.num == null) continue;
-    const w = hs > as ? m.home.name : as > hs ? m.away.name : null;
+    const w = koWinnerName(m);
     if (w && !isCode(w)) winners[m.num] = w;
   }
   const ctx = { standings, thirds: rankedThirds(standings), usedThirds: new Set(), winners };
@@ -555,6 +573,13 @@ export function renderBracket(matches, standings = new Map()) {
     const s = slot.get(m.id) || { home: resolveSlot(m.home.name, ctx), away: resolveSlot(m.away.name, ctx) };
     const hs = m.score?.home, as = m.score?.away, played = hs != null;
     const sc = (v) => (played ? `<span class="bk-sc">${v}</span>` : "");
+    // Winner may be decided in extra time or on penalties (level score).
+    const win = played ? koWinnerSide(m) : null;
+    const hasPen = m.score?.penHome != null && m.score?.penAway != null;
+    const etPlayed = m.score?.etHome != null;
+    const note = hasPen ? `${t("br.pens")} ${m.score.penHome}–${m.score.penAway}`
+      : etPlayed ? t("br.aet") : "";
+    const penLine = note ? `<div class="bk-pen">${note}</div>` : "";
     const v = VENUES[m.ground];
     const where = v ? v.city : (m.ground || "");
     const when = played ? "" : (kickoffDate(m) ? kickoffDateTime(m) : fmtDate(m.date));
@@ -563,8 +588,9 @@ export function renderBracket(matches, standings = new Map()) {
     const title = `${m.num != null ? `#${m.num} · ` : ""}${meta}`;
     return `<div class="bkm${big ? " big" : ""}" title="${esc(title)}">
       ${no}
-      <div class="bkm-r ${played && hs > as ? "win" : ""} ${s.home.placeholder ? "tbd" : ""}">${slotInner(s.home)}${sc(hs)}</div>
-      <div class="bkm-r ${played && as > hs ? "win" : ""} ${s.away.placeholder ? "tbd" : ""}">${slotInner(s.away)}${sc(as)}</div>
+      <div class="bkm-r ${win === "home" ? "win" : ""} ${s.home.placeholder ? "tbd" : ""}">${slotInner(s.home)}${sc(hs)}</div>
+      <div class="bkm-r ${win === "away" ? "win" : ""} ${s.away.placeholder ? "tbd" : ""}">${slotInner(s.away)}${sc(as)}</div>
+      ${penLine}
       ${meta ? `<div class="bkm-v">📍 ${esc(meta)}</div>` : ""}
     </div>`;
   };

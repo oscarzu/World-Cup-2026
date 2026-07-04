@@ -21,13 +21,17 @@ export function resolveKnockouts(matches, standings) {
   if (!standings || !standings.size) return matches;
   const thirds = rankThirds(standings).filter((t) => t.qualified && t.P > 0); // top 8
   const used = new Set();
-  // Winners of already-played knockout matches (by match number).
+  // Winners of already-played knockout matches (by match number). A level score
+  // after extra time is decided by the penalty shootout (score.penHome/penAway).
   const winners = {};
   for (const m of matches) {
     const hs = m.score?.home, as = m.score?.away;
     if (hs == null || as == null || m.num == null) continue;
-    if (hs > as && isRealName(m.home?.name)) winners[m.num] = m.home.name;
-    else if (as > hs && isRealName(m.away?.name)) winners[m.num] = m.away.name;
+    const ph = m.score?.penHome, pa = m.score?.penAway;
+    let side = hs > as ? "home" : as > hs ? "away"
+      : (ph != null && pa != null ? (ph > pa ? "home" : pa > ph ? "away" : null) : null);
+    const wName = side === "home" ? m.home?.name : side === "away" ? m.away?.name : null;
+    if (wName && isRealName(wName)) winners[m.num] = wName;
   }
   const resolveCode = (code) => {
     if (isRealName(code)) return code;

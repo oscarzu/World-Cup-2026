@@ -98,11 +98,18 @@ function normalizeGoals(arr, side) {
 // Convert one base-dataset match into the normalized shape.
 function normalizeMatch(raw, idx) {
   const ft = raw.score?.ft;
+  const et = raw.score?.et;   // after extra time (120'); present only when played
   const ht = raw.score?.ht;
   const pen = raw.score?.p;
-  const score = Array.isArray(ft)
+  // The final on-field result is extra time when it was played, otherwise full
+  // time. openfootball's `et` is cumulative (includes the 90' goals), so a tie
+  // decided in ET (e.g. 1-1 ft → 3-2 et) shows the true score and a winner.
+  const fin = Array.isArray(et) ? et : ft;
+  const score = Array.isArray(fin)
     ? {
-        home: ft[0], away: ft[1],
+        home: fin[0], away: fin[1],
+        ftHome: ft?.[0], ftAway: ft?.[1],
+        etHome: et?.[0], etAway: et?.[1],
         htHome: ht?.[0], htAway: ht?.[1],
         penHome: pen?.[0], penAway: pen?.[1],
       }
