@@ -5,6 +5,7 @@ Dashboard **responsive**, **bilingüe (ES/EN)**, con **modo oscuro/claro** y enf
 (Canadá · México · USA · 11 jun – 19 jul 2026) con datos reales casi en vivo.
 
 🔗 **En vivo:** https://oscarzu.github.io/World-Cup-2026/
+📘 **¿Cómo funciona? (explicado sencillo + glosario):** [`docs/COMO-FUNCIONA.md`](docs/COMO-FUNCIONA.md)
 
 Sin paso de build: HTML + CSS + JavaScript (ES modules) y [Chart.js](https://www.chartjs.org/)
 por CDN. Se despliega tal cual en GitHub Pages. Los datos en vivo llegan a través de un
@@ -28,9 +29,12 @@ Seis pestañas: **Resumen · Estadísticas · Partidos · Grupos · Goleadores �
     (goles ÷ tiros a puerta), top-10 más/menos eficaces, **rojas por selección**, lesiones
     y una gráfica **dumbbell de eficacia por fase** (datos reales del Worker; ver abajo).
 - **Partidos** — calendario agrupado por ronda con **fecha y hora** por partido, más el
-  **bracket** de eliminatorias (con número de partido para rastrear cada cruce) en la
-  misma pestaña, vía control segmentado. Calendario `.ics` **descargable y suscribible**
-  (bilingüe, con banderas, sede y transmisión).
+  **bracket** de eliminatorias en la misma pestaña (control segmentado). El bracket es un
+  "camino a la final" con la copa al centro, alineado por fase; resuelve **prórroga y
+  penales** (marca al ganador y muestra "t. extra" / "pen."). En escritorio aprovecha el
+  alto de la pantalla; en móvil se desliza de lado. Calendario `.ics` **descargable y
+  suscribible** (bilingüe, con banderas, sede, transmisión; los partidos jugados muestran
+  el marcador final).
 - **Grupos** — tablas de clasificación + **cómo terminó cada grupo** (Avanzó / Avanzó
   como mejor 3.º / Eliminado, con certeza).
 - **Goleadores** — orden oficial FIFA; al hacer clic, **contra qué selecciones marcó**
@@ -109,7 +113,8 @@ js/charts.js           Gráficas (Chart.js) con etiquetas directas
 js/app.js              Orquestación: tabs, tema, idioma, polling en vivo, drill-downs
 model.html             Página de datos del modelo (metodología, Elo, back-test)
 data/                  worldcup.json + capas curadas
-docs/                  Reglamento oficial (PDF) + informe de métricas
+assets/                wc26-logo.png (copa al centro del bracket)
+docs/                  Cómo funciona + informe de métricas + reglamento (PDF)
 worker/                Cloudflare Worker (recolector ESPN + KV + cron + /efficacy + .ics)
 ```
 
