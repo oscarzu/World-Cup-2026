@@ -6,7 +6,7 @@ import { loadBase, applyLive, loadTeamStats, loadEfficacyHistory, loadSocial } f
 import { computeStandings } from "./standings.js";
 import { resolveKnockouts, rankThirds } from "./qualification.js";
 import { computeScorers, goalStats, goalsByScorer } from "./scorers.js";
-import { computeFacts } from "./facts.js";
+import { computeFacts, shootoutStats } from "./facts.js";
 import { computeDiscipline } from "./discipline.js";
 import { renderCharts, rethemeCharts, drawGoalsByMatchday } from "./charts.js";
 import { buildKnockoutICS, downloadICS } from "./calendar.js";
@@ -495,6 +495,8 @@ function renderAll() {
   const disc = computeDiscipline(state.teamStats, matchesByTeam);
   state._lastDisc = disc; // for chart drill-downs
   UI.renderDiscipline(disc);
+  UI.renderGoalkeeping(disc);
+  UI.renderShootouts(shootoutStats(resolved));
   UI.renderInsightStrip(stats, facts, disc);
   // Efficacy history: never show a phase that hasn't actually been played. Group
   // matchday entries always pass (the group stage is complete); a knockout-phase

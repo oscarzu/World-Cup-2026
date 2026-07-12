@@ -350,9 +350,15 @@ function aggregateTeams(agg) {
     for (const side of ["home", "away"]) {
       const s = agg.fixtures[id][side];
       if (!s || !s.name) continue;
-      const t = teams[s.name] || { fouls: 0, shotsOnTarget: 0, goals: 0, red: 0, matches: 0 };
+      const opp = agg.fixtures[id][side === "home" ? "away" : "home"]; // rival, for goalkeeping
+      const t = teams[s.name] || { fouls: 0, shotsOnTarget: 0, goals: 0, red: 0, matches: 0,
+        shotsFaced: 0, against: 0, cleanSheets: 0 };
       t.fouls += s.fouls; t.shotsOnTarget += s.shots; t.goals += s.goals;
       t.red += s.red || 0; t.matches += 1;
+      // Goalkeeping: shots on target faced, goals conceded, clean sheets.
+      t.shotsFaced += (opp?.shots || 0);
+      t.against += (opp?.goals || 0);
+      if (opp && (opp.goals || 0) === 0) t.cleanSheets += 1;
       teams[s.name] = t;
     }
   }

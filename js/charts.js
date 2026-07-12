@@ -253,6 +253,15 @@ export function renderCharts(stats, facts, disc, effHist) {
       setSub("sub-eff-worst", sub(`${tName(worst[0].name)} es la menos eficaz: ${Math.round(worst[0].pct)}% de conversión.`,
         `${tName(worst[0].name)} is the least efficient: ${Math.round(worst[0].pct)}% conversion.`));
     }
+
+    // Goalkeeping: best shot-stoppers by save %.
+    const gk = (lastDisc.goalkeeping || []).slice(0, 10);
+    if (gk.length) {
+      upsert("chart-gk", "bar", gk.map((x) => tName(x.name)), gk.map((x) => Math.round(x.savePct)), "%",
+        { horizontal: true, emphasis: true, leadFirst: true, color: tc.accent2, suffix: "%", drillKeys: gk.map((x) => x.name) });
+      setSub("sub-gk", sub(`${tName(gk[0].name)} detiene el ${Math.round(gk[0].savePct)}% de los tiros a puerta que recibe.`,
+        `${tName(gk[0].name)} stops ${Math.round(gk[0].savePct)}% of the shots on target it faces.`));
+    }
   }
 
   if (lastEffHist && lastEffHist.length) {

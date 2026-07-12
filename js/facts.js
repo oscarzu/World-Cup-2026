@@ -90,3 +90,30 @@ export function computeFacts(matches) {
     addedTime: CONFIG.TOURNAMENT.addedTime,
   };
 }
+
+// Penalty-shootout stats from knockout matches decided on penalties
+// (score.penHome/penAway = pens scored by each side). Returns each shootout plus
+// a per-team record (contested / won / lost / pens scored + conversion).
+export function shootoutStats(matches) {
+  const list = [];
+  const byTeam = new Map();
+  const bump = (name, won, scored) => {
+    const r = byTeam.get(name) || { name, contested: 0, won: 0, lost: 0, scored: 0 };
+    r.contested++; r[won ? "won" : "lost"]++; r.scored += scored;
+    byTeam.set(name, r);
+  };
+  for (const m of matches) {
+    const ph = m.score?.penHome, pa = m.score?.penAway;
+    if (ph == null || pa == null || !m.home?.name || !m.away?.name) continue;
+    const homeWon = ph > pa;
+    // On-field score at the end of extra time (level), for context on the card.
+    const level = m.score?.etHome != null ? `${m.score.etHome}-${m.score.etAway}` : `${m.score.home}-${m.score.away}`;
+    list.push({ home: m.home.name, away: m.away.name, penHome: ph, penAway: pa,
+      winner: homeWon ? m.home.name : m.away.name, round: m.round, level, date: m.date });
+    bump(m.home.name, homeWon, ph);
+    bump(m.away.name, !homeWon, pa);
+  }
+  list.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+  const teams = [...byTeam.values()].sort((a, b) => b.won - a.won || b.scored - a.scored || a.name.localeCompare(b.name));
+  return { list, teams, total: list.length };
+}

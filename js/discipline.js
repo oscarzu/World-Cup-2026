@@ -27,6 +27,19 @@ export function computeDiscipline(teamStats, matchesByTeam = {}) {
     }))
     .sort((a, b) => b.pct - a.pct);            // best (highest %) first
 
+  // Goalkeeping / shot-stopping: save % = saves ÷ shots on target faced, where
+  // saves ≈ shots on target faced − goals conceded (a shot on target that isn't
+  // a goal was stopped). Needs the Worker's shotsFaced/against fields.
+  const goalkeeping = entries
+    .filter(([, s]) => (s.shotsFaced ?? 0) >= 3)
+    .map(([name, s]) => {
+      const faced = s.shotsFaced, against = s.against ?? 0;
+      const saves = Math.max(0, faced - against);
+      return { name, faced, saves, against, cleanSheets: s.cleanSheets ?? 0,
+        matches: matchesOf(name, s), savePct: faced ? (saves / faced) * 100 : 0 };
+    })
+    .sort((a, b) => b.savePct - a.savePct || b.saves - a.saves);
+
   const yellow = [...(teamStats?.yellowCards || [])]
     .sort((a, b) => b.cards - a.cards).slice(0, 10);
 
@@ -47,6 +60,8 @@ export function computeDiscipline(teamStats, matchesByTeam = {}) {
     efficacy,                                  // best → worst (pct desc)
     mostEfficacy: efficacy[0] || null,         // highest conversion %
     leastEfficacy: efficacy[efficacy.length - 1] || null, // lowest conversion %
+    goalkeeping,                               // best shot-stoppers (save % desc)
+    bestKeeper: goalkeeping[0] || null,
     yellow,
     redByTeam, redTotal,
     injuries,

@@ -1064,6 +1064,62 @@ export function renderDiscipline(disc) {
   }
 }
 
+// ---- goalkeeping: best shot-stoppers (save %) + clean sheets ----
+export function renderGoalkeeping(disc) {
+  const gk = disc.goalkeeping || [];
+  const kpiWrap = document.getElementById("gk-kpis");
+  if (kpiWrap) {
+    if (!gk.length) {
+      kpiWrap.innerHTML = `<p class="archive-empty">${t("gk.none")}</p>`;
+    } else {
+      const best = gk[0];
+      const mostSaves = [...gk].sort((a, b) => b.saves - a.saves)[0];
+      const mostClean = [...gk].sort((a, b) => b.cleanSheets - a.cleanSheets)[0];
+      const cards = [];
+      cards.push(fact("🧤", t("gk.best"), `${Math.round(best.savePct)}%`,
+        `${flagImg(best.name)} ${esc(tn(best.name))} · ${best.saves}/${best.faced} ${t("gk.stops")}`));
+      cards.push(fact("✋", t("gk.mostSaves"), fmtInt(mostSaves.saves),
+        `${flagImg(mostSaves.name)} ${esc(tn(mostSaves.name))}`));
+      if (mostClean && mostClean.cleanSheets > 0)
+        cards.push(fact("🛡️", t("gk.mostClean"), String(mostClean.cleanSheets),
+          `${flagImg(mostClean.name)} ${esc(tn(mostClean.name))}`));
+      kpiWrap.innerHTML = cards.join("");
+    }
+  }
+  const cleanWrap = document.getElementById("gk-clean");
+  if (cleanWrap) {
+    const cs = [...gk].filter((g) => g.cleanSheets > 0)
+      .sort((a, b) => b.cleanSheets - a.cleanSheets || b.savePct - a.savePct).slice(0, 8);
+    cleanWrap.innerHTML = cs.length
+      ? cs.map((g, i) => `<div class="gk-row"><span class="gk-rk">${i + 1}</span>${flagImg(g.name)}<span class="gk-nm">${esc(tn(g.name))}</span><span class="gk-cs">${g.cleanSheets}</span></div>`).join("")
+      : `<p class="archive-empty">${t("gk.none")}</p>`;
+  }
+}
+
+// ---- penalty shootouts: each duel + a per-team record ----
+export function renderShootouts(pk) {
+  const wrap = document.getElementById("pk-wrap");
+  if (!wrap) return;
+  if (!pk || !pk.total) { wrap.innerHTML = `<p class="archive-empty">${t("pk.none")}</p>`; return; }
+  const cards = pk.list.map((s) => {
+    const homeWon = s.winner === s.home;
+    return `<div class="pk-card">
+      <div class="pk-round">${esc(roundLabel(s.round))}</div>
+      <div class="pk-duel">
+        <div class="pk-team ${homeWon ? "win" : ""}">${flagImg(s.home)}<span class="pk-tn">${esc(tn(s.home))}</span></div>
+        <div class="pk-score">${s.penHome}<span>–</span>${s.penAway}</div>
+        <div class="pk-team right ${!homeWon ? "win" : ""}"><span class="pk-tn">${esc(tn(s.away))}</span>${flagImg(s.away)}</div>
+      </div>
+      <div class="pk-foot"><span>${t("pk.aet")} ${s.level}</span><span class="pk-win">🏆 ${esc(tn(s.winner))}</span></div>
+    </div>`;
+  }).join("");
+  const lead = pk.teams.slice(0, 6).map((tt, i) => `
+    <div class="pk-lrow"><span class="pk-rk">${i + 1}</span>${flagImg(tt.name)}<span class="pk-lnm">${esc(tn(tt.name))}</span>
+      <span class="pk-rec"><b class="ok">${tt.won}</b>${t("pk.w")} · <b class="no">${tt.lost}</b>${t("pk.l")} · ${tt.scored} ${t("pk.scored")}</span></div>`).join("");
+  wrap.innerHTML = `<div class="pk-grid">${cards}</div>
+    <div class="pk-board"><div class="pk-board-h">${t("pk.record")}</div>${lead}</div>`;
+}
+
 // ---- generic info modal (custom HTML body) ----
 export function openInfoModal({ title, html }) {
   closeModal();
@@ -1325,8 +1381,8 @@ export function renderInsightStrip(stats, facts, disc) {
     const maxG = top[0].goals;
     const names = top.filter((x) => x.goals === maxG).map((x) => esc(tn(x.name))).join(en ? " & " : " y ");
     out.push(card(fmtInt(maxG), en
-      ? `goals by <b>${names}</b>, the deadliest attack`
-      : `goles de <b>${names}</b>, el ataque más letal`, "gold"));
+      ? `goals by <b>${names}</b>, the team with the most goals`
+      : `goles de <b>${names}</b>, la selección con más goles`, "gold"));
   }
   if (facts?.highest)
     out.push(card(fmtInt(facts.highest.total), (en

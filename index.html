@@ -205,6 +205,8 @@
         <a href="#sec-viz" data-i18n="subnav.viz">Gráficas</a>
         <a href="#sec-disc" data-i18n="subnav.disc">Disciplina</a>
         <a href="#sec-eff" data-i18n="subnav.eff">Eficacia</a>
+        <a href="#sec-gk" data-i18n="subnav.gk">Porteros</a>
+        <a href="#sec-pk" data-i18n="subnav.pk">Penales</a>
         <a href="#sec-rc" data-i18n="subnav.rc">Rojas y lesiones</a>
       </nav>
       <div class="insight-strip" id="insight-strip"></div>
@@ -320,6 +322,36 @@
           <p class="card-foot" data-i18n="eff.histFoot">Solo fase de grupos (J1–J3): todas con los mismos partidos · ilustrativo</p>
         </div>
       </div>
+
+      <!-- Goalkeeping: best shot-stoppers -->
+      <div class="section-head" id="sec-gk">
+        <p class="kicker" data-i18n="gk.kicker">Porteros · la muralla</p>
+        <h3 class="section-title" data-i18n="gk.title">Quién detiene más tiros a puerta</h3>
+        <p class="section-sub" data-i18n="gk.sub">% de paradas = tiros a puerta detenidos ÷ recibidos. Por selección (portería + defensa).</p>
+      </div>
+      <div class="facts-grid" id="gk-kpis"></div>
+      <div class="charts-grid">
+        <div class="card viz">
+          <p class="card-kicker" data-i18n="gk.chartKicker">Muralla</p>
+          <h3 data-i18n="gk.chartTitle">Mejor % de paradas</h3>
+          <p class="card-sub" id="sub-gk">—</p>
+          <div class="chart-box"><canvas id="chart-gk"></canvas></div>
+          <p class="card-foot" data-i18n="gk.chartFoot">Top 10 · una parada = tiro a puerta recibido que no fue gol</p>
+        </div>
+        <div class="card">
+          <h3 data-i18n="gk.cleanTitle">Vallas invictas (portería a cero)</h3>
+          <div id="gk-clean" class="gk-clean"></div>
+          <p class="card-foot" data-i18n="gk.cleanFoot">Partidos sin recibir gol</p>
+        </div>
+      </div>
+
+      <!-- Penalty shootouts -->
+      <div class="section-head" id="sec-pk">
+        <p class="kicker" data-i18n="pk.kicker">Once contra portero</p>
+        <h3 class="section-title" data-i18n="pk.title">Tandas de penales</h3>
+        <p class="section-sub" data-i18n="pk.sub">Los duelos que se decidieron desde los once metros.</p>
+      </div>
+      <div id="pk-wrap" class="pk-wrap"></div>
 
       <div class="section-head" id="sec-rc">
         <p class="kicker" data-i18n="rc.kicker">Tarjetas rojas y lesiones</p>

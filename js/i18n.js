@@ -400,7 +400,35 @@ const STR = {
   "subnav.kpis": ["Cifras", "Numbers"], "subnav.facts": ["Curiosidades", "Fun facts"],
   "subnav.agg": ["Agregados", "Aggregates"], "subnav.viz": ["Gráficas", "Charts"],
   "subnav.disc": ["Disciplina", "Discipline"], "subnav.eff": ["Eficacia", "Efficiency"],
+  "subnav.gk": ["Porteros", "Keepers"], "subnav.pk": ["Penales", "Shootouts"],
   "subnav.rc": ["Rojas y lesiones", "Reds & injuries"],
+
+  // goalkeeping
+  "gk.kicker": ["Porteros · la muralla", "Keepers · the wall"],
+  "gk.title": ["Quién detiene más tiros a puerta", "Who stops the most shots on target"],
+  "gk.sub": ["% de paradas = tiros a puerta detenidos ÷ recibidos. Por selección (portería + defensa).",
+             "Save % = shots on target saved ÷ faced. Per team (keeper + defense)."],
+  "gk.chartKicker": ["Muralla", "The wall"],
+  "gk.chartTitle": ["Mejor % de paradas", "Best save %"],
+  "gk.chartFoot": ["Top 10 · una parada = tiro a puerta recibido que no terminó en gol",
+                   "Top 10 · a save = a shot on target faced that didn't end in a goal"],
+  "gk.cleanTitle": ["Vallas invictas (portería a cero)", "Clean sheets"],
+  "gk.cleanFoot": ["Partidos sin recibir gol", "Matches without conceding"],
+  "gk.best": ["Mejor % de paradas", "Best save %"],
+  "gk.mostSaves": ["Más paradas", "Most saves"],
+  "gk.mostClean": ["Más vallas invictas", "Most clean sheets"],
+  "gk.stops": ["paradas", "saves"],
+  "gk.none": ["Aún sin datos de tiros recibidos (se activan al desplegar el Worker).",
+              "No shots-faced data yet (activates once the Worker is deployed)."],
+
+  // penalty shootouts
+  "pk.kicker": ["Once contra portero", "One-on-one from the spot"],
+  "pk.title": ["Tandas de penales", "Penalty shootouts"],
+  "pk.sub": ["Los duelos que se decidieron desde los once metros.", "The ties decided from twelve yards."],
+  "pk.none": ["Todavía no hay tandas de penales en el torneo.", "No penalty shootouts in the tournament yet."],
+  "pk.aet": ["Tras 120’:", "After 120’:"],
+  "pk.record": ["Récord en tandas", "Shootout record"],
+  "pk.w": ["G", "W"], "pk.l": ["P", "L"], "pk.scored": ["anotados", "scored"],
 
 
   // host pills + short card kickers

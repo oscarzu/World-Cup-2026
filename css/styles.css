@@ -448,6 +448,52 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 .scorer .goals { font-weight: 800; font-size: 1.1rem; }
 .scorer .goals small { color: var(--muted); font-weight: 500; font-size: 0.7rem; }
 
+/* ---- goalkeeping: clean-sheet list ---- */
+.gk-clean { display: grid; gap: 0.15rem; margin-top: 0.3rem; }
+.gk-row { display: grid; grid-template-columns: 1.8rem 26px 1fr auto; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 0.4rem; border-bottom: 1px solid var(--border); }
+.gk-row:last-child { border-bottom: 0; }
+.gk-row .flag { width: 26px; height: 17px; border-radius: 3px; object-fit: cover; }
+.gk-rk { color: var(--muted); font-weight: 800; text-align: center; }
+.gk-row:nth-child(1) .gk-rk { color: var(--gold); }
+.gk-nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gk-cs { font-weight: 800; font-size: 1.1rem; color: var(--accent-2); font-variant-numeric: tabular-nums; }
+
+/* ---- penalty shootouts ---- */
+.pk-wrap { display: grid; grid-template-columns: 1fr; gap: 1.2rem; }
+@media (min-width: 720px) { .pk-wrap { grid-template-columns: 1.6fr 1fr; align-items: start; } }
+.pk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.7rem; }
+.pk-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0.75rem 0.85rem; box-shadow: var(--shadow); }
+.pk-round { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--muted); margin-bottom: 0.5rem; }
+.pk-duel { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.5rem; }
+.pk-team { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+.pk-team.right { flex-direction: row-reverse; text-align: right; }
+.pk-team .flag { width: 24px; height: 16px; border-radius: 3px; object-fit: cover; flex: 0 0 auto; opacity: 0.6; }
+.pk-team.win .flag { opacity: 1; }
+.pk-tn { font-weight: 600; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.pk-team.win .pk-tn { color: var(--text); font-weight: 800; }
+.pk-score { font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.pk-score span { color: var(--muted); font-size: 0.9rem; margin: 0 0.1rem; }
+.pk-foot { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 0.55rem;
+  padding-top: 0.5rem; border-top: 1px dashed var(--border); font-size: 0.7rem; color: var(--muted); }
+.pk-win { color: var(--gold); font-weight: 700; white-space: nowrap; }
+.pk-board { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0.8rem 0.9rem; box-shadow: var(--shadow); }
+.pk-board-h { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--muted); margin-bottom: 0.55rem; }
+.pk-lrow { display: grid; grid-template-columns: 1.6rem 24px 1fr auto; align-items: center; gap: 0.55rem;
+  padding: 0.45rem 0.2rem; border-bottom: 1px solid var(--border); }
+.pk-lrow:last-child { border-bottom: 0; }
+.pk-lrow .flag { width: 24px; height: 16px; border-radius: 3px; object-fit: cover; }
+.pk-rk { color: var(--muted); font-weight: 800; text-align: center; }
+.pk-lrow:nth-child(2) .pk-rk { color: var(--gold); }
+.pk-lnm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pk-rec { font-size: 0.72rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pk-rec b { font-weight: 800; }
+.pk-rec b.ok { color: var(--accent); } .pk-rec b.no { color: var(--live); }
+
 /* ---- venues ---- */
 .venues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1.2rem; }
 .venue { background: var(--surface); border: 1px solid var(--border);
