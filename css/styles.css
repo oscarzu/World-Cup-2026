@@ -385,6 +385,9 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 .bkm-r .flag { width: 16px; height: 11px; border-radius: 2px; object-fit: cover; flex: 0 0 auto; }
 .bkm-r .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
 .bkm-r.win { color: var(--accent); font-weight: 800; }
+/* eliminated team: faded, so the survivors' path pops through the bracket */
+.bkm-r.lost { opacity: 0.4; }
+.bkm-r.lost .nm { text-decoration: line-through; text-decoration-thickness: 1px; }
 .bkm-r.tbd .nm { color: var(--muted); font-style: italic; }
 .bk-sc { font-weight: 800; font-variant-numeric: tabular-nums; margin-left: auto; padding-left: 0.3rem; }
 .bk-pen { margin-top: 0.15rem; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.02em;
@@ -953,6 +956,14 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
   .rank-table td.val { -webkit-text-fill-color: currentColor; color: var(--text); background: none; }
 }
 [data-theme="light"] .at-big { -webkit-text-fill-color: #0a7d39; }
+/* Guard: metric numbers must never inherit a transparent text-fill (that would
+   render them dark/invisible on dark cards). Force an explicit light fill. */
+[data-theme="dark"] .num, [data-theme="dark"] .stat .num, [data-theme="dark"] .fact-value,
+[data-theme="dark"] .insight .big, [data-theme="dark"] .atr-v, [data-theme="dark"] .atp-v,
+[data-theme="dark"] .pk-score, [data-theme="dark"] .rank-table td.val {
+  color: var(--text); -webkit-text-fill-color: var(--text);
+}
+[data-theme="dark"] .at-phase.total .atp-v { color: var(--accent); -webkit-text-fill-color: var(--accent); }
 
 /* ---- visually-hidden (screen-reader only) ---- */
 .sr-only {

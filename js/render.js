@@ -586,10 +586,14 @@ export function renderBracket(matches, standings = new Map()) {
     const meta = `${where}${when ? ` · ${when}` : ""}`;
     const no = m.num != null ? `<span class="bkm-no" aria-hidden="true">#${m.num}</span>` : "";
     const title = `${m.num != null ? `#${m.num} · ` : ""}${meta}`;
+    // Show both teams; fade the one that was eliminated so the advancing path
+    // reads like a route through the bracket (a "maze" of survivors).
+    const hCls = win === "home" ? "win" : win === "away" ? "lost" : "";
+    const aCls = win === "away" ? "win" : win === "home" ? "lost" : "";
     return `<div class="bkm${big ? " big" : ""}" title="${esc(title)}">
       ${no}
-      <div class="bkm-r ${win === "home" ? "win" : ""} ${s.home.placeholder ? "tbd" : ""}">${slotInner(s.home)}${sc(hs)}</div>
-      <div class="bkm-r ${win === "away" ? "win" : ""} ${s.away.placeholder ? "tbd" : ""}">${slotInner(s.away)}${sc(as)}</div>
+      <div class="bkm-r ${hCls} ${s.home.placeholder ? "tbd" : ""}">${slotInner(s.home)}${sc(hs)}</div>
+      <div class="bkm-r ${aCls} ${s.away.placeholder ? "tbd" : ""}">${slotInner(s.away)}${sc(as)}</div>
       ${penLine}
       ${meta ? `<div class="bkm-v">📍 ${esc(meta)}</div>` : ""}
     </div>`;
@@ -847,7 +851,8 @@ export function renderStatsKpis(stats, matches) {
     [t("s.live"), live],
     [t("s.finished"), finished],
     [t("s.remaining"), matches.length - finished],
-  ];
+  // Hide zero-value cards (e.g. "0 en vivo", "0 restantes") — no empty metrics.
+  ].filter(([, n]) => Number(String(n).replace(/,/g, "")) !== 0);
   $("#stats-kpis").innerHTML = kpis.map(([l, n]) =>
     `<div class="stat"><div class="num">${fmtInt(n)}</div><div class="label">${l}</div></div>`).join("");
 }
