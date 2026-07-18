@@ -32,7 +32,7 @@ export default {
     }
     if (path === "/teamstats") {
       const agg = JSON.parse((await env.WC26.get("agg")) || '{"fixtures":{}}');
-      return json({ teams: aggregateTeams(agg), updatedAt: agg.updatedAt || null }, 200, cors);
+      return json({ teams: aggregateTeams(agg), addedTime: aggregateAddedTime(agg), updatedAt: agg.updatedAt || null }, 200, cors);
     }
     if (path === "/efficacy.json") {
       // Real conversion % per phase, computed on the fly from the captured
@@ -263,6 +263,36 @@ function extractStats(summary, home, away) {
   };
 }
 
+// Real added (stoppage) time actually played, derived from ESPN's own clock.
+// Every play/event carries a clock like "45'+2" or "90'+6"; the furthest one
+// reached in each half tells us how many minutes were played beyond regulation.
+// We take the MAX "+N" seen at each half boundary (45/90/105/120) so a single
+// stoppage-time goal or card reveals the added time. This is a lower bound when
+// ESPN's feed is sparse (it can only see the events it published), never an
+// over-count — so it's honest to report as measured, not estimated.
+const RE_STOPPAGE = /(\d{1,3})'?\s*\+\s*(\d{1,2})/;
+function extractAddedTime(summary) {
+  const src = []
+    .concat(summary?.keyEvents || [])
+    .concat(summary?.commentary || [])
+    .concat(summary?.plays || []);
+  const maxAt = {}; // half-boundary minute -> max stoppage minutes seen
+  for (const p of src) {
+    const cvRaw = p?.clock?.displayValue ?? p?.time?.displayValue ?? p?.clock ?? "";
+    const cv = typeof cvRaw === "string" ? cvRaw : "";
+    const mm = RE_STOPPAGE.exec(cv);
+    if (!mm) continue;
+    const base = Number(mm[1]), add = Number(mm[2]);
+    const key = base >= 120 ? 120 : base >= 105 ? 105 : base >= 90 ? 90 : base >= 45 ? 45 : null;
+    if (key == null || !(add >= 0)) continue;
+    maxAt[key] = Math.max(maxAt[key] || 0, add);
+  }
+  if (!Object.keys(maxAt).length) return null;
+  const first = maxAt[45] || 0, second = maxAt[90] || 0;
+  const et = (maxAt[105] || 0) + (maxAt[120] || 0); // extra-time added minutes
+  return { first, second, et, total: first + second + et };
+}
+
 function extractAgg(ev, summary, m) {
   const comp = ev.competitions?.[0] || {};
   const cs = comp.competitors || [];
@@ -285,6 +315,7 @@ function extractAgg(ev, summary, m) {
     home: { name: m.home.name, fouls: m.stats.home.fouls || 0, shots: m.stats.home.shots || 0, goals: m.score.home || 0, red: homeRed },
     away: { name: m.away.name, fouls: m.stats.away.fouls || 0, shots: m.stats.away.shots || 0, goals: m.score.away || 0, red: awayRed },
     yc,
+    at: extractAddedTime(summary), // real stoppage time played (null if unknown)
   };
 }
 
@@ -363,6 +394,29 @@ function aggregateTeams(agg) {
     }
   }
   return teams;
+}
+// Tournament-wide added (stoppage) time from the per-fixture `at` we captured.
+// Only fixtures where ESPN's feed actually let us measure stoppage time count,
+// so the average reflects real WC2026 matches (not an estimate). Falls back to
+// null when nothing measurable exists yet → the client keeps its labelled
+// estimate. Keeps the same shape the UI already renders (ref + byPhase).
+function aggregateAddedTime(agg) {
+  let sum = 0, n = 0, groups = 0, knockouts = 0;
+  for (const id in (agg.fixtures || {})) {
+    const fx = agg.fixtures[id];
+    const at = fx.at;
+    if (!at || at.total == null) continue;
+    sum += at.total; n += 1;
+    if (phaseKey(fx.round) === "group") groups += at.total; else knockouts += at.total;
+  }
+  if (!n) return null;
+  return {
+    avgPerMatch: Math.round((sum / n) * 10) / 10,
+    matches: n,
+    byPhase: { groups, knockouts },
+    ref: { wc2018: 6.6, wc2022: 11.6 },
+    isEstimate: false,
+  };
 }
 function aggregateCards(agg) {
   const c = {};
