@@ -57,7 +57,10 @@ https://<your-worker>.<your-subdomain>.workers.dev/health    ← see status
 
 ## Routes
 - `GET /snapshot`      → `{ updatedAt, live:[…], yellowCards:[…] }` (what the UI reads)
-- `GET /teamstats`     → `{ teams: { name: { fouls, shotsOnTarget, goals, red, matches } } }`
+- `GET /teamstats`     → `{ teams: { name: { fouls, shotsOnTarget, goals, red, matches } }, addedTime }`
+  - `addedTime` = real stoppage time measured from ESPN's match clock
+    (`{ avgPerMatch, matches, byPhase, ref, isEstimate:false }`), or `null` until
+    at least one match is measurable.
 - `GET /efficacy.json` → `{ byPhase:[{ phase, perPhase:{best,worst}, accumulated:{…} }] }`
 - `GET /calendar.ics`  → subscribable knockout calendar (`?lang=es|en`)
 - `GET /health`        → status + last-run diagnostics

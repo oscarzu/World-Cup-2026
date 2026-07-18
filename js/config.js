@@ -103,9 +103,11 @@ export const CONFIG = {
       ],
     },
 
-    // Added (stoppage) time. Illustrative estimate for 2026 with reference
-    // averages from the last two World Cups (Qatar 2022 set records for
-    // strict time-keeping). Per-phase totals are cumulative estimates.
+    // Added (stoppage) time. Fallback estimate for 2026 with reference averages
+    // from the last two World Cups (Qatar 2022 set records for strict
+    // time-keeping). Once the Worker has measured real stoppage time from
+    // ESPN's match clock (/teamstats → addedTime), the app swaps this out and
+    // drops the "estimado" badge. Per-phase totals here are cumulative estimates.
     addedTime: {
       avgPerMatch: 9.8,                       // min agregados por partido (prom., 2026 · estimado)
       ref: { wc2018: 6.6, wc2022: 11.6 },     // promedios de referencia (Rusia 2018, Qatar 2022)

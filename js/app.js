@@ -451,6 +451,11 @@ function renderAll() {
   const stats = goalStats(state.matches);
   state._stats = stats; // for the goals-by-phase → matchday drill-down
   const facts = computeFacts(state.matches);
+  // Prefer REAL added (stoppage) time measured by the Worker from ESPN's own
+  // match clock over the bundled estimate. Only override when the Worker
+  // actually captured measurable minutes; otherwise keep the labelled estimate.
+  const realAT = state.teamStats?.addedTime;
+  if (realAT && realAT.avgPerMatch != null && realAT.matches > 0) facts.addedTime = realAT;
   state._facts = facts; // for clickable fact-card drill-downs
   const standings = computeStandings(state.matches);
   // Resolve knockout placeholder codes (1A, 3A/B/C/D/F, …) into real teams from
