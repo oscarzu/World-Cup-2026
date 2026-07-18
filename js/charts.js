@@ -155,6 +155,13 @@ export function renderCharts(stats, facts, disc, effHist) {
   if (disc) lastDisc = disc;
   if (effHist) lastEffHist = effHist;
   const tc = theme();
+  // Chart.js falls back to a hardcoded #666 for any text/border we don't color
+  // explicitly — nearly black on our dark surface. Pin the defaults to the live
+  // theme so every label follows light/dark (re-applied on each retheme).
+  if (typeof Chart !== "undefined") {
+    Chart.defaults.color = tc.text;
+    Chart.defaults.borderColor = tc.grid;
+  }
 
   if (lastStats) {
     // Goals by phase: whole group stage as one bar, then each knockout round
