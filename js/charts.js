@@ -275,23 +275,47 @@ export function renderCharts(stats, facts, disc, effHist) {
     // New shape uses perPhase; fall back to the legacy perJornada key.
     const perKey = lastEffHist[0] && lastEffHist[0].perPhase ? "perPhase" : "perJornada";
     effDumbbell("chart-eff-jornada", lastEffHist, perKey, tc);
-    // The cumulative view is identical to per-phase until a 2nd phase exists, so
-    // hide its card while there's only the group stage (avoids two twin charts).
+    // Accumulated view: a cumulative leader/laggard that never changes would paint
+    // the same dumbbell on every phase. Collapse consecutive identical states into
+    // one row spanning the phases where they held, so the chart reads as an
+    // evolution (only where the leaderboard actually moved), not a repeated bar.
+    const acc = collapseAccumulated(lastEffHist, "accumulated");
+    // Show the accumulated card only when it adds information beyond the per-phase
+    // one — i.e. the cumulative leaderboard shifted at least once (≥2 distinct rows).
     const cumCard = document.getElementById("chart-eff-cumulative")?.closest(".card.viz");
-    if (cumCard) cumCard.style.display = lastEffHist.length < 2 ? "none" : "";
-    if (lastEffHist.length >= 2) effDumbbell("chart-eff-cumulative", lastEffHist, "accumulated", tc);
-    const note = sub("Cada fila es una fase: la selección más eficaz (verde) y la menos eficaz (rojo), unidas por su rango de conversión.",
-      "Each row is a phase: most efficient team (green) and least efficient (red), joined by their conversion range.");
-    setSub("sub-eff-jornada", note); setSub("sub-eff-cumulative", note);
+    if (cumCard) cumCard.style.display = acc.length < 2 ? "none" : "";
+    if (acc.length >= 2) effDumbbell("chart-eff-cumulative", acc, "accumulated", tc);
+    setSub("sub-eff-jornada",
+      sub("Cada fila es una fase: la selección más eficaz (verde) y la menos eficaz (rojo), unidas por su rango de conversión.",
+          "Each row is a phase: most efficient team (green) and least efficient (red), joined by their conversion range."));
+    setSub("sub-eff-cumulative",
+      sub("Acumulado del torneo: solo se muestran las fases donde cambió la selección más o menos eficaz.",
+          "Tournament to date: only the phases where the most/least efficient team changed are shown."));
   }
 }
 
 // Phase label for the efficacy history x-axis (group → R32 … Final).
 function phaseAxisLabel(h) {
+  if (h._span) return h._span[0] === h._span[1] ? h._span[0] : `${h._span[0]}–${h._span[1]}`;
   if (h.phase === "group") return t("ph.group");
   if (h.phase && KO_SHORT[h.phase]) return t(KO_SHORT[h.phase]);
   if (h.matchday != null) return `${getLang() === "en" ? "MD" : "J"}${h.matchday}`; // legacy
   return h.phase || "";
+}
+
+// Merge consecutive accumulated rows with an identical best/worst (team + pct):
+// a cumulative leader that holds for several phases becomes one row whose axis
+// label spans that range (e.g. "Grupos–Final"). Prevents the repeated-dumbbell
+// look when the leaderboard doesn't move. Non-mutating.
+function collapseAccumulated(history, kind) {
+  const key = (h) => `${h[kind].best.team}|${h[kind].best.pct}|${h[kind].worst.team}|${h[kind].worst.pct}`;
+  const runs = [];
+  for (const h of history) {
+    const last = runs[runs.length - 1];
+    if (last && key(last.first) === key(h)) { last.end = h; continue; }
+    runs.push({ first: h, end: h });
+  }
+  return runs.map(({ first, end }) => ({ ...first, _span: [phaseAxisLabel(first), phaseAxisLabel(end)] }));
 }
 
 // Dumbbell (connected-dot) chart — the standard at Opta / The Athletic for
