@@ -201,7 +201,10 @@ function initDrill() {
     if (goto) { const tab = document.querySelector(`.tab[data-tab="${goto.dataset.goto}"]`); if (tab) activateTab(tab); return; }
     // VAR aggregate cards → the incidents behind the number.
     const varCard = e.target.closest(".stat.agg[data-var]");
-    if (varCard) drillVar(varCard.dataset.var);
+    if (varCard) { drillVar(varCard.dataset.var); return; }
+    // Any match with a result → full detail (score breakdown, goals, forecast).
+    const mEl = e.target.closest("[data-match-id]");
+    if (mEl) openMatchDetail(mEl.dataset.matchId);
   });
   // Keyboard activation (Enter/Space) for fact + VAR + scorer cards.
   document.addEventListener("keydown", (e) => {
@@ -211,7 +214,22 @@ function initDrill() {
     const sc = e.target.closest && e.target.closest(".scorer[data-scorer-name]");
     if (sc) { e.preventDefault(); drillScorer(sc.dataset.scorerName, sc.dataset.scorerCountry); return; }
     const vc = e.target.closest && e.target.closest(".stat.agg[data-var]");
-    if (vc) { e.preventDefault(); drillVar(vc.dataset.var); }
+    if (vc) { e.preventDefault(); drillVar(vc.dataset.var); return; }
+    const mEl = e.target.closest && e.target.closest("[data-match-id]");
+    if (mEl) { e.preventDefault(); openMatchDetail(mEl.dataset.matchId); }
+  });
+}
+
+// Full detail for one match: score breakdown, goals and the model's forecast.
+function openMatchDetail(id) {
+  const matches = state.matchesResolved || state.matches;
+  const m = matches.find((x) => x.id === id);
+  if (!m) return;
+  const sample = (state._bt && state._bt.samples || []).find((s) => s.match?.id === id);
+  const en = getLang() === "en";
+  UI.openInfoModal({
+    title: `${UI.teamLabel(m.home.name)} ${en ? "vs" : "vs"} ${UI.teamLabel(m.away.name)}`,
+    html: UI.matchDetailHTML(m, sample),
   });
 }
 
@@ -475,6 +493,7 @@ function renderAll() {
   UI.renderQualification(standings);
   const model = buildModel(resolved);
   const bt = backtest(resolved);
+  state._bt = bt; // for the per-match detail modal (forecast storytelling)
   UI.renderPredictions(upcomingPredictions(resolved, model, 16), bt);
   UI.renderPredReport(bt); // predicted vs actual on played matches
   // Rank is assigned on the full FIFA-ordered table so it's preserved when the

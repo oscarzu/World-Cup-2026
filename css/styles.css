@@ -1334,3 +1334,61 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
   .cn-v { font-size: 1.7rem; }
   .cs-nums b { font-size: 2rem; }
 }
+
+/* ---- clickable results / path / forecast cards → match detail ---- */
+.match.clickable, .cp-step[role="button"], .pr-card.clickable { cursor: pointer; }
+.match.clickable:focus-visible, .cp-step[role="button"]:focus-visible, .pr-card.clickable:focus-visible {
+  outline: 2px solid var(--gold); outline-offset: 2px; }
+.cp-step[role="button"] { transition: background var(--t), transform var(--t); border-radius: 6px 6px 0 0; }
+.cp-step[role="button"]:hover { background: color-mix(in srgb, var(--gold) 9%, transparent); transform: translateY(-2px); }
+.pr-card.clickable { transition: transform var(--t), border-color var(--t); }
+.pr-card.clickable:hover { transform: translateY(-3px); border-color: var(--border-strong); }
+
+/* Forecast storytelling line under the report summary. */
+.pr-story { margin: 0.2rem 0 1rem; color: var(--muted); font-size: 0.9rem; line-height: 1.55;
+  padding: 0.9rem 1.05rem; border-left: 2px solid var(--gold); background: color-mix(in srgb, var(--gold) 6%, transparent);
+  border-radius: 0 var(--radius) var(--radius) 0; }
+.pr-story b { color: var(--text); font-weight: 700; }
+
+/* ---- match detail modal body ---- */
+.md-score { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; margin: 0.2rem 0 0.6rem; }
+.md-side { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--text); font-size: 1.02rem; }
+.md-flag { width: 34px; height: 23px; border-radius: 3px; }
+.md-nums { font-family: var(--font-poster); font-weight: 400; font-size: 2.6rem; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+.md-nums i { color: var(--gold); font-style: normal; padding: 0 0.25rem; }
+.md-meta { text-align: center; color: var(--muted); font-size: 0.82rem; margin: 0 0 1.1rem; }
+
+.md-breakdown { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 1.1rem; }
+.mdb { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; min-width: 92px;
+  padding: 0.55rem 0.8rem; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); }
+.mdb span { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.mdb b { font-family: var(--font-display); font-size: 1.1rem; color: var(--text); font-variant-numeric: tabular-nums; }
+
+.md-goals { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.1rem; }
+.md-goals-col { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.7rem 0.9rem; }
+.mgc-h { display: flex; align-items: center; gap: 0.4rem; font-weight: 600; font-size: 0.85rem; color: var(--text);
+  padding-bottom: 0.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.md-goals-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.md-goals-col li { font-size: 0.86rem; color: var(--text); display: flex; justify-content: space-between; gap: 0.6rem; }
+.md-goals-col li.none { color: var(--muted); justify-content: center; }
+.mg-min { color: var(--gold); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.md-pred { border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem;
+  background: color-mix(in srgb, var(--surface-2) 60%, transparent); }
+.md-pred.hit { border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.md-pred.miss { border-color: color-mix(in srgb, var(--live) 38%, transparent); }
+.md-pred-h { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap;
+  font-family: var(--font-poster); font-weight: 400; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--gold); font-size: 0.82rem; margin-bottom: 0.7rem; }
+.md-verdict { font-family: var(--font-display); text-transform: none; letter-spacing: 0; font-size: 0.8rem; color: var(--text); font-weight: 600; }
+.md-pred.hit .md-verdict { color: var(--accent); }
+.md-pred.miss .md-verdict { color: var(--live); }
+.md-bar { display: flex; height: 9px; border-radius: 999px; overflow: hidden; background: var(--surface); margin-bottom: 0.45rem; }
+.md-bar .mb.home { background: var(--accent); }
+.md-bar .mb.draw { background: var(--muted); }
+.md-bar .mb.away { background: var(--crimson); }
+.md-legend { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.74rem; color: var(--muted); margin-bottom: 0.6rem; }
+.md-legend b { color: var(--text); font-variant-numeric: tabular-nums; }
+.md-pred-txt { margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
+
+@media (max-width: 560px) { .md-goals { grid-template-columns: 1fr; } .md-nums { font-size: 2.1rem; } }

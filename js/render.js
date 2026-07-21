@@ -166,8 +166,12 @@ export function matchCard(m, { showGoals = true } = {}) {
   // Always show the exact date (+ kickoff time) so grouped/ranged lists are legible.
   const when = m.date ? (kickoffDateTime(m) || fmtDate(m.date)) : "";
   const dateLine = when ? `<div class="match-when">🗓️ ${esc(when)}</div>` : "";
+  // Played matches are clickable → full detail modal (score breakdown, goals, forecast).
+  const clickable = hasScore
+    ? ` clickable" data-match-id="${esc(m.id)}" role="button" tabindex="0" aria-label="${esc(tn(m.home.name))} ${m.score.home}–${m.score.away} ${esc(tn(m.away.name))} — ${esc(t("drill.detail"))}`
+    : "";
   return `
-  <div class="match ${m.status === "live" ? "is-live" : ""}">
+  <div class="match ${m.status === "live" ? "is-live" : ""}${clickable}">
     ${dateLine}
     <div class="side home">${flagImg(m.home.name)}<span class="nm">${esc(tn(m.home.name))}</span></div>
     <div class="center">
@@ -177,6 +181,72 @@ export function matchCard(m, { showGoals = true } = {}) {
     <div class="side away">${flagImg(m.away.name)}<span class="nm">${esc(tn(m.away.name))}</span></div>
     ${goals}${venue}
   </div>`;
+}
+
+// ---- full match detail (modal body): score breakdown, goals, and the model's
+// forecast for that match woven into a short story. `sample` is the backtest
+// entry for this fixture (optional).
+export function matchDetailHTML(m, sample) {
+  const en = getLang() === "en";
+  const s = m.score || {};
+  const hasScore = s.home != null;
+  const pct = (x) => Math.round(x * 100);
+
+  const lines = [];
+  if (s.htHome != null) lines.push([en ? "Half-time" : "Medio tiempo", `${s.htHome}–${s.htAway}`]);
+  if (s.ftHome != null) lines.push([en ? "90 minutes" : "90 minutos", `${s.ftHome}–${s.ftAway}`]);
+  if (s.etHome != null) lines.push([en ? "After extra time" : "Tras la prórroga", `${s.etHome}–${s.etAway}`]);
+  if (s.penHome != null) lines.push([en ? "Penalty shootout" : "Tanda de penales", `${s.penHome}–${s.penAway}`]);
+
+  const goalItem = (g) => `<li>${esc(tn(g.name))} <span class="mg-min">${g.minute}'${g.penalty ? ` (${en ? "pen" : "pen"})` : ""}</span></li>`;
+  const gh = (m.goals || []).filter((g) => g.team === "home");
+  const ga = (m.goals || []).filter((g) => g.team === "away");
+
+  let story = "";
+  if (sample && sample.probs) {
+    const p = sample.probs;
+    const pick = sample.predOutcome === "draw" ? (en ? "a draw" : "el empate")
+      : tn(sample.predOutcome === "home" ? m.home.name : m.away.name);
+    const fav = Math.max(p.home, p.draw, p.away);
+    const hit = sample.correct;
+    const verdict = hit ? (en ? "The model called it." : "El modelo lo clavó.")
+      : (en ? "The result defied the model." : "El resultado desafió al modelo.");
+    story = `
+      <div class="md-pred ${hit ? "hit" : "miss"}">
+        <div class="md-pred-h">${en ? "The forecast" : "El pronóstico"}
+          <span class="md-verdict">${hit ? "✓" : "✗"} ${verdict}</span></div>
+        <div class="md-bar" role="img" aria-label="${pct(p.home)}% / ${pct(p.draw)}% / ${pct(p.away)}%">
+          <span class="mb home" style="width:${pct(p.home)}%"></span>
+          <span class="mb draw" style="width:${pct(p.draw)}%"></span>
+          <span class="mb away" style="width:${pct(p.away)}%"></span>
+        </div>
+        <div class="md-legend">
+          <span><b>${pct(p.home)}%</b> ${esc(tn(m.home.name))}</span>
+          <span><b>${pct(p.draw)}%</b> ${en ? "draw" : "empate"}</span>
+          <span><b>${pct(p.away)}%</b> ${esc(tn(m.away.name))}</span>
+        </div>
+        <p class="md-pred-txt">${en
+          ? `Before kickoff the model leaned toward ${pick} (${pct(fav)}%), most-likely score ${sample.predScore}. It finished ${sample.actScore}.`
+          : `Antes del pitido, el modelo se inclinaba por ${pick} (${pct(fav)}%), marcador más probable ${sample.predScore}. Terminó ${sample.actScore}.`}</p>
+      </div>`;
+  }
+
+  const venue = m.ground ? `📍 ${esc(venueFifa(m.ground))}` : "";
+  const when = m.date ? fmtDateLong(m.date) : "";
+  return `
+    <div class="md-score">
+      <span class="md-side">${flagImg(m.home.name, "flag md-flag", { eager: true })}<span>${esc(tn(m.home.name))}</span></span>
+      <span class="md-nums">${hasScore ? `${s.home}<i>–</i>${s.away}` : "vs"}</span>
+      <span class="md-side rev"><span>${esc(tn(m.away.name))}</span>${flagImg(m.away.name, "flag md-flag", { eager: true })}</span>
+    </div>
+    <p class="md-meta">${esc(roundLabel(m.round))}${when ? ` · ${esc(when)}` : ""}${venue ? ` · ${venue}` : ""}</p>
+    ${lines.length ? `<div class="md-breakdown">${lines.map(([k, v]) => `<div class="mdb"><span>${esc(k)}</span><b>${v}</b></div>`).join("")}</div>` : ""}
+    ${(gh.length || ga.length) ? `
+      <div class="md-goals">
+        <div class="md-goals-col"><div class="mgc-h">${flagImg(m.home.name)}<span>${esc(tn(m.home.name))}</span></div><ul>${gh.map(goalItem).join("") || `<li class="none">—</li>`}</ul></div>
+        <div class="md-goals-col"><div class="mgc-h">${flagImg(m.away.name)}<span>${esc(tn(m.away.name))}</span></div><ul>${ga.map(goalItem).join("") || `<li class="none">—</li>`}</ul></div>
+      </div>` : ""}
+    ${story}`;
 }
 
 // ---- overview ----
@@ -202,9 +272,19 @@ export function renderOverview(matches, stats, tournament) {
     .sort((a, b) => (kickoffDate(a)?.getTime() ?? Infinity) - (kickoffDate(b)?.getTime() ?? Infinity))
     .slice(0, 6 - live.length);
   const seeMore = `<button type="button" class="see-more" data-goto="matches">${t("ov.seeAll")} →</button>`;
-  $("#overview-live").innerHTML = (live.length || upcoming.length)
-    ? [...live.map((m) => matchCard(m, { showGoals: false })), ...upcoming.map(upcomingCard)].join("") + seeMore
-    : `<p class="empty">${t("empty.noUpcoming")}</p>` + seeMore;
+  if (live.length || upcoming.length) {
+    $("#overview-live").innerHTML =
+      [...live.map((m) => matchCard(m, { showGoals: false })), ...upcoming.map(upcomingCard)].join("") + seeMore;
+  } else {
+    // Tournament concluded: surface the climax — the final and the last knockout
+    // results, newest first. Each is clickable for the full detail.
+    const finals = matches.filter((m) => m.score && m.score.home != null)
+      .sort((a, b) => (b.num ?? 0) - (a.num ?? 0) || (b.date || "").localeCompare(a.date || ""))
+      .slice(0, 6);
+    $("#overview-live").innerHTML = finals.length
+      ? finals.map((m) => matchCard(m, { showGoals: false })).join("") + seeMore
+      : `<p class="empty">${t("empty.noUpcoming")}</p>` + seeMore;
+  }
 }
 
 // ---- matches tab ----
@@ -376,6 +456,7 @@ export function renderPredReport(bt) {
   const samples = (bt && bt.samples) || [];
   if (!samples.length) { wrap.innerHTML = `<p class="empty">${t("pred.repNone")}</p>`; return; }
   const pct = (x) => Math.round(x * 100);
+  const en = getLang() === "en";
   // Every predicted match, most recent first (the tournament is over — show them all).
   const recent = [...samples].reverse();
   const outName = (m, who) => who === "draw" ? t("pred.draw") : tn(who === "home" ? m.home.name : m.away.name);
@@ -384,9 +465,27 @@ export function renderPredReport(bt) {
       <div><span class="pr-k">${t("pred.repAcc")}</span><span class="pr-v">${pct(bt.accuracy)}%</span><small>${samples.filter((s) => s.correct).length}/${samples.length}</small></div>
       <div><span class="pr-k">${t("pred.repExact")}</span><span class="pr-v">${pct(bt.exactScore)}%</span><small>${samples.filter((s) => s.exact).length}/${samples.length}</small></div>
     </div>`;
+
+  // Storytelling: the model's most confident correct call, and its biggest upset
+  // (most confident when it was wrong). Both grounded in the walk-forward probs.
+  const conf = (s) => (s.probs ? Math.max(s.probs.home, s.probs.draw, s.probs.away) : 0);
+  const hits = samples.filter((s) => s.correct && s.probs);
+  const misses = samples.filter((s) => !s.correct && s.probs);
+  const boldest = hits.slice().sort((a, b) => conf(b) - conf(a))[0];
+  const upset = misses.slice().sort((a, b) => conf(b) - conf(a))[0];
+  const pair = (m) => `${esc(tn(m.home.name))}–${esc(tn(m.away.name))}`;
+  const story = (boldest || upset) ? `<p class="pr-story">${[
+    boldest ? (en
+      ? `Its surest call landed: <b>${esc(outName(boldest.match, boldest.predOutcome))}</b> at ${pct(conf(boldest))}% in ${pair(boldest.match)} (${esc(boldest.actScore)}).`
+      : `Su llamada más firme se cumplió: <b>${esc(outName(boldest.match, boldest.predOutcome))}</b> con ${pct(conf(boldest))}% en ${pair(boldest.match)} (${esc(boldest.actScore)}).`) : "",
+    upset ? (en
+      ? `Its biggest upset: it gave <b>${esc(outName(upset.match, upset.predOutcome))}</b> ${pct(conf(upset))}%, but ${pair(upset.match)} finished ${esc(upset.actScore)}.`
+      : `Su mayor sorpresa: daba ${pct(conf(upset))}% a <b>${esc(outName(upset.match, upset.predOutcome))}</b>, pero ${pair(upset.match)} terminó ${esc(upset.actScore)}.`) : "",
+  ].filter(Boolean).join(" ")}</p>` : "";
+
   const rows = recent.map((s) => {
     const m = s.match;
-    return `<div class="pr-card ${s.correct ? "hit" : "miss"}">
+    return `<div class="pr-card ${s.correct ? "hit" : "miss"} clickable" data-match-id="${esc(m.id)}" role="button" tabindex="0" aria-label="${esc(tn(m.home.name))} ${esc(s.actScore)} ${esc(tn(m.away.name))} — ${esc(t("drill.detail"))}">
       <div class="pr-match">
         <span class="pr-t">${flagImg(m.home.name)}<span class="pr-tn">${esc(tn(m.home.name))}</span></span>
         <span class="pr-sc">${esc(s.actScore)}</span>
@@ -398,7 +497,7 @@ export function renderPredReport(bt) {
       </div>
     </div>`;
   }).join("");
-  wrap.innerHTML = summary + `<div class="pr-grid">${rows}</div><p class="pred-note">${t("pred.repNote")}</p>`;
+  wrap.innerHTML = summary + story + `<div class="pr-grid">${rows}</div><p class="pred-note">${t("pred.repNote")}</p>`;
 }
 
 // ---- road to the Round of 32: qualified teams + best thirds + what-if ----
@@ -1382,7 +1481,7 @@ export function renderChampion(matches, facts) {
       const home = m.home.name === champ;
       const gf = home ? m.score.home : m.score.away;
       const gc = home ? m.score.away : m.score.home;
-      return { round: roundLabel(m.round), opp: home ? m.away.name : m.home.name, gf, gc, win: gf > gc, draw: gf === gc };
+      return { id: m.id, round: roundLabel(m.round), opp: home ? m.away.name : m.home.name, gf, gc, win: gf > gc, draw: gf === gc };
     });
 
   const aw = ch.awards;
@@ -1436,7 +1535,7 @@ export function renderChampion(matches, facts) {
     <div class="champ-path">
       <p class="cp-title">${en ? `${esc(tn(champ))}'s road to glory` : `El camino de ${esc(tn(champ))} a la gloria`}</p>
       <div class="cp-track">
-        ${path.map((p, i) => `<span class="cp-step ${p.win ? "w" : p.draw ? "d" : "l"}"><span class="cp-no">${String(i + 1).padStart(2, "0")}</span>${flagImg(p.opp, "cp-flag", { eager: true })}<b>${p.gf}–${p.gc}</b><small>${esc(p.round)}</small></span>`).join("")}
+        ${path.map((p, i) => `<span class="cp-step ${p.win ? "w" : p.draw ? "d" : "l"}" data-match-id="${esc(p.id)}" role="button" tabindex="0" aria-label="${esc(tn(champ))} ${p.gf}–${p.gc} ${esc(tn(p.opp))} — ${esc(t("drill.detail"))}"><span class="cp-no">${String(i + 1).padStart(2, "0")}</span>${flagImg(p.opp, "cp-flag", { eager: true })}<b>${p.gf}–${p.gc}</b><small>${esc(p.round)}</small></span>`).join("")}
       </div>
     </div>`;
 }
