@@ -2,6 +2,13 @@
 // No API key required. All sources below are free and CORS-safe for the browser.
 
 export const CONFIG = {
+  // ---- Tournament concluded: ARCHIVE MODE ----
+  // The 2026 World Cup is over. With this ON, the site reads only the frozen
+  // data bundled in ./data/ and makes ZERO data API calls (no openfootball, no
+  // Worker, no live polling) — the numbers can't change anymore, so we don't
+  // pay for requests. Flip to false only to reopen a live edition.
+  ARCHIVED: true,
+
   // Reliable, public-domain base data (CORS-safe via raw.githubusercontent.com).
   BASE_DATA_URL:
     "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
@@ -66,6 +73,25 @@ export const CONFIG = {
     groups: 12,
     matches: 104,
     stadiums: 16,
+
+    // ---- Result (tournament concluded) — real, sourced facts ----
+    // The champion, final and individual awards are documented facts (see
+    // docs/RETROSPECTIVA.md for sources: NPR, ESPN, FIFA, Al Jazeera, Olympics).
+    // Everything else in the hub (scorers, totals, best matches, the champion's
+    // path) is computed from the frozen match data at runtime.
+    champion: {
+      team: "Spain", runnerUp: "Argentina", title: 2, unbeaten: true,
+      final: {
+        score: [1, 0], aet: true, scorer: "Ferran Torres", minute: 106,
+        venue: "New York/New Jersey (East Rutherford)", date: "2026-07-19",
+      },
+      awards: {
+        goldenBoot: { player: "Kylian Mbappé", team: "France", es: "Bota de Oro", en: "Golden Boot", note: ["10 goles", "10 goals"] },
+        goldenBall: { player: "Rodri", team: "Spain", es: "Balón de Oro", en: "Golden Ball", note: ["Mejor jugador", "Best player"] },
+        goldenGlove: { player: "Unai Simón", team: "Spain", es: "Guante de Oro", en: "Golden Glove", note: ["1 gol recibido en el torneo", "1 goal conceded all tournament"] },
+        youngPlayer: { player: "Pau Cubarsí", team: "Spain", es: "Mejor Joven", en: "Best Young Player", note: ["19 años", "aged 19"] },
+      },
+    },
 
     // Tournament-wide aggregates that can't be derived from the fixtures/scores
     // alone (offsides, cards, VAR, etc.). These are illustrative competition

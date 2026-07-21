@@ -7,6 +7,7 @@
 import { CONFIG } from "./config.js";
 
 export function liveEnabled() {
+  if (CONFIG.ARCHIVED) return false; // tournament over: no live layer, no polling
   return !!(CONFIG.LIVE_PROXY_URL && CONFIG.LIVE_PROXY_URL.trim());
 }
 

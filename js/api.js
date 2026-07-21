@@ -178,6 +178,12 @@ function applyLiveOverlay(matches, liveRaw) {
 
 export async function loadBase() {
   let raw, source, online = true;
+  // Archived: read the frozen results bundled with the site — no network call.
+  if (CONFIG.ARCHIVED) {
+    raw = await cachedFetch(CONFIG.FALLBACK_DATA_URL, CONFIG.BASE_TTL);
+    const matches = (raw.matches || []).map(normalizeMatch);
+    return { matches, source: "archivo del torneo (congelado)", online: true, fetchedAt: new Date() };
+  }
   try {
     raw = await cachedFetch(CONFIG.BASE_DATA_URL, CONFIG.BASE_TTL);
     source = "live source (openfootball)";
@@ -204,7 +210,7 @@ export async function loadTeamStats() {
 // numbers as each one finishes); falls back to the bundled illustrative file
 // (group stage only) when the proxy is unavailable. Never throws.
 export async function loadEfficacyHistory() {
-  const base = (CONFIG.LIVE_PROXY_URL || "").trim();
+  const base = (CONFIG.ARCHIVED ? "" : (CONFIG.LIVE_PROXY_URL || "")).trim();
   if (base) {
     try {
       const live = await cachedFetch(base.replace(/\/+$/, "") + "/efficacy.json", 5 * 60 * 1000);

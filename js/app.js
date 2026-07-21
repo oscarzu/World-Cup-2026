@@ -413,10 +413,12 @@ function initCalendar() {
     downloadICS(ics);
   });
   // Subscribe buttons live in both the Matches/bracket view AND the home page.
+  // A "subscribe (auto-updates)" calendar makes no sense once the tournament is
+  // over, so hide them in archive mode; the static .ics download stays as a keepsake.
   const base = (CONFIG.LIVE_PROXY_URL || "").trim();
   const subBtns = document.querySelectorAll("#sub-calendar, #sub-calendar-home");
   subBtns.forEach((b) => {
-    if (!base) { b.hidden = true; return; }
+    if (CONFIG.ARCHIVED || !base) { b.hidden = true; return; }
     b.addEventListener("click", openSubscribeModal);
   });
 }
@@ -464,6 +466,7 @@ function renderAll() {
   state.matchesResolved = resolved;
   UI.renderOverview(resolved, stats, CONFIG.TOURNAMENT);
   UI.renderHeroNext(resolved);
+  UI.renderChampion(resolved, facts);
   UI.renderHeroLead(stats);
   UI.animateCounts($("#overview-stats"));
   UI.renderMatches(resolved, { grouped: true });
@@ -612,6 +615,9 @@ let liveStarted = false;
 function startLiveOnce() {
   if (liveStarted) return;
   liveStarted = true;
+  // Tournament concluded: the data is frozen, so we start no live layer and make
+  // no polling requests at all.
+  if (CONFIG.ARCHIVED) return;
   // Real-time provider (ESPN via proxy) if configured; else the best-effort
   // community overlay. Both poll on an interval.
   if (AF.liveEnabled()) {

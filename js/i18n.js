@@ -56,12 +56,12 @@ const STR = {
 
   // predictions
   "pred.kicker": ["Modelo predictivo", "Predictive model"],
-  "pred.title": ["Probabilidades de los próximos partidos", "Odds for the upcoming matches"],
+  "pred.title": ["El modelo predictivo, partido por partido", "The predictive model, match by match"],
   "pred.sub": ["Modelo Poisson con prior Elo y forma actual: marcador más probable y probabilidad de cada resultado.",
                "Poisson model with an Elo prior and current form: most-likely score and outcome probabilities."],
   "pred.draw": ["Empate", "Draw"],
   "pred.xg": ["Goles esperados", "Expected goals"],
-  "pred.none": ["Aún no hay partidos confirmados próximos para predecir.", "No confirmed upcoming matches to predict yet."],
+  "pred.none": ["El torneo concluyó. Abajo están todos los pronósticos del modelo frente al resultado real.", "The tournament is over. Every model forecast vs. the actual result is below."],
   "pred.confTitle": ["Confianza del modelo", "Model confidence"],
   "pred.acc": ["Aciertos de resultado", "Outcome accuracy"],
   "pred.rps": ["RPS (menor = mejor)", "RPS (lower = better)"],
@@ -74,8 +74,8 @@ const STR = {
   "pred.ko": ["Eliminatoria · sin empate", "Knockout · no draws"],
   "pred.penNote": ["Probabilidad de que el partido se defina en penales. La fuerza desde el manchón es a nivel selección (último año + histórico de tandas).",
                    "Chance the tie goes to a shootout. Spot-kick strength is team-level (last year + historical shootout record)."],
-  "pred.note": ["Parámetros fijos (no ajustados al pasado, para evitar overfitting). Validación walk-forward: cada partido se predice usando solo datos previos. En eliminatorias no hay empate: la probabilidad se reparte entre prórroga y penales (fuerza desde el manchón por selección). Con pocos partidos la confianza es baja y mejora conforme avanza el torneo. No es consejo de apuestas.",
-                "Fixed parameters (not tuned to the past, to avoid overfitting). Walk-forward validation: each match is predicted using only prior data. In knockouts there are no draws — the probability is split between extra time and penalties (team-level spot-kick strength). With few games confidence is low and improves as the tournament progresses. Not betting advice."],
+  "pred.note": ["Parámetros fijos (no ajustados al pasado, para evitar overfitting). Validación walk-forward: cada partido se predice usando solo datos previos. En eliminatorias no hay empate: la probabilidad se reparte entre prórroga y penales (fuerza desde el manchón por selección). Con pocos partidos la confianza era baja y mejoró conforme avanzó el torneo. No es consejo de apuestas.",
+                "Fixed parameters (not tuned to the past, to avoid overfitting). Walk-forward validation: each match is predicted using only prior data. In knockouts there are no draws — the probability is split between extra time and penalties (team-level spot-kick strength). With few games confidence was low and improved as the tournament progressed. Not betting advice."],
   "pred.reportKicker": ["Aciertos del modelo", "Model accuracy"],
   "pred.reportTitle": ["Pronóstico vs. resultado real", "Forecast vs. actual result"],
   "pred.reportSub": ["Qué tan bien acertó el modelo en los partidos ya jugados (validación sin trampa, sin ver el futuro).",
@@ -99,14 +99,14 @@ const STR = {
 
   // hero
   "hero.title": ["La 23.ª Copa Mundial de la FIFA", "The 23rd FIFA World Cup"],
-  "hero.text": ["Primera edición con <strong>48 selecciones</strong>, repartida en tres países anfitriones y <strong>16 sedes</strong>.",
-                "The first edition with <strong>48 teams</strong>, across three host nations and <strong>16 venues</strong>."],
+  "hero.text": ["La primera edición con <strong>48 selecciones</strong>, en tres países anfitriones y <strong>16 sedes</strong>, ya es historia. Así se vivió.",
+                "The first edition with <strong>48 teams</strong>, across three host nations and <strong>16 venues</strong>, is now history. Here's how it unfolded."],
   "host.cst": ["Horarios en CST", "Times in CST"],
   "hero.next": ["Próximo partido", "Next match"],
   "hero.live": ["¡En juego!", "Kicking off!"],
 
   // generic section heads / cards
-  "ov.next": ["Próximos y en vivo", "Live & upcoming"],
+  "ov.next": ["Resultados del torneo", "Tournament results"],
   "ov.seeAll": ["Ver todos los partidos", "See all matches"],
   "ov.goalsByMd": ["Goles por fase", "Goals by phase"],
   "foot.goalsByMd": ["Fase de grupos y cada ronda de eliminatoria (16vos → final) · eje en escala logarítmica", "Group stage and each knockout round (R32 → final) · log-scale axis"],

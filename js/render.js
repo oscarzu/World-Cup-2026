@@ -376,8 +376,8 @@ export function renderPredReport(bt) {
   const samples = (bt && bt.samples) || [];
   if (!samples.length) { wrap.innerHTML = `<p class="empty">${t("pred.repNone")}</p>`; return; }
   const pct = (x) => Math.round(x * 100);
-  // Most recent first; show a manageable window.
-  const recent = samples.slice(-12).reverse();
+  // Every predicted match, most recent first (the tournament is over — show them all).
+  const recent = [...samples].reverse();
   const outName = (m, who) => who === "draw" ? t("pred.draw") : tn(who === "home" ? m.home.name : m.away.name);
   const summary = `
     <div class="pr-summary">
@@ -1354,6 +1354,91 @@ export function tickHeroCountdown() {
     m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
   el.innerHTML = (d > 0 ? `<span class="hc-u"><b>${d}</b>d</span>` : "") +
     `<span class="hc-u"><b>${pad(h)}</b>h</span><span class="hc-u"><b>${pad(m)}</b>m</span><span class="hc-u"><b>${pad(s)}</b>s</span>`;
+}
+
+// Ordinal in the active language (2 → "2.º" / "2nd").
+function ordinal(n, en) {
+  if (en) return (["0th", "1st", "2nd", "3rd"][n] || `${n}th`);
+  return (["0.º", "1.er", "2.º", "3.er", "4.º", "5.º"][n] || `${n}.º`);
+}
+
+// ---- retrospective hub: champion, individual awards, tournament highlights,
+// and the champion's road to the title. Data-driven from the frozen results;
+// the (editorial) individual awards come from CONFIG.TOURNAMENT.champion.
+export function renderChampion(matches, facts) {
+  const host = document.getElementById("champion-hub");
+  if (!host) return;
+  const ch = CONFIG.TOURNAMENT.champion;
+  if (!ch) { host.hidden = true; return; }
+  const en = getLang() === "en";
+  const champ = ch.team, runner = ch.runnerUp;
+  const [gh, ga] = ch.final.score;
+
+  // The champion's path: their finished matches, in tournament order.
+  const path = (matches || [])
+    .filter((m) => (m.home?.name === champ || m.away?.name === champ) && m.score && m.score.home != null)
+    .sort((a, b) => (a.num ?? 0) - (b.num ?? 0))
+    .map((m) => {
+      const home = m.home.name === champ;
+      const gf = home ? m.score.home : m.score.away;
+      const gc = home ? m.score.away : m.score.home;
+      return { round: roundLabel(m.round), opp: home ? m.away.name : m.home.name, gf, gc, win: gf > gc, draw: gf === gc };
+    });
+
+  const aw = ch.awards;
+  const awards = [
+    { ic: "👟", d: aw.goldenBoot }, { ic: "🏅", d: aw.goldenBall },
+    { ic: "🧤", d: aw.goldenGlove }, { ic: "🌟", d: aw.youngPlayer },
+  ].map(({ ic, d }) => `
+    <div class="award">
+      <span class="aw-medal" aria-hidden="true">${ic}</span>
+      <span class="aw-title">${en ? d.en : d.es}</span>
+      <b class="aw-player">${esc(tn(d.player))}</b>
+      <small class="aw-note">${esc(en ? d.note[1] : d.note[0])} · ${esc(tn(d.team))}</small>
+    </div>`).join("");
+
+  const pair = (m) => m ? `${esc(tn(m.home.name))} ${m.score.home}–${m.score.away} ${esc(tn(m.away.name))}` : "—";
+  const numbers = [
+    ["⚽", facts.totalGoals, en ? "goals" : "goles"],
+    ["🏟️", facts.played, en ? "matches" : "partidos"],
+    ["📊", facts.avg ? facts.avg.toFixed(2) : "—", en ? "goals / match" : "goles / partido"],
+  ];
+
+  host.hidden = false;
+  host.innerHTML = `
+    <div class="champ-banner">
+      <div class="champ-rays" aria-hidden="true"></div>
+      <p class="champ-eyebrow">🏆 ${en ? "WORLD CHAMPION · 2026" : "CAMPEÓN DEL MUNDO · 2026"}</p>
+      <div class="champ-crown">
+        ${flagImg(champ, "champ-flag", { eager: true })}
+        <h2 class="champ-team">${esc(tn(champ))}</h2>
+      </div>
+      <p class="champ-sub">${ordinal(ch.title, en)} ${en ? "world title" : "título mundial"}${ch.unbeaten ? ` · ${en ? "unbeaten champion" : "campeón invicto"}` : ""}</p>
+      <div class="champ-score">
+        <span class="cs-side">${flagImg(champ, "cs-flag", { eager: true })}<span>${esc(tn(champ))}</span></span>
+        <span class="cs-nums"><b>${gh}</b><i>–</i><b>${ga}</b>${ch.final.aet ? `<em>${en ? "AET" : "pró."}</em>` : ""}</span>
+        <span class="cs-side rev"><span>${esc(tn(runner))}</span>${flagImg(runner, "cs-flag", { eager: true })}</span>
+      </div>
+      <p class="champ-final">${en ? "Final · goal by" : "Final · gol de"} <b>${esc(ch.final.scorer)}</b> (${ch.final.minute}') · 📍 ${esc(ch.final.venue)}</p>
+    </div>
+
+    <div class="awards-row">${awards}</div>
+
+    <div class="champ-numbers">
+      ${numbers.map(([ic, v, l]) => `<div class="cn"><span class="cn-ic" aria-hidden="true">${ic}</span><b class="cn-v">${fmtInt(v)}</b><span class="cn-l">${l}</span></div>`).join("")}
+    </div>
+
+    <div class="champ-highlights">
+      ${facts.highest ? `<div class="chl"><span class="chl-k">${en ? "Wildest game" : "El partidazo"}</span><b>${pair(facts.highest.m)}</b><small>${facts.highest.total} ${en ? "goals" : "goles"}</small></div>` : ""}
+      ${facts.biggest ? `<div class="chl"><span class="chl-k">${en ? "Biggest win" : "La goleada"}</span><b>${pair(facts.biggest.m)}</b><small>+${facts.biggest.margin} ${en ? "goal margin" : "de diferencia"}</small></div>` : ""}
+    </div>
+
+    <div class="champ-path">
+      <p class="cp-title">${en ? `${esc(tn(champ))}'s road to glory` : `El camino de ${esc(tn(champ))} a la gloria`}</p>
+      <div class="cp-track">
+        ${path.map((p) => `<span class="cp-step ${p.win ? "w" : p.draw ? "d" : "l"}">${flagImg(p.opp, "cp-flag", { eager: true })}<b>${p.gf}–${p.gc}</b><small>${esc(p.round)}</small></span>`).join('<span class="cp-arrow" aria-hidden="true">→</span>')}
+      </div>
+    </div>`;
 }
 
 export function renderHeroLead(stats) {
