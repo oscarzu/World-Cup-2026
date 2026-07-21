@@ -3,11 +3,13 @@ main = "worker.js"
 compatibility_date = "2024-11-01"
 workers_dev = true
 
-# Cron: collect from ESPN every 3 minutes. ESPN is free/key-less. The Worker
-# writes to KV ONLY when content changes (free tier = 1000 puts/day), so quiet
-# periods cost 0 writes and live goals still appear within ~3 min.
+# Cron trigger. The 2026 World Cup is over and the data is frozen, so the cron
+# is DISABLED (empty array) — no more scheduled ESPN fetches / KV writes.
+# Deploying with `crons = []` reliably removes the schedules (the experimental
+# `wrangler triggers deploy` can fail on the schedules API). To reopen a live
+# edition, restore:  crons = ["*/3 * * * *"]
 [triggers]
-crons = ["*/3 * * * *"]
+crons = []
 
 # KV store that holds the shared snapshot + accumulated dataset.
 # Create it once and paste the returned id below:
