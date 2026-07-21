@@ -3,57 +3,66 @@
    a vibrant pitch-green→teal accent and a gold highlight for the heroes. */
 
 :root {
-  --accent: #2fd968;
+  /* Identity metal — the trophy. Gold leads the chrome (headlines, eyebrows,
+     the champion). Pitch-green is demoted to a DATA colour (charts, actions). */
+  --gold: #e9c15b;
+  --gold-bright: #f7de8b;
+  --crimson: #e3253c;          /* champion signal (La Roja) — used sparingly */
+  --accent: #2fd968;           /* pitch green — data viz + interactive states */
   --accent-2: #14b8a6;
-  --gold: #ffd23f;
   --accent-soft: rgba(47, 217, 104, 0.14);
   --accent-grad: linear-gradient(120deg, #2fd968 0%, #14b8a6 100%);
+  --gold-grad: linear-gradient(100deg, #e9c15b 0%, #f7de8b 55%, #d8a53f 100%);
   --live: #ff453a;
   --radius: 16px;
   --radius-lg: 24px;
   --radius-xl: 30px;
   --maxw: 1200px;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  /* Display face — a technical grotesque that nods to scoreboards & data
-     readouts: more identity than a system font, still legible at big sizes. */
+  /* Technical grotesque for data/subheads; Anton is the monumental poster face
+     reserved for the champion, big numerals and section eyebrows. */
   --font-display: "Space Grotesk", var(--font);
+  --font-poster: "Anton", "Space Grotesk", var(--font);
   --t: 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Dark (default) — near-black, cinematic */
+/* Dark (default) — "stadium ink": a warm plum-black, not a cold near-black.
+   The warmth + gold glow reads as a printed commemorative, not a neon dashboard. */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #050507;
-  --bg-glow: radial-gradient(1100px 620px at 78% -8%, rgba(47, 217, 104, 0.14), transparent 60%),
-             radial-gradient(900px 540px at 12% 0%, rgba(20, 184, 166, 0.12), transparent 55%);
-  --surface: rgba(28, 30, 36, 0.66);
-  --surface-solid: #14161c;
-  --surface-2: rgba(44, 48, 56, 0.7);
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --text: #f4f6fb;
-  --muted: #9aa3b2;
-  --shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.8);
-  --shadow-hover: 0 22px 50px -20px rgba(0, 0, 0, 0.9);
-  --glass-blur: saturate(160%) blur(22px);
+  --bg: #100c14;
+  --bg-glow: radial-gradient(1150px 640px at 82% -10%, rgba(233, 193, 91, 0.13), transparent 60%),
+             radial-gradient(920px 560px at 8% -4%, rgba(227, 37, 60, 0.10), transparent 58%);
+  --surface: rgba(31, 25, 37, 0.66);
+  --surface-solid: #1a141f;
+  --surface-2: rgba(46, 38, 54, 0.72);
+  --border: rgba(244, 238, 227, 0.10);
+  --border-strong: rgba(244, 238, 227, 0.18);
+  --text: #f4eee3;            /* bone — warm off-white, print feel */
+  --muted: #a99fac;
+  --shadow: 0 12px 34px -16px rgba(0, 0, 0, 0.82);
+  --shadow-hover: 0 24px 54px -20px rgba(0, 0, 0, 0.92);
+  --glass-blur: saturate(150%) blur(22px);
 }
 
-/* Light — clean, airy */
+/* Light — "programme paper": a warm off-white keepsake, not clinical grey. */
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #eef0f4;
-  --bg-glow: radial-gradient(1100px 620px at 80% -10%, rgba(47, 217, 104, 0.16), transparent 60%),
-             radial-gradient(900px 520px at 10% 0%, rgba(20, 184, 166, 0.12), transparent 55%);
-  --surface: rgba(255, 255, 255, 0.74);
-  --surface-solid: #ffffff;
-  --surface-2: rgba(255, 255, 255, 0.9);
-  --border: rgba(13, 18, 28, 0.08);
-  --border-strong: rgba(13, 18, 28, 0.16);
-  --text: #11151c;
-  --muted: #5b6472;
-  --shadow: 0 12px 30px -18px rgba(16, 22, 32, 0.4);
-  --shadow-hover: 0 22px 46px -20px rgba(16, 22, 32, 0.5);
-  --glass-blur: saturate(150%) blur(20px);
+  --bg: #f2ece1;
+  --bg-glow: radial-gradient(1100px 620px at 82% -12%, rgba(216, 165, 63, 0.20), transparent 60%),
+             radial-gradient(900px 520px at 8% -4%, rgba(227, 37, 60, 0.10), transparent 56%);
+  --surface: rgba(255, 253, 249, 0.80);
+  --surface-solid: #fffdf8;
+  --surface-2: rgba(255, 253, 249, 0.94);
+  --border: rgba(28, 20, 12, 0.10);
+  --border-strong: rgba(28, 20, 12, 0.18);
+  --text: #211a12;
+  --muted: #6b6152;
+  --shadow: 0 12px 30px -18px rgba(40, 30, 16, 0.34);
+  --shadow-hover: 0 22px 46px -20px rgba(40, 30, 16, 0.44);
+  --glass-blur: saturate(148%) blur(20px);
+  --gold: #b8862b;           /* deeper gold reads on paper */
+  --gold-bright: #d8a53f;
 }
 
 * { box-sizing: border-box; }
@@ -82,7 +91,7 @@ h1, h2, h3 { text-wrap: balance; }       /* avoid heading widows */
 
 h1, h2, h3, h4 { margin: 0; font-weight: 700; letter-spacing: -0.022em; }
 .accent {
-  background: var(--accent-grad);
+  background: var(--gold-grad);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -103,10 +112,12 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; letter-spacing: -0.022em; }
 .logo {
   font-size: 1.7rem; line-height: 1;
   display: grid; place-items: center; width: 46px; height: 46px;
-  border-radius: 14px; background: var(--accent-soft);
-  border: 1px solid var(--border); box-shadow: inset 0 0 18px rgba(47, 217, 104, 0.18);
+  border-radius: 14px; background: color-mix(in srgb, var(--gold) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--gold) 22%, transparent);
 }
-.site-header h1 { font-size: 1.3rem; }
+.site-header h1 { font-family: var(--font-poster); font-weight: 400; font-size: 1.5rem;
+  letter-spacing: 0.02em; text-transform: uppercase; }
 .sub { margin: 0; font-size: 0.76rem; color: var(--muted); letter-spacing: 0.01em; }
 .header-meta { display: flex; align-items: center; gap: 0.6rem; }
 .updated { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
@@ -149,10 +160,10 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; letter-spacing: -0.022em; }
 }
 .tab:hover { color: var(--text); transform: translateY(-1px); }
 .tab.is-active {
-  color: #04140a; background: var(--accent-grad);
-  box-shadow: 0 8px 22px -10px color-mix(in srgb, var(--accent) 80%, transparent);
+  color: #1c1206; background: var(--gold-grad);
+  box-shadow: 0 8px 22px -10px color-mix(in srgb, var(--gold) 80%, transparent);
 }
-[data-theme="light"] .tab.is-active { color: #03210f; }
+[data-theme="light"] .tab.is-active { color: #241a0a; }
 /* "Live" tab turns red (with a pulsing dot) only while a match is live */
 .tab.has-live:not(.is-active) { color: var(--live); }
 .tab.has-live::before {
@@ -183,30 +194,37 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
 .card h3 { font-size: 0.98rem; margin-bottom: 0.95rem; }
 
 /* ---- hero ---- */
+/* Hero = the commemorative programme masthead: a warm cover, not a neon panel. */
 .hero {
   position: relative; overflow: hidden;
   background:
-    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 52%),
-    radial-gradient(120% 160% at 100% 0%, color-mix(in srgb, var(--accent-2) 24%, transparent), transparent 55%),
+    radial-gradient(130% 150% at 100% 0%, color-mix(in srgb, var(--gold) 20%, transparent), transparent 55%),
+    radial-gradient(120% 150% at 0% 100%, color-mix(in srgb, var(--crimson) 12%, transparent), transparent 52%),
     var(--surface);
   border: 1px solid var(--border-strong); border-radius: var(--radius-xl);
-  padding: 2.4rem 2.2rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+  padding: 2.6rem 2.3rem 2.2rem; margin-bottom: 1.4rem; box-shadow: var(--shadow);
   backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
 }
+/* Ghosted host codes, like a poster's edition mark. */
 .hero::after {
-  content: "⚽"; position: absolute; right: -1.2rem; bottom: -2.4rem;
-  font-size: 11rem; opacity: 0.06; transform: rotate(-12deg); pointer-events: none;
+  content: "CAN · MEX · USA"; position: absolute; right: 1.6rem; bottom: 0.4rem;
+  font-family: var(--font-poster); font-size: clamp(2rem, 7vw, 4.6rem); line-height: 1;
+  color: var(--text); opacity: 0.05; letter-spacing: 0.02em; pointer-events: none; white-space: nowrap;
 }
-.hero-dates { color: var(--accent); font-weight: 700; font-size: 0.82rem;
-  letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 0.55rem; }
-.hero-title { font-size: clamp(1.7rem, 4vw, 2.8rem); line-height: 1.05; }
-.hero-text { color: var(--muted); margin: 0.7rem 0 0; max-width: 52ch; font-size: 1.02rem; }
-.host-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.3rem; }
+.hero-dates {
+  font-family: var(--font-poster); color: var(--gold); font-weight: 400; font-size: 0.82rem;
+  letter-spacing: 0.18em; text-transform: uppercase; margin: 0 0 0.7rem;
+}
+.hero-title { font-family: var(--font-poster); font-weight: 400; text-transform: uppercase;
+  font-size: clamp(1.9rem, 4.6vw, 3.1rem); line-height: 0.98; letter-spacing: 0.01em; }
+.hero-text { color: var(--muted); margin: 0.8rem 0 0; max-width: 54ch; font-size: 1.02rem; line-height: 1.5; }
+.hero-text strong { color: var(--text); font-weight: 700; }
+.host-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.4rem; }
 .host-pill {
   background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: 999px; padding: 0.4rem 0.85rem; font-size: 0.84rem; font-weight: 600;
+  border-radius: 999px; padding: 0.4rem 0.9rem; font-size: 0.82rem; font-weight: 600;
 }
-.host-pill.ghost { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.host-pill.ghost { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 42%, transparent); }
 
 /* ---- stat grid ---- */
 .stat-grid {
@@ -668,17 +686,27 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 .num, .stat .num, .fact-value, .live-score .lsc, .rank-table td.val, .insight .big,
 .standings td, .scorer .goals { font-variant-numeric: tabular-nums; }
 
-/* editorial section headers */
-.section-head { margin: 2.4rem 0 1.15rem; }
-.section-head.lead { margin: .4rem 0 1.2rem; }
+/* editorial section headers — a gold hairline + Anton eyebrow give every
+   section a printed-programme masthead feel. */
+.section-head { margin: 2.6rem 0 1.15rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.section-head.lead { margin: .6rem 0 1.2rem; border-top: 0; padding-top: 0; }
 .kicker, .card-kicker {
-  font-size: .68rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--accent); margin: 0 0 .35rem;
+  position: relative; display: inline-block;
+  font-family: var(--font-poster); font-size: .8rem; font-weight: 400;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin: 0 0 .5rem;
+  padding-left: 1.9rem;
 }
+.kicker::before, .card-kicker::before {
+  content: ""; position: absolute; left: 0; top: 50%; width: 1.4rem; height: 2px;
+  background: var(--gold-grad); transform: translateY(-50%);
+}
+.card-kicker { padding-left: 0; }
+.card-kicker::before { display: none; }
 .section-head .section-title { margin: 0; }
-.section-title { font-size: clamp(1.15rem, 2.5vw, 1.55rem); font-weight: 750; letter-spacing: -.02em; line-height: 1.15; }
-.section-title.big { font-size: clamp(1.55rem, 3.6vw, 2.3rem); }
-.section-sub { color: var(--muted); font-size: .9rem; margin: .35rem 0 0; max-width: 64ch; }
+.section-title { font-family: var(--font-display); font-size: clamp(1.25rem, 2.6vw, 1.7rem); font-weight: 700; letter-spacing: -.02em; line-height: 1.12; }
+.section-title.big { font-family: var(--font-poster); font-weight: 400; letter-spacing: .005em;
+  font-size: clamp(2rem, 5.2vw, 3.4rem); line-height: 0.98; text-transform: uppercase; }
+.section-sub { color: var(--muted); font-size: .9rem; margin: .5rem 0 0; max-width: 64ch; }
 
 .hero-lead { margin: 1rem 0 0; font-size: 1.02rem; color: var(--text); }
 .hero-lead strong { color: var(--accent); font-weight: 800; }
@@ -1196,86 +1224,113 @@ img.flag { width: 24px; height: 16px; object-fit: cover; border-radius: 3px; }
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 
-/* ---- retrospective hub: champion, awards, highlights (tournament concluded) ---- */
-.champion-hub { margin: 1.4rem 0 2rem; display: grid; gap: 1.05rem; }
+/* ---- retrospective hub: the commemorative spread (champion + awards) ---- */
+.champion-hub { margin: 1.4rem 0 2rem; display: grid; gap: 1rem; }
 
+/* The champion banner: a monumental ghosted "2026", the champion set in the
+   poster face, and the final as a stadium scoreboard slab. */
 .champ-banner {
   position: relative; overflow: hidden; text-align: center;
-  padding: 2.5rem 1.4rem 2rem; border-radius: var(--radius-xl);
-  border: 1px solid rgba(255, 210, 63, 0.3);
-  background: radial-gradient(120% 105% at 50% -18%, rgba(255, 210, 63, 0.17), transparent 62%), var(--surface);
+  padding: 2.6rem 1.4rem 2.2rem; border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  background:
+    radial-gradient(120% 115% at 50% -20%, color-mix(in srgb, var(--gold) 16%, transparent), transparent 64%),
+    var(--surface);
   -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
-  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow), inset 0 1px 0 color-mix(in srgb, var(--gold) 18%, transparent);
 }
-.champ-rays {
-  position: absolute; inset: -46% 0 auto 0; height: 360px; margin: 0 auto; pointer-events: none; opacity: 0.55;
-  background: conic-gradient(from 0deg at 50% 0%,
-    transparent 0 7deg, rgba(255, 210, 63, 0.11) 8deg 10deg, transparent 11deg 18deg);
-  -webkit-mask-image: radial-gradient(58% 78% at 50% 0%, #000, transparent 72%);
-          mask-image: radial-gradient(58% 78% at 50% 0%, #000, transparent 72%);
+/* Ghost edition year, the poster's watermark. */
+.champ-year {
+  position: absolute; left: 50%; top: 48%; transform: translate(-50%, -50%);
+  font-family: var(--font-poster); font-size: clamp(9rem, 34vw, 20rem); line-height: 1;
+  color: var(--text); opacity: 0.045; letter-spacing: 0.02em; pointer-events: none; z-index: 0;
 }
+.champ-banner > *:not(.champ-year) { position: relative; z-index: 1; }
 .champ-eyebrow {
-  position: relative; margin: 0 0 0.85rem; font-family: var(--font-display); font-weight: 700;
-  letter-spacing: 0.2em; font-size: 0.72rem; color: var(--gold); text-transform: uppercase;
+  margin: 0 0 0.9rem; font-family: var(--font-poster); font-weight: 400;
+  letter-spacing: 0.22em; font-size: 0.82rem; color: var(--gold); text-transform: uppercase;
 }
-.champ-crown { position: relative; display: flex; align-items: center; justify-content: center; gap: 0.85rem; flex-wrap: wrap; }
-.champ-flag { width: 56px; height: 38px; border-radius: 5px; object-fit: cover; box-shadow: 0 5px 16px rgba(0, 0, 0, 0.45); }
+.champ-crown { display: flex; align-items: center; justify-content: center; gap: 0.9rem; flex-wrap: wrap; }
+.champ-flag { width: 58px; height: 39px; border-radius: 5px; object-fit: cover; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5); }
 .champ-team {
-  margin: 0; font-family: var(--font-display); font-weight: 700; line-height: 1;
-  font-size: clamp(2.3rem, 7.5vw, 3.8rem);
-  background: linear-gradient(180deg, #ffffff 0%, #ffe9a6 66%, #ffd23f 100%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
+  margin: 0; font-family: var(--font-poster); font-weight: 400; line-height: 0.9; text-transform: uppercase;
+  font-size: clamp(3rem, 12vw, 6rem); letter-spacing: 0.01em;
+  background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.champ-sub { position: relative; margin: 0.5rem 0 1.35rem; color: var(--muted); font-size: 0.9rem; }
+.champ-sub { margin: 0.55rem 0 1.5rem; color: var(--muted); font-size: 0.86rem;
+  letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
 
-.champ-score { position: relative; display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
-.cs-side { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 1rem; color: var(--text); }
+/* Scoreboard slab — the signature object. */
+.champ-score {
+  display: inline-flex; align-items: stretch; gap: 0; margin: 0 auto 0.85rem;
+  border: 1px solid var(--border-strong); border-radius: 14px; overflow: hidden;
+  background: color-mix(in srgb, var(--surface-solid) 82%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.cs-side { display: inline-flex; align-items: center; gap: 0.55rem; padding: 0.7rem 1.05rem;
+  font-weight: 600; font-size: 0.98rem; color: var(--text); }
 .cs-flag { width: 30px; height: 20px; border-radius: 3px; }
-.cs-nums { display: inline-flex; align-items: center; gap: 0.35rem; font-family: var(--font-display); font-weight: 700; }
-.cs-nums b { font-size: 2.1rem; color: var(--text); font-variant-numeric: tabular-nums; }
-.cs-nums i { color: var(--muted); font-style: normal; }
-.cs-nums em { font-style: normal; font-size: 0.62rem; color: var(--gold); border: 1px solid rgba(255, 210, 63, 0.42);
-  border-radius: 999px; padding: 0.12rem 0.42rem; margin-left: 0.3rem; letter-spacing: 0.05em; }
-.champ-final { position: relative; margin: 0; color: var(--muted); font-size: 0.82rem; }
-.champ-final b { color: var(--text); }
+.cs-nums { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1.1rem;
+  font-family: var(--font-poster); font-weight: 400; background: color-mix(in srgb, var(--gold) 10%, transparent);
+  border-inline: 1px solid var(--border); }
+.cs-nums b { font-size: 2.5rem; line-height: 1; color: var(--text); }
+.cs-nums i { color: var(--gold); font-style: normal; font-size: 1.4rem; }
+.cs-nums em { font-family: var(--font-display); font-style: normal; font-size: 0.6rem; color: var(--bg);
+  background: var(--gold); border-radius: 999px; padding: 0.14rem 0.44rem; margin-left: 0.35rem;
+  letter-spacing: 0.05em; font-weight: 700; align-self: center; }
+.champ-final { margin: 0; color: var(--muted); font-size: 0.82rem; }
+.champ-final b { color: var(--gold); font-weight: 700; }
 
+/* Awards as ticket stubs (perforated inner edge). */
 .awards-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; }
-.award { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.25rem;
-  padding: 1.15rem 0.7rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); }
-.aw-medal { font-size: 1.65rem; line-height: 1; }
-.aw-title { font-family: var(--font-display); font-size: 0.66rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--gold); }
-.aw-player { font-size: 0.98rem; color: var(--text); }
+.award { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 0.28rem; padding: 1.2rem 0.8rem 1.2rem 1.1rem; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+.award::before { content: ""; position: absolute; left: 0.5rem; top: 0.9rem; bottom: 0.9rem; width: 2px;
+  background-image: radial-gradient(circle, var(--border-strong) 1px, transparent 1.4px);
+  background-size: 2px 7px; }
+.aw-medal { font-size: 1.7rem; line-height: 1; }
+.aw-title { font-family: var(--font-poster); font-weight: 400; font-size: 0.74rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--gold); }
+.aw-player { font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--text); }
 .aw-note { font-size: 0.72rem; color: var(--muted); }
 
 .champ-numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
-.cn { display: flex; flex-direction: column; align-items: center; gap: 0.12rem; padding: 1rem;
+.cn { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; padding: 1.15rem 1rem;
   border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); }
-.cn-ic { font-size: 1.2rem; }
-.cn-v { font-family: var(--font-display); font-size: 1.75rem; color: var(--text); font-variant-numeric: tabular-nums; }
-.cn-l { font-size: 0.74rem; color: var(--muted); }
+.cn-ic { font-size: 1.15rem; opacity: 0.85; }
+.cn-v { font-family: var(--font-poster); font-weight: 400; font-size: 2.2rem; line-height: 1; color: var(--text);
+  font-variant-numeric: tabular-nums; }
+.cn-l { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.03em; text-transform: uppercase; margin-top: 0.25rem; }
 
 .champ-highlights { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
-.chl { padding: 1rem 1.1rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border);
-  display: flex; flex-direction: column; gap: 0.2rem; }
-.chl-k { font-family: var(--font-display); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.chl { padding: 1.05rem 1.15rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 0.22rem; }
+.chl-k { font-family: var(--font-poster); font-weight: 400; font-size: 0.72rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--crimson); }
 .chl b { color: var(--text); font-size: 1rem; }
 .chl small { color: var(--muted); font-size: 0.76rem; }
 
-.champ-path { padding: 1.1rem 1.2rem 1.2rem; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--border); }
-.cp-title { margin: 0 0 0.8rem; font-family: var(--font-display); font-weight: 600; color: var(--text); font-size: 0.95rem; }
-.cp-track { display: flex; align-items: stretch; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.3rem; scrollbar-width: thin; }
-.cp-step { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; min-width: 76px;
-  padding: 0.6rem 0.5rem; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); }
-.cp-step.w { border-color: rgba(47, 217, 104, 0.42); box-shadow: inset 0 0 0 1px rgba(47, 217, 104, 0.12); }
-.cp-step.d { border-color: rgba(255, 210, 63, 0.36); }
-.cp-flag { width: 30px; height: 20px; border-radius: 3px; }
-.cp-step b { font-family: var(--font-display); color: var(--text); font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+/* The road to glory — a numbered progression (8 real rounds). */
+.champ-path { padding: 1.2rem 1.3rem 1.3rem; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--border); }
+.cp-title { margin: 0 0 0.9rem; font-family: var(--font-poster); font-weight: 400; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text); font-size: 1.05rem; }
+.cp-track { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 0.4rem; scrollbar-width: thin; }
+.cp-step { position: relative; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+  min-width: 84px; padding: 0.7rem 0.6rem 0.6rem; border-bottom: 2px solid var(--border); }
+.cp-step + .cp-step { border-left: 1px solid var(--border); }
+.cp-step.w { border-bottom-color: var(--accent); }
+.cp-step.d { border-bottom-color: var(--gold); }
+.cp-step.l { border-bottom-color: var(--live); }
+.cp-no { font-family: var(--font-poster); font-weight: 400; font-size: 0.66rem; color: var(--muted); letter-spacing: 0.1em; }
+.cp-flag { width: 32px; height: 21px; border-radius: 3px; }
+.cp-step b { font-family: var(--font-poster); font-weight: 400; color: var(--text); font-variant-numeric: tabular-nums; font-size: 1.15rem; line-height: 1; }
 .cp-step small { color: var(--muted); font-size: 0.62rem; text-align: center; line-height: 1.15; }
-.cp-arrow { align-self: center; color: var(--muted); flex: 0 0 auto; opacity: 0.5; font-size: 0.8rem; }
 
 @media (max-width: 680px) {
   .awards-row { grid-template-columns: 1fr 1fr; }
   .champ-numbers { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
   .champ-highlights { grid-template-columns: 1fr; }
-  .cn-v { font-size: 1.4rem; }
+  .cn-v { font-size: 1.7rem; }
+  .cs-nums b { font-size: 2rem; }
 }

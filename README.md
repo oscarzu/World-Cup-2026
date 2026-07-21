@@ -1,24 +1,38 @@
-# World Cup 2026 — Dashboard interactivo ⚽
+# World Cup 2026 — Retrospectiva interactiva ⚽
 
-Dashboard **responsive**, **bilingüe (ES/EN)**, con **modo oscuro/claro** y enfoque de
-**data storytelling**, que muestra estadísticas de la **Copa Mundial de la FIFA 2026**
-(Canadá · México · USA · 11 jun – 19 jul 2026) con datos reales casi en vivo.
+Sitio **responsive**, **bilingüe (ES/EN)**, con **modo oscuro/claro** y enfoque de
+**data storytelling**, que documenta la **Copa Mundial de la FIFA 2026**
+(Canadá · México · USA · 11 jun – 19 jul 2026) con datos reales del torneo completo.
+
+> 🏆 **Torneo concluido — España, campeona del mundo** (1-0 a Argentina en la final,
+> gol de Ferran Torres al 106'). El sitio pasó a **modo archivo**: datos congelados,
+> **cero llamadas a APIs**. Ver [`docs/RETROSPECTIVA.md`](docs/RETROSPECTIVA.md).
 
 🔗 **En vivo:** https://oscarzu.github.io/World-Cup-2026/
 📘 **¿Cómo funciona? (explicado sencillo + glosario):** [`docs/COMO-FUNCIONA.md`](docs/COMO-FUNCIONA.md)
+📊 **Modelo predictivo (desempeño + aprendizajes):** [`docs/MODELO-PREDICTIVO.md`](docs/MODELO-PREDICTIVO.md)
 
 Sin paso de build: HTML + CSS + JavaScript (ES modules) y [Chart.js](https://www.chartjs.org/)
-por CDN. Se despliega tal cual en GitHub Pages. Los datos en vivo llegan a través de un
-**Cloudflare Worker** (ver [`worker/`](worker/)).
+por CDN. Se despliega tal cual en GitHub Pages. Durante el torneo, los datos en vivo
+llegaban a través de un **Cloudflare Worker** (ver [`worker/`](worker/)); ahora ese
+Worker está en reposo (cron apagado) y el sitio lee solo los datos congelados en `data/`.
+
+## Diseño
+
+Dirección visual de **programa conmemorativo**: fondo "tinta de estadio" (negro cálido),
+el **oro del trofeo** como color de identidad y el **verde de la cancha** reservado para
+la data. Tipografía **Anton** (titulares tipo póster) + **Space Grotesk** (datos). La
+pieza central es el *scoreboard* de la final sobre un "2026" monumental.
 
 ## Características
 
 Seis pestañas: **Resumen · Estadísticas · Partidos · Grupos · Goleadores · Sedes**.
 
-- **Resumen (home)** — cifras clave, titular dinámico y franja de *insights* (estilo
-  data-journalism). Trae la **caja de partidos en vivo** (aparece solo cuando hay juego),
-  el **goleo por fase** (escala logarítmica, con *drill-down* a goles por jornada) y el
-  **modelo de predicciones** con su comparativo **pronóstico vs. resultado real**.
+- **Resumen (home)** — un **hub retrospectivo**: la campeona (**España**, invicta), los
+  premios individuales (Bota **Mbappé**, Balón **Rodri**, Guante **Unai Simón**, Joven
+  **Cubarsí**), las cifras del torneo, los mejores partidos y **el camino del campeón**.
+  Debajo, el **goleo por fase** (escala logarítmica, *drill-down* a goles por jornada) y el
+  **modelo predictivo** con su comparativo **pronóstico vs. resultado real** de los 104 partidos.
 - **Estadísticas** — el corazón del proyecto:
   - KPIs del torneo y **datos curiosos** (partido más goleador, remontadas, hat-tricks,
     gol más madrugador/tardío con minuto exacto…).
@@ -32,9 +46,9 @@ Seis pestañas: **Resumen · Estadísticas · Partidos · Grupos · Goleadores �
   **bracket** de eliminatorias en la misma pestaña (control segmentado). El bracket es un
   "camino a la final" con la copa al centro, alineado por fase; resuelve **prórroga y
   penales** (marca al ganador y muestra "t. extra" / "pen."). En escritorio aprovecha el
-  alto de la pantalla; en móvil se desliza de lado. Calendario `.ics` **descargable y
-  suscribible** (bilingüe, con banderas, sede, transmisión; los partidos jugados muestran
-  el marcador final).
+  alto de la pantalla; en móvil se desliza de lado. Calendario `.ics` **descargable**
+  como recuerdo (bilingüe, con banderas, sede, transmisión y el marcador final de cada
+  partido). *(La suscripción con auto-actualización se retiró al concluir el torneo.)*
 - **Grupos** — tablas de clasificación + **cómo terminó cada grupo** (Avanzó / Avanzó
   como mejor 3.º / Eliminado, con certeza).
 - **Goleadores** — orden oficial FIFA; al hacer clic, **contra qué selecciones marcó**
@@ -43,6 +57,19 @@ Seis pestañas: **Resumen · Estadísticas · Partidos · Grupos · Goleadores �
 - **Reglamento** — 13 reglas verificadas contra el [reglamento oficial FIFA 26](docs/Reglamento_WC26.pdf).
 
 ## Arquitectura de datos
+
+**Ahora (torneo concluido · modo archivo):** el sitio es 100 % estático y no hace
+ninguna llamada de red de datos. Todo se lee de los archivos congelados en `data/`.
+
+```
+data/worldcup.json  (104 resultados finales) ─┐
+data/teamstats.json (faltas/tiros/tarjetas)  ─┼─▶ navegador   [CONFIG.ARCHIVED = true]
+data/efficacy-history.json, social.json      ─┘   (0 API calls)
+data/archive/  ← copia del dataset capturado (semilla para la próxima edición)
+```
+
+**Durante el torneo** funcionaba así (se puede reactivar con `ARCHIVED = false` y
+restaurando el cron en `worker/wrangler.toml`):
 
 ```
             cron cada 3 min (un solo consumidor)        lecturas ilimitadas, 0 costo
@@ -54,12 +81,8 @@ ESPN ─────────────────────────
 openfootball ──▶ raw.githubusercontent ──▶ navegador (calendario base / respaldo)
 ```
 
-> El Worker escribe en KV **solo cuando el contenido cambia**, para respetar el límite
-> gratuito (1000 puts/día).
-
-El Worker es el **único** que llama a ESPN; guarda un *snapshot* normalizado en **KV** y
-todos los visitantes leen lo mismo (idéntico, a prueba de recargas, sin multiplicar
-peticiones por usuario). Con un contador diario nunca se exceden los límites.
+> El Worker escribía en KV **solo cuando el contenido cambiaba**, para respetar el
+> límite gratuito (1000 puts/día). Con el cron apagado, ahora está en reposo (0 costo).
 
 ## Fuentes de datos
 

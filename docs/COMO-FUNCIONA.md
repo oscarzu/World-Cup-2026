@@ -3,6 +3,10 @@
 > Guía para entender **qué hace cada pieza** y **los términos técnicos**, sin
 > asumir conocimientos previos. Al final hay un **glosario**.
 
+> 🏆 **El torneo terminó** (España, campeona). El sitio está en **modo archivo**:
+> lee solo datos congelados y no hace llamadas a APIs. Lo de abajo describe cómo
+> operaba en vivo; el cierre está en [`RETROSPECTIVA.md`](RETROSPECTIVA.md).
+
 ---
 
 ## 1. La idea en una frase

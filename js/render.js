@@ -1407,8 +1407,8 @@ export function renderChampion(matches, facts) {
   host.hidden = false;
   host.innerHTML = `
     <div class="champ-banner">
-      <div class="champ-rays" aria-hidden="true"></div>
-      <p class="champ-eyebrow">🏆 ${en ? "WORLD CHAMPION · 2026" : "CAMPEÓN DEL MUNDO · 2026"}</p>
+      <span class="champ-year" aria-hidden="true">2026</span>
+      <p class="champ-eyebrow">★ ${en ? "World champion" : "Campeón del mundo"}</p>
       <div class="champ-crown">
         ${flagImg(champ, "champ-flag", { eager: true })}
         <h2 class="champ-team">${esc(tn(champ))}</h2>
@@ -1436,7 +1436,7 @@ export function renderChampion(matches, facts) {
     <div class="champ-path">
       <p class="cp-title">${en ? `${esc(tn(champ))}'s road to glory` : `El camino de ${esc(tn(champ))} a la gloria`}</p>
       <div class="cp-track">
-        ${path.map((p) => `<span class="cp-step ${p.win ? "w" : p.draw ? "d" : "l"}">${flagImg(p.opp, "cp-flag", { eager: true })}<b>${p.gf}–${p.gc}</b><small>${esc(p.round)}</small></span>`).join('<span class="cp-arrow" aria-hidden="true">→</span>')}
+        ${path.map((p, i) => `<span class="cp-step ${p.win ? "w" : p.draw ? "d" : "l"}"><span class="cp-no">${String(i + 1).padStart(2, "0")}</span>${flagImg(p.opp, "cp-flag", { eager: true })}<b>${p.gf}–${p.gc}</b><small>${esc(p.round)}</small></span>`).join("")}
       </div>
     </div>`;
 }
